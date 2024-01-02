@@ -58,8 +58,8 @@ extern "C"
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-void init_i2c();
-void init_gpio();
+void i2c_init();
+void gpio_init();
 void init_hardware();
 void init_debug();
 void i2c_send();
@@ -75,8 +75,8 @@ void LPI2C3_IRQHandler(void);
  * Variables
  ******************************************************************************/
 uint8_t g_debugBuffer[32];
-uint16_t g_i2cData[8] = {0};
-uint8_t g_pdsData[PDS_SIZE + STATUS_SIZE] = {0};
+uint16_t g_i2cData[3] = {0};
+uint8_t g_pdsData[2][PDS_SIZE + STATUS_SIZE] = {0};
 const uint16_t g_i2cDataLength = ARRAY_SIZE(g_i2cData);
 const uint32_t g_transferChannel = 0;
 
@@ -111,12 +111,18 @@ int main(void)
     init_hardware();
     init_debug();
 
+    uint32_t testTime = USEC_TO_COUNT(2000, CLOCK_GetFreq(kCLOCK_PerClk));
+
     /* Enter an infinite loop, just incrementing a counter. */
     while (1)
     {
         /* 'Dummy' NOP to allow source level single stepping of
             tight while() loop */
         __asm volatile("nop");
+        size_t txFifoLength;
+        LPI2C_MasterGetFifoCounts(EXAMPLE_I2C_MASTER, NULL, &txFifoLength);
+        uint32_t currentTime = PIT_GetCurrentTimerCount(PIT_PERIPHERAL, PIT_CHANNEL_0);
+        GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, txFifoLength > 1);
     }
     return 0;
 }
@@ -148,7 +154,7 @@ void LPI2C3_IRQHandler(void)
     LPI2C_MasterClearStatusFlags(EXAMPLE_I2C_MASTER, status);
 }
 
-void buildCommand_ReadStatus(uint16_t* data, uint8_t addr)
+void i2c_buildCommand_ReadStatus(uint16_t* data, uint8_t addr)
 {
     uint16_t startCmd = LPI2C_MTDR_CMD(4) | addr << 1 | kLPI2C_Write;
     uint16_t restartCmd = LPI2C_MTDR_CMD(4) | addr << 1 | kLPI2C_Read;
@@ -167,7 +173,7 @@ void buildCommand_ReadStatus(uint16_t* data, uint8_t addr)
     data[4] = stopCmd;
 }
 
-void buildCommand_HIn_PDS(uint16_t* data, uint8_t addr)
+void i2c_buildCommand_HIn_PDS(uint16_t* data, uint8_t addr)
 {
     uint16_t startCmd = LPI2C_MTDR_CMD(4) | addr << 1 | kLPI2C_Read;
     uint16_t stopCmd = LPI2C_MTDR_CMD(2);
@@ -182,14 +188,14 @@ void i2c_send()
 {
     uint8_t addr = 0x08;
     
-    buildCommand_ReadStatus(&g_i2cData[0], addr);
-    buildCommand_HIn_PDS(&g_i2cData[5], addr);
+    //i2c_buildCommand_ReadStatus(&g_i2cData[0], addr);
+    i2c_buildCommand_HIn_PDS(&g_i2cData[0], addr);
 
     // Enable DMA request
     LPI2C_MasterEnableDMA(EXAMPLE_I2C_MASTER, true, false);
 }
 
-void buildCommands()
+void i2c_buildCommands()
 {
     const uint8_t nDevices = 4;
     static uint16_t HInCommands[5*nDevices];
@@ -202,7 +208,27 @@ void buildCommands()
     }
 }
 
-void init_dma(uint16_t *data, uint16_t length)
+void dma_createHInTcd(edma_tcd_t* tcd, uint16_t* data, uint16_t length, edma_tcd_t* nextTcd, LPI2C_Type* i2cHardware)
+{
+    EDMA_TcdReset(tcd);
+    tcd->ATTR = DMA_ATTR_SSIZE(1) | DMA_ATTR_DSIZE(1);
+
+    tcd->SADDR = (uint32_t)data;
+    tcd->SOFF = 2;
+
+    tcd->DADDR = (uint32_t)&i2cHardware->MTDR;
+    tcd->DOFF = 0;
+
+    tcd->NBYTES = 2;
+    tcd->CITER = length;
+    tcd->BITER = length;
+    tcd->SLAST = -length * 2;
+    tcd->DLAST_SGA = (uint32_t)nextTcd;
+
+    tcd->CSR = DMA_CSR_ESG(1);
+}
+
+void dma_init(uint16_t *data, uint16_t length)
 {
     /* Enable DMA clock */
     CLOCK_EnableClock(kCLOCK_Dma);
@@ -232,25 +258,16 @@ void init_dma(uint16_t *data, uint16_t length)
 
 
     // init edma tcd
-    edma_tcd_t transferTcd __ALIGNED(32);
-    EDMA_TcdReset(&transferTcd);
-    transferTcd.ATTR = DMA_ATTR_SSIZE(1) | DMA_ATTR_DSIZE(1);
+    static edma_tcd_t HInTcd1 __ALIGNED(32);
+    static edma_tcd_t HInTcd2 __ALIGNED(32);
 
-    transferTcd.SOFF = 2;
-    transferTcd.SADDR = (uint32_t)data;
+    dma_createHInTcd(&HInTcd1, data, length, &HInTcd2, EXAMPLE_I2C_MASTER);
+    dma_createHInTcd(&HInTcd2, data, length, &HInTcd1, EXAMPLE_I2C_MASTER);
 
-    transferTcd.DADDR = (uint32_t)&EXAMPLE_I2C_MASTER->MTDR;
-    transferTcd.DOFF = 0;
-
-    transferTcd.NBYTES = 2;
-    transferTcd.CITER = length;
-    transferTcd.BITER = length;
-    transferTcd.SLAST = -length * 2;
-    transferTcd.DLAST_SGA = 0;
-
-    EDMA_TcdEnableAutoStopRequest(&transferTcd, true);
+    EDMA_TcdEnableAutoStopRequest(&HInTcd2, true);
+    
     //EDMA_TcdSetChannelLink(&transferTcd, kEDMA_MajorLink, g_transferChannel);
-    EDMA_InstallTCD(DMA0, g_transferChannel, &transferTcd);
+    EDMA_InstallTCD(DMA0, g_transferChannel, &HInTcd1);
     EDMA_DisableChannelRequest(DMA0, g_transferChannel);
 
     // 4. Configure the corresponding timer.
@@ -261,7 +278,7 @@ void init_dma(uint16_t *data, uint16_t length)
     DMAMUX_EnableChannel(DMAMUX_BASE, g_transferChannel);
 }
 
-void init_i2c()
+void i2c_init()
 {
     lpi2c_master_config_t masterConfig;
 
@@ -292,9 +309,12 @@ void init_i2c()
 
     /* Initialize the LPI2C master peripheral */
     LPI2C_MasterInit(EXAMPLE_I2C_MASTER, &masterConfig, LPI2C_CLOCK_FREQUENCY);
+
+    // Set tx fifo watermark
+    LPI2C_MasterSetWatermarks(EXAMPLE_I2C_MASTER, 1, 0);
 }
 
-void init_gpio()
+void gpio_init()
 {
     /* Define the init structure for the output LED pin*/
     gpio_pin_config_t led_config = {
@@ -317,9 +337,9 @@ void init_hardware()
     // Set frequency to 200Hz
     PIT_SetTimerPeriod(PIT_PERIPHERAL, PIT_CHANNEL_0, USEC_TO_COUNT(5000, CLOCK_GetFreq(kCLOCK_PerClk)));
 
-    init_gpio();
-    init_dma(g_i2cData, g_i2cDataLength);
-    init_i2c();
+    gpio_init();
+    dma_init(g_i2cData, g_i2cDataLength);
+    i2c_init();
 }
 
 void init_debug()
