@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "*.embeddedhtml": "html",
+        "*.rmd": "markdown",
+        "fsl_lpi2c.h": "c",
+        "fsl_common.h": "c",
+        "mimxrt1062.h": "c"
+    }
+}
