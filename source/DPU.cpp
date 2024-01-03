@@ -58,17 +58,25 @@ extern "C"
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-void i2c_init();
 void gpio_init();
 void init_hardware();
 void init_debug();
-void i2c_send();
+void i2c_init();
+void i2c_writeCommandBuffer();
+void i2c_filltxFifo();
+void i2c_buildCommand_ReadStatus(uint16_t* data, uint8_t addr);
+void i2c_buildCommand_HIn_PDS(uint16_t* data, uint8_t addr);
+void dma_init(uint8_t *data, uint32_t length);
+void dma_createHInTcd(edma_tcd_t* tcd, uint8_t* data, uint32_t length, edma_tcd_t* nextTcd, LPI2C_Type* i2cHardware);
+
 #ifdef __MCUXPRESSO
 // vscode linter can't call c++ functions from c functions
 extern "C"
 void PIT_IRQHandler(void);
 extern "C"
 void LPI2C3_IRQHandler(void);
+extern "C"
+void DMA0_DMA16_IRQHandler(void);
 #endif
 
 /*******************************************************************************
@@ -78,6 +86,8 @@ uint8_t g_debugBuffer[32];
 uint16_t g_i2cData[3] = {0};
 uint8_t g_pdsData[2][PDS_SIZE + STATUS_SIZE] = {0};
 const uint16_t g_i2cDataLength = ARRAY_SIZE(g_i2cData);
+const uint16_t g_pdsDataLength = ARRAY_SIZE(g_pdsData[0]);
+uint32_t g_dma_tcdIndex = 0;
 const uint32_t g_transferChannel = 0;
 
 /**** Register interface ****/
@@ -122,7 +132,6 @@ int main(void)
         size_t txFifoLength;
         LPI2C_MasterGetFifoCounts(EXAMPLE_I2C_MASTER, NULL, &txFifoLength);
         uint32_t currentTime = PIT_GetCurrentTimerCount(PIT_PERIPHERAL, PIT_CHANNEL_0);
-        GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, txFifoLength > 1);
     }
     return 0;
 }
@@ -135,15 +144,13 @@ void PIT_IRQHandler(void)
     i++;
     GPIO_PinWrite(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, i & 1);
 
-    if (i & 1)
-    {
-        EDMA_EnableChannelRequest(DMA0, g_transferChannel);
-    }
+    // Reset at the beginning of the cycle
+    g_dma_tcdIndex = 0;
 
     // start i2c transfer after 100 cycles
-    if (i == 100)
+    if (i & 1 && i > 100)
     {
-        i2c_send();
+        i2c_filltxFifo();
     }
 }
 
@@ -152,6 +159,23 @@ void LPI2C3_IRQHandler(void)
     uint32_t status = LPI2C_MasterGetStatusFlags(EXAMPLE_I2C_MASTER);
 
     LPI2C_MasterClearStatusFlags(EXAMPLE_I2C_MASTER, status);
+}
+
+void DMA0_DMA16_IRQHandler(void)
+{
+    uint32_t status = EDMA_GetChannelStatusFlags(DMA0, g_transferChannel);
+    EDMA_ClearChannelStatusFlags(DMA0, g_transferChannel, status);
+
+    // Toggle LED    
+    GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, !g_dma_tcdIndex);
+
+    // Start next transfer if not last tcd of cycle (last tcd should be started by timer interrupt)
+    if(g_dma_tcdIndex == 0)
+    {
+        i2c_filltxFifo();
+    }
+
+    g_dma_tcdIndex++;
 }
 
 void i2c_buildCommand_ReadStatus(uint16_t* data, uint8_t addr)
@@ -180,19 +204,24 @@ void i2c_buildCommand_HIn_PDS(uint16_t* data, uint8_t addr)
 
     // Set data to send
     data[0] = startCmd;
-    data[1] = LPI2C_MTDR_CMD(3) | (0xf0);
+    data[1] = LPI2C_MTDR_CMD(1) | (0xf0);
     data[2] = stopCmd;
 }
 
-void i2c_send()
+void i2c_writeCommandBuffer()
 {
     uint8_t addr = 0x08;
     
     //i2c_buildCommand_ReadStatus(&g_i2cData[0], addr);
     i2c_buildCommand_HIn_PDS(&g_i2cData[0], addr);
+}
 
-    // Enable DMA request
-    LPI2C_MasterEnableDMA(EXAMPLE_I2C_MASTER, true, false);
+void i2c_filltxFifo()
+{
+    for (size_t i = 0; i < g_i2cDataLength; i++)
+    {
+        EXAMPLE_I2C_MASTER->MTDR = g_i2cData[i] & 0xFFFF;
+    }
 }
 
 void i2c_buildCommands()
@@ -208,27 +237,31 @@ void i2c_buildCommands()
     }
 }
 
-void dma_createHInTcd(edma_tcd_t* tcd, uint16_t* data, uint16_t length, edma_tcd_t* nextTcd, LPI2C_Type* i2cHardware)
+void dma_createHInTcd(edma_tcd_t* tcd, uint8_t* data, uint32_t length, edma_tcd_t* nextTcd, LPI2C_Type* i2cHardware)
 {
     EDMA_TcdReset(tcd);
-    tcd->ATTR = DMA_ATTR_SSIZE(1) | DMA_ATTR_DSIZE(1);
+    tcd->ATTR = DMA_ATTR_SSIZE(0) | DMA_ATTR_DSIZE(0);
 
-    tcd->SADDR = (uint32_t)data;
-    tcd->SOFF = 2;
+    tcd->SADDR = (uint32_t)&i2cHardware->MRDR;
+    tcd->SOFF = 0;
 
-    tcd->DADDR = (uint32_t)&i2cHardware->MTDR;
-    tcd->DOFF = 0;
+    tcd->DADDR = (uint32_t)data;
+    tcd->DOFF = 1;
 
-    tcd->NBYTES = 2;
+    tcd->NBYTES = 1;
     tcd->CITER = length;
     tcd->BITER = length;
-    tcd->SLAST = -length * 2;
+    tcd->SLAST = -length * 1;
     tcd->DLAST_SGA = (uint32_t)nextTcd;
 
-    tcd->CSR = DMA_CSR_ESG(1);
+    tcd->CSR = DMA_CSR_ESG(1) | DMA_CSR_INTMAJOR(1);
+
+    // Disable auto stop request as the channels may always be active
+    //  because there will only be data in the fifo when the i2c is active
+    EDMA_TcdEnableAutoStopRequest(tcd, false);
 }
 
-void dma_init(uint16_t *data, uint16_t length)
+void dma_init(uint8_t *data, uint32_t length)
 {
     /* Enable DMA clock */
     CLOCK_EnableClock(kCLOCK_Dma);
@@ -262,13 +295,14 @@ void dma_init(uint16_t *data, uint16_t length)
     static edma_tcd_t HInTcd2 __ALIGNED(32);
 
     dma_createHInTcd(&HInTcd1, data, length, &HInTcd2, EXAMPLE_I2C_MASTER);
-    dma_createHInTcd(&HInTcd2, data, length, &HInTcd1, EXAMPLE_I2C_MASTER);
-
-    EDMA_TcdEnableAutoStopRequest(&HInTcd2, true);
+    dma_createHInTcd(&HInTcd2, data + length, length, &HInTcd1, EXAMPLE_I2C_MASTER);
     
-    //EDMA_TcdSetChannelLink(&transferTcd, kEDMA_MajorLink, g_transferChannel);
     EDMA_InstallTCD(DMA0, g_transferChannel, &HInTcd1);
-    EDMA_DisableChannelRequest(DMA0, g_transferChannel);
+    EDMA_EnableChannelRequest(DMA0, g_transferChannel);
+    
+    // Enable interrupts
+    // individual interrupts are enabled in the corresponding tcd
+    EnableIRQ(DMA0_DMA16_IRQn);
 
     // 4. Configure the corresponding timer.
     // 5. Select the source to be routed to the DMA channel. Write to the corresponding
@@ -311,7 +345,13 @@ void i2c_init()
     LPI2C_MasterInit(EXAMPLE_I2C_MASTER, &masterConfig, LPI2C_CLOCK_FREQUENCY);
 
     // Set tx fifo watermark
-    LPI2C_MasterSetWatermarks(EXAMPLE_I2C_MASTER, 1, 0);
+    LPI2C_MasterSetWatermarks(EXAMPLE_I2C_MASTER, 0, 0);
+
+    // Enable DMA request
+    LPI2C_MasterEnableDMA(EXAMPLE_I2C_MASTER, false, true);
+
+    // write commandbuffer
+    i2c_writeCommandBuffer();
 }
 
 void gpio_init()
@@ -338,7 +378,7 @@ void init_hardware()
     PIT_SetTimerPeriod(PIT_PERIPHERAL, PIT_CHANNEL_0, USEC_TO_COUNT(5000, CLOCK_GetFreq(kCLOCK_PerClk)));
 
     gpio_init();
-    dma_init(g_i2cData, g_i2cDataLength);
+    dma_init(g_pdsData[0], g_pdsDataLength);
     i2c_init();
 }
 
