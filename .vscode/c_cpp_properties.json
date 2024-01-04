@@ -12,6 +12,30 @@
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64"
+        },
+        {
+            "name": "cortex-m7",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "CPU_MIMXRT1062DVL6B",
+                "CPU_MIMXRT1062DVL6B_cm7",
+                "SDK_OS_FREE_RTOS",
+                "DISABLEFLOAT16",
+                "SERIAL_PORT_TYPE_UART=1",
+                "XIP_EXTERNAL_FLASH=1",
+                "XIP_BOOT_HEADER_ENABLE=1",
+                "SDK_DEBUGCONSOLE=1",
+                "__MCUXPRESSO",
+                "__USE_CMSIS",
+                "DEBUG",
+                "__NEWLIB__"
+            ],
+            "compilerPath": "/usr/bin/arm-none-eabi-g++",
+            "cStandard": "c17",
+            "intelliSenseMode": "linux-gcc-arm",
+            "cppStandard": "c++23"
         }
     ],
     "version": 4
