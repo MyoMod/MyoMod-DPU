@@ -31,6 +31,7 @@ extern "C"
     #include "fsl_edma.h"
     #include "fsl_dmamux.h"
 }
+#include <span>
 
 #include "SEGGER_RTT.h"
 
@@ -51,9 +52,15 @@ extern "C"
 
 #define LPI2C_BAUDRATE 1000000U
 
-#define PDS_SIZE_DISPLAY 0x04
+#define N_PDS_HIN 1
+#define N_PDS_HOUT 1
+#define PDS_SIZE_DISPLAY_HOUT 0x07
+#define PDS_SIZE_DISPLAY_HIN 0x04
 #define PDS_SIZE_ELECTRODE 0xf0
 #define STATUS_SIZE 0x01
+
+uint8_t g_electrodeAddr = 0x08;
+uint8_t g_displayAddr = 0x18;
 
 /*******************************************************************************
  * Prototypes
@@ -88,12 +95,15 @@ uint8_t g_debugBuffer[32];
 uint16_t g_i2cCmdBuffer[3] = {0};
 const uint16_t g_i2cCmdBufferLength = ARRAY_SIZE(g_i2cCmdBuffer);
 const uint32_t g_transferChannel = 0;
-uint32_t g_dma_tcdIndex = 0;
+volatile uint32_t g_dma_tcdIndex = 0;
 
-uint8_t g_pdsDataDisplay[2][PDS_SIZE_DISPLAY + STATUS_SIZE] = {0};
+uint8_t g_pdsHInDataDisplay[2][PDS_SIZE_DISPLAY_HIN + STATUS_SIZE] = {0};
 uint8_t g_pdsDataElectrode[2][PDS_SIZE_ELECTRODE + STATUS_SIZE] = {0};
 const uint16_t g_pdsDataLengthElectrode = ARRAY_SIZE(g_pdsDataElectrode[0]);
-const uint16_t g_pdsDataLengthDisplay = ARRAY_SIZE(g_pdsDataDisplay[0]);
+const uint16_t g_pdsHInDataLengthDisplay = ARRAY_SIZE(g_pdsHInDataDisplay[0]);
+
+uint8_t g_pdsHOutDataDisplay[2][PDS_SIZE_DISPLAY_HOUT] = {0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7};
+const uint16_t g_pdsHOutDataLengthDisplay = ARRAY_SIZE(g_pdsHOutDataDisplay[0]);
 
 /**** Register interface ****/
 StatusByte_t g_statusByte;
@@ -155,6 +165,8 @@ void PIT_IRQHandler(void)
     // start i2c transfer after 100 cycles
     if (i & 1 && i > 100)
     {
+        LPI2C_MasterEnableDMA(EXAMPLE_I2C_MASTER, false, true);
+        EDMA_EnableChannelRequest(DMA0, g_transferChannel);
         i2c_filltxFifo(0);
     }
 }
@@ -170,17 +182,22 @@ void DMA0_DMA16_IRQHandler(void)
 {
     uint32_t status = EDMA_GetChannelStatusFlags(DMA0, g_transferChannel);
     EDMA_ClearChannelStatusFlags(DMA0, g_transferChannel, status);
+    g_dma_tcdIndex++;
 
     // Toggle LED    
-    GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, !g_dma_tcdIndex);
+    GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, g_dma_tcdIndex & 1);
 
     // Start next transfer if not last tcd of cycle (last tcd should be started by timer interrupt)
-    if(g_dma_tcdIndex == 0)
+    if(g_dma_tcdIndex < N_PDS_HIN)
     {
-        i2c_filltxFifo(1);
+        i2c_filltxFifo(g_dma_tcdIndex);
     }
-
-    g_dma_tcdIndex++;
+    else if(g_dma_tcdIndex == N_PDS_HIN)
+    {
+        // Change direction to HOut
+        LPI2C_MasterEnableDMA(EXAMPLE_I2C_MASTER, true, false);
+        EDMA_EnableChannelRequest(DMA0, g_transferChannel);
+    }
 }
 
 void i2c_buildCommand_ReadStatus(uint16_t* data, uint8_t addr)
@@ -215,13 +232,22 @@ void i2c_buildCommand_HIn_PDS(uint16_t* data, uint8_t addr, uint8_t length)
     data[2] = stopCmd;
 }
 
+void i2c_buildCommand_HOut_PDS(uint16_t* data, uint8_t addr, uint8_t controlWord)
+{
+    uint16_t startCmd = LPI2C_MTDR_CMD(4) | addr << 1 | kLPI2C_Write;
+    uint16_t stopCmd = LPI2C_MTDR_CMD(2);
+
+    // Set data to send
+    data[0] = startCmd;
+
+    data[1] = LPI2C_MTDR_CMD(0) | controlWord;
+    data[2] = stopCmd;
+}
+
 void i2c_writeCommandBuffer(uint32_t cycle)
 {
-    uint8_t electrodeAddr = 0x08;
-    uint8_t displayAddr = 0x18;
-
-    const uint32_t addresses[] = {electrodeAddr, displayAddr};
-    const uint32_t lengths[] = {PDS_SIZE_ELECTRODE, PDS_SIZE_DISPLAY};
+    const uint32_t addresses[] = {g_displayAddr, g_electrodeAddr};
+    const uint32_t lengths[] = {PDS_SIZE_DISPLAY_HIN, PDS_SIZE_ELECTRODE};
 
     if(cycle < 2)
     {
@@ -282,6 +308,55 @@ void dma_createHInTcd(edma_tcd_t* tcd, uint8_t* data, uint32_t length, edma_tcd_
     EDMA_TcdEnableAutoStopRequest(tcd, false);
 }
 
+/**
+ * @brief Fills a tcd for a HOut transfer
+ * 
+ * @param tcd 
+ * @param data 
+ * @param length 
+ * @param nextTcd 
+ * @param i2cHardware 
+ * @param size          Size of the data in 2^n bytes
+ */
+void dma_createHOutTcd(edma_tcd_t* tcd, uint8_t* data, uint32_t length, edma_tcd_t* nextTcd, LPI2C_Type* i2cHardware, uint32_t size = 0)
+{
+    assert (size <= 4);
+    uint32_t sizeInBytes = 1 << size;
+    EDMA_TcdReset(tcd);
+    tcd->ATTR = DMA_ATTR_SSIZE(size) | DMA_ATTR_DSIZE(size);
+
+    tcd->SADDR = (uint32_t)data;
+    tcd->SOFF = sizeInBytes;
+
+    tcd->DADDR = (uint32_t)&i2cHardware->MTDR;
+    tcd->DOFF = 0;
+
+    tcd->NBYTES = sizeInBytes;
+    tcd->CITER = length;
+    tcd->BITER = length;
+    tcd->SLAST = -length * sizeInBytes;
+    tcd->DLAST_SGA = (uint32_t)nextTcd;
+
+    // Disable interrupts because tx can be linked without software interaction
+    tcd->CSR = DMA_CSR_ESG(1) | DMA_CSR_INTMAJOR(0);
+
+    // Disable auto stop request as the channels may always be active
+    //  because there will only be data in the fifo when the i2c is active
+    EDMA_TcdEnableAutoStopRequest(tcd, false);
+}
+
+void dma_createHOutPDSTcd(edma_tcd_t* tcd, std::span<uint16_t, 3> cmdBuffer, uint8_t addr, uint8_t* data, uint32_t length, edma_tcd_t* nextTcd, LPI2C_Type* i2cHardware)
+{
+    const uint32_t nTcds = 3; // start + cmd, data, stop
+
+    //build command buffer
+    i2c_buildCommand_HOut_PDS(&cmdBuffer[0], addr, 0x81);
+
+    dma_createHOutTcd(&tcd[0], (uint8_t*) &cmdBuffer[0], 2, &tcd[1], i2cHardware, 1);
+    dma_createHOutTcd(&tcd[1], data, length, &tcd[2], i2cHardware, 0);
+    dma_createHOutTcd(&tcd[2], (uint8_t*) &cmdBuffer[2], 1, nextTcd, i2cHardware, 1);
+}
+
 void dma_init()
 {
     /* Enable DMA clock */
@@ -314,11 +389,21 @@ void dma_init()
     // init edma tcd
     static edma_tcd_t HInTcd1[2] __ALIGNED(32);
     static edma_tcd_t HInTcd2[2] __ALIGNED(32);
+    static edma_tcd_t HOutTcd1[2][3] __ALIGNED(32);
+    static uint16_t txCmd[3] = {0};
+    uint32_t nTcds = 5;
+
 
     for (size_t i = 0; i < 2; i++)
     {
-        dma_createHInTcd(&HInTcd1[i], g_pdsDataElectrode[i], g_pdsDataLengthElectrode, &HInTcd2[i], EXAMPLE_I2C_MASTER);
-        dma_createHInTcd(&HInTcd2[i], g_pdsDataDisplay[i], g_pdsDataLengthDisplay, &HInTcd1[(i + 1)%2], EXAMPLE_I2C_MASTER);
+        //dma_createHInTcd(&HInTcd1[i], g_pdsDataElectrode[i], g_pdsDataLengthElectrode, &HOutTcd1[i][0], EXAMPLE_I2C_MASTER);
+        dma_createHInTcd(&HInTcd1[i], g_pdsHInDataDisplay[i], g_pdsHInDataLengthDisplay, &HOutTcd1[i][0], EXAMPLE_I2C_MASTER);
+
+        dma_createHOutPDSTcd(&HOutTcd1[i][0], txCmd, g_displayAddr, g_pdsHOutDataDisplay[i], g_pdsHOutDataLengthDisplay, &HInTcd1[(i+1)%2], EXAMPLE_I2C_MASTER);
+
+        // Enable auto-stop for direction changes
+        EDMA_TcdEnableAutoStopRequest(&HInTcd1[i], true);
+        EDMA_TcdEnableAutoStopRequest(&HOutTcd1[i][2], true);
     }
     
     
