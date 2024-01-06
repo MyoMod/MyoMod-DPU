@@ -52,7 +52,7 @@ extern "C"
 
 #define LPI2C_BAUDRATE 1000000U
 
-#define N_PDS_HIN 1
+#define N_PDS_HIN 2
 #define N_PDS_HOUT 1
 #define PDS_SIZE_DISPLAY_HOUT 0x07
 #define PDS_SIZE_DISPLAY_HIN 0x04
@@ -76,6 +76,8 @@ void i2c_buildCommand_ReadStatus(uint16_t* data, uint8_t addr);
 void i2c_buildCommand_HIn_PDS(uint16_t* data, uint8_t addr);
 void dma_init(uint8_t *data, uint32_t length);
 void dma_createHInTcd(edma_tcd_t* tcd, uint8_t* data, uint32_t length, edma_tcd_t* nextTcd, LPI2C_Type* i2cHardware);
+
+void processPDS(uint32_t HInBufferIndex, uint32_t HOutBufferIndex);
 
 #ifdef __MCUXPRESSO
 // vscode linter can't call c++ functions from c functions
@@ -104,6 +106,11 @@ const uint16_t g_pdsHInDataLengthDisplay = ARRAY_SIZE(g_pdsHInDataDisplay[0]);
 
 uint8_t g_pdsHOutDataDisplay[2][PDS_SIZE_DISPLAY_HOUT] = {0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7};
 const uint16_t g_pdsHOutDataLengthDisplay = ARRAY_SIZE(g_pdsHOutDataDisplay[0]);
+
+volatile uint32_t g_pdsHInBufferIndex = 0;
+volatile uint32_t g_pdsHOutBufferIndex = 0;
+
+volatile int32_t g_HInTestValues[6];
 
 /**** Register interface ****/
 StatusByte_t g_statusByte;
@@ -197,6 +204,11 @@ void DMA0_DMA16_IRQHandler(void)
         // Change direction to HOut
         LPI2C_MasterEnableDMA(EXAMPLE_I2C_MASTER, true, false);
         EDMA_EnableChannelRequest(DMA0, g_transferChannel);
+
+        // Call function to process PDS
+        processPDS(g_pdsHInBufferIndex, g_pdsHOutBufferIndex);
+        g_pdsHInBufferIndex = (g_pdsHInBufferIndex + 1) % 2;
+        g_pdsHOutBufferIndex = (g_pdsHOutBufferIndex + 1) % 2;
     }
 }
 
@@ -246,10 +258,10 @@ void i2c_buildCommand_HOut_PDS(uint16_t* data, uint8_t addr, uint8_t controlWord
 
 void i2c_writeCommandBuffer(uint32_t cycle)
 {
-    const uint32_t addresses[] = {g_displayAddr, g_electrodeAddr};
-    const uint32_t lengths[] = {PDS_SIZE_DISPLAY_HIN, PDS_SIZE_ELECTRODE};
+    const uint32_t addresses[] = {g_electrodeAddr, g_displayAddr};
+    const uint32_t lengths[] = {PDS_SIZE_ELECTRODE, PDS_SIZE_DISPLAY_HIN};
 
-    if(cycle < 2)
+    if(cycle < N_PDS_HIN)
     {
         i2c_buildCommand_HIn_PDS(&g_i2cCmdBuffer[0], addresses[cycle], lengths[cycle]);
     }
@@ -264,23 +276,18 @@ void i2c_filltxFifo(uint32_t cycle)
     // create commands
     i2c_writeCommandBuffer(cycle);
 
+    // Check if there is enough space in the fifo
+    size_t txFifoCount;
+    do
+    {
+        LPI2C_MasterGetFifoCounts(EXAMPLE_I2C_MASTER, &txFifoCount, NULL);
+    }
+    while(txFifoCount > (4 - txFifoCount));
+
     // Write commands to fifo
     for (size_t i = 0; i < g_i2cCmdBufferLength; i++)
     {
         EXAMPLE_I2C_MASTER->MTDR = g_i2cCmdBuffer[i] & 0xFFFF;
-    }
-}
-
-void i2c_buildCommands()
-{
-    const uint8_t nDevices = 4;
-    static uint16_t HInCommands[5*nDevices];
-    static uint16_t readHInCommands[3*nDevices];
-    static uint16_t readHOutCommands[3*nDevices];
-
-    // Build commands for reading status
-    for (uint8_t i = 0; i < nDevices; i++)
-    {
     }
 }
 
@@ -387,27 +394,33 @@ void dma_init()
 
 
     // init edma tcd
-    static edma_tcd_t HInTcd1[2] __ALIGNED(32);
-    static edma_tcd_t HInTcd2[2] __ALIGNED(32);
+    uint8_t* dataBuffers[N_PDS_HIN] = {(uint8_t*) g_pdsDataElectrode, (uint8_t*) g_pdsHInDataDisplay};
+    uint32_t dataLengths[N_PDS_HIN] = {g_pdsDataLengthElectrode, g_pdsHInDataLengthDisplay};
+    static edma_tcd_t HInTcd[N_PDS_HIN][2] __ALIGNED(32);
     static edma_tcd_t HOutTcd1[2][3] __ALIGNED(32);
     static uint16_t txCmd[3] = {0};
     uint32_t nTcds = 5;
 
 
-    for (size_t i = 0; i < 2; i++)
+    for (size_t bufferIndex = 0; bufferIndex < 2; bufferIndex++)
     {
-        //dma_createHInTcd(&HInTcd1[i], g_pdsDataElectrode[i], g_pdsDataLengthElectrode, &HOutTcd1[i][0], EXAMPLE_I2C_MASTER);
-        dma_createHInTcd(&HInTcd1[i], g_pdsHInDataDisplay[i], g_pdsHInDataLengthDisplay, &HOutTcd1[i][0], EXAMPLE_I2C_MASTER);
+        for (size_t hinTcd = 0; hinTcd < N_PDS_HIN; hinTcd++)
+        {
+            edma_tcd_t* nextTcd = (hinTcd == N_PDS_HIN - 1) ? &HOutTcd1[bufferIndex][0] : &HInTcd[hinTcd + 1][bufferIndex];
+            uint8_t* dataAddr =dataBuffers[hinTcd] + bufferIndex * dataLengths[hinTcd];
+            dma_createHInTcd(&HInTcd[hinTcd][bufferIndex], dataAddr, dataLengths[hinTcd], nextTcd, EXAMPLE_I2C_MASTER);
+        }
 
-        dma_createHOutPDSTcd(&HOutTcd1[i][0], txCmd, g_displayAddr, g_pdsHOutDataDisplay[i], g_pdsHOutDataLengthDisplay, &HInTcd1[(i+1)%2], EXAMPLE_I2C_MASTER);
+        // Bufferindex is inverted because of pipelining
+        dma_createHOutPDSTcd(&HOutTcd1[bufferIndex][0], txCmd, g_displayAddr, g_pdsHOutDataDisplay[!bufferIndex], g_pdsHOutDataLengthDisplay, &HInTcd[0][(bufferIndex+1)%2], EXAMPLE_I2C_MASTER);
 
         // Enable auto-stop for direction changes
-        EDMA_TcdEnableAutoStopRequest(&HInTcd1[i], true);
-        EDMA_TcdEnableAutoStopRequest(&HOutTcd1[i][2], true);
+        EDMA_TcdEnableAutoStopRequest(&HInTcd[N_PDS_HIN-1][bufferIndex], true);
+        EDMA_TcdEnableAutoStopRequest(&HOutTcd1[bufferIndex][2], true);
     }
     
     
-    EDMA_InstallTCD(DMA0, g_transferChannel, &HInTcd1[0]);
+    EDMA_InstallTCD(DMA0, g_transferChannel, &HInTcd[0][0]);
     EDMA_EnableChannelRequest(DMA0, g_transferChannel);
     
     // Enable interrupts
@@ -499,4 +512,32 @@ void init_debug()
     SEGGER_RTT_WriteString(0, "SEGGER Real-Time-Terminal Sample\r\n\r\n");
     SEGGER_RTT_WriteString(0, BOARD_NAME);
 
+}
+
+long map(long x, long in_min, long in_max, long out_min, long out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+void processPDS(uint32_t HInBufferIndex, uint32_t HOutBufferIndex)
+{   
+    // reinterpret input buffer as PDS
+    int32_t* pdsHInDataElectrode = (int32_t*) &g_pdsDataElectrode[HInBufferIndex][0];
+    const float min = -0x0fffff00;
+    const float max = 0x0fffff00;
+    const float maxOut = 100;
+    const float minOut = 0;
+
+    for (size_t channel = 0; channel < 6; channel++)
+    {
+        float inValue = pdsHInDataElectrode[channel];
+        inValue -= min;
+        float result = inValue * maxOut / (max - min);
+
+        //bound result to minOut and maxOut
+        result = result < 0 ? 0 : result;
+        result = result > maxOut ? maxOut : result;
+
+        g_pdsHOutDataDisplay[HOutBufferIndex][channel] = result;
+        g_HInTestValues[channel] = pdsHInDataElectrode[channel];
+    }
 }
