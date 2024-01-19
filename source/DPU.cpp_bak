@@ -35,7 +35,7 @@ extern "C"
 
 #include "SEGGER_RTT.h"
 
-#include "comInterface.h"
+#include "ComInterface.h"
 
 /*******************************************************************************
  * Definitions
@@ -166,12 +166,13 @@ void PIT_IRQHandler(void)
     i++;
     GPIO_PinWrite(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, i & 1);
 
-    // Reset at the beginning of the cycle
-    g_dma_tcdIndex = 0;
 
     // start i2c transfer after 100 cycles
     if (i & 1 && i > 100)
     {
+        // Reset at the beginning of the cycle
+        g_dma_tcdIndex = 0;
+
         LPI2C_MasterEnableDMA(EXAMPLE_I2C_MASTER, false, true);
         EDMA_EnableChannelRequest(DMA0, g_transferChannel);
         i2c_filltxFifo(0);

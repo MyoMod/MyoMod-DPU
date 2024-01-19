@@ -103,8 +103,8 @@ pin_labels:
 - {pin_num: F14, pin_signal: GPIO_AD_B0_09, label: 'JTAG_TDI/J21[5]/ENET_RST/J22[5]'}
 - {pin_num: G13, pin_signal: GPIO_AD_B0_10, label: 'JTAG_TDO/J21[13]/INT1_COMBO/ENET_INT/J22[6]/U32[11]', identifier: INT1_COMBO}
 - {pin_num: G10, pin_signal: GPIO_AD_B0_11, label: 'JTAG_nTRST/J21[3]/INT2_COMBO/LCD_TOUCH_INT/J22[3]/U32[9]', identifier: INT2_COMBO}
-- {pin_num: K14, pin_signal: GPIO_AD_B0_12, label: UART1_TXD, identifier: UART1_TXD}
-- {pin_num: L14, pin_signal: GPIO_AD_B0_13, label: UART1_RXD, identifier: UART1_RXD}
+- {pin_num: K14, pin_signal: GPIO_AD_B0_12, label: SCL4, identifier: UART1_TXD;SCL4}
+- {pin_num: L14, pin_signal: GPIO_AD_B0_13, label: SDA4, identifier: UART1_RXD;SDA4}
 - {pin_num: H14, pin_signal: GPIO_AD_B0_14, label: 'CAN2_TX/U12[1]', identifier: CAN2_TX}
 - {pin_num: L10, pin_signal: GPIO_AD_B0_15, label: 'CAN2_RX/U12[4]', identifier: CAN2_RX}
 - {pin_num: J11, pin_signal: GPIO_AD_B1_00, label: 'I2C1_SCL/CSI_I2C_SCL/J35[20]/J23[6]/U13[17]/U32[4]', identifier: I2C_SCL_FXOS8700CQ;CSI_I2C_SCL}
@@ -235,6 +235,8 @@ BOARD_InitPins:
   - {pin_num: J12, peripheral: LPI2C3, signal: SDA, pin_signal: GPIO_AD_B1_06, software_input_on: Enable, open_drain: Enable}
   - {pin_num: K10, peripheral: LPI2C3, signal: SCL, pin_signal: GPIO_AD_B1_07, software_input_on: Enable, open_drain: Enable}
   - {pin_num: M12, peripheral: GPIO1, signal: 'gpio_io, 19', pin_signal: GPIO_AD_B1_03}
+  - {pin_num: K14, peripheral: LPI2C4, signal: SCL, pin_signal: GPIO_AD_B0_12, identifier: SCL4, software_input_on: Enable, open_drain: Enable}
+  - {pin_num: L14, peripheral: LPI2C4, signal: SDA, pin_signal: GPIO_AD_B0_13, identifier: SDA4, software_input_on: Enable, open_drain: Enable}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -247,6 +249,8 @@ BOARD_InitPins:
 void BOARD_InitPins(void) {
   CLOCK_EnableClock(kCLOCK_Iomuxc);           
 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_12_LPI2C4_SCL, 1U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_13_LPI2C4_SDA, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_03_GPIO1_IO19, 0U); 
@@ -261,6 +265,8 @@ void BOARD_InitPins(void) {
     (~(BOARD_INITPINS_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK))) 
       | IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL(0x00U) 
     );
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B0_12_LPI2C4_SCL, 0x18B0U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B0_13_LPI2C4_SDA, 0x18B0U); 
   IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 0x18B0U); 
   IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 0x18B0U); 
   IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_06_LPI2C3_SDA, 0x18B0U); 
@@ -272,11 +278,7 @@ void BOARD_InitPins(void) {
  * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 BOARD_InitDEBUG_UART:
 - options: {callFromInitBoot: 'true', coreID: core0, enableClock: 'true'}
-- pin_list:
-  - {pin_num: K14, peripheral: LPUART1, signal: TX, pin_signal: GPIO_AD_B0_12, software_input_on: Disable, hysteresis_enable: Disable, pull_up_down_config: Pull_Down_100K_Ohm,
-    pull_keeper_select: Keeper, pull_keeper_enable: Enable, open_drain: Disable, speed: MHZ_100, drive_strength: R0_6, slew_rate: Slow}
-  - {pin_num: L14, peripheral: LPUART1, signal: RX, pin_signal: GPIO_AD_B0_13, software_input_on: Disable, hysteresis_enable: Disable, pull_up_down_config: Pull_Down_100K_Ohm,
-    pull_keeper_select: Keeper, pull_keeper_enable: Enable, open_drain: Disable, speed: MHZ_100, drive_strength: R0_6, slew_rate: Slow}
+- pin_list: []
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -287,12 +289,6 @@ BOARD_InitDEBUG_UART:
  *
  * END ****************************************************************************************************************/
 void BOARD_InitDEBUG_UART(void) {
-  CLOCK_EnableClock(kCLOCK_Iomuxc);           
-
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_12_LPUART1_TX, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_13_LPUART1_RX, 0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B0_12_LPUART1_TX, 0x10B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B0_13_LPUART1_RX, 0x10B0U); 
 }
 
 
@@ -300,46 +296,7 @@ void BOARD_InitDEBUG_UART(void) {
  * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 BOARD_InitSDRAM:
 - options: {coreID: core0, enableClock: 'true'}
-- pin_list:
-  - {pin_num: C2, peripheral: SEMC, signal: 'ADDR, 00', pin_signal: GPIO_EMC_09}
-  - {pin_num: G1, peripheral: SEMC, signal: 'ADDR, 01', pin_signal: GPIO_EMC_10}
-  - {pin_num: G3, peripheral: SEMC, signal: 'ADDR, 02', pin_signal: GPIO_EMC_11}
-  - {pin_num: H1, peripheral: SEMC, signal: 'ADDR, 03', pin_signal: GPIO_EMC_12}
-  - {pin_num: A6, peripheral: SEMC, signal: 'ADDR, 04', pin_signal: GPIO_EMC_13}
-  - {pin_num: B6, peripheral: SEMC, signal: 'ADDR, 05', pin_signal: GPIO_EMC_14}
-  - {pin_num: B1, peripheral: SEMC, signal: 'ADDR, 06', pin_signal: GPIO_EMC_15}
-  - {pin_num: A5, peripheral: SEMC, signal: 'ADDR, 07', pin_signal: GPIO_EMC_16}
-  - {pin_num: A4, peripheral: SEMC, signal: 'ADDR, 08', pin_signal: GPIO_EMC_17}
-  - {pin_num: B2, peripheral: SEMC, signal: 'ADDR, 09', pin_signal: GPIO_EMC_18}
-  - {pin_num: G2, peripheral: SEMC, signal: 'ADDR, 10', pin_signal: GPIO_EMC_23}
-  - {pin_num: B4, peripheral: SEMC, signal: 'ADDR, 11', pin_signal: GPIO_EMC_19}
-  - {pin_num: A3, peripheral: SEMC, signal: 'ADDR, 12', pin_signal: GPIO_EMC_20}
-  - {pin_num: C1, peripheral: SEMC, signal: 'BA, 0', pin_signal: GPIO_EMC_21}
-  - {pin_num: F1, peripheral: SEMC, signal: 'BA, 1', pin_signal: GPIO_EMC_22}
-  - {pin_num: D3, peripheral: SEMC, signal: semc_cas, pin_signal: GPIO_EMC_24}
-  - {pin_num: A2, peripheral: SEMC, signal: semc_cke, pin_signal: GPIO_EMC_27}
-  - {pin_num: B3, peripheral: SEMC, signal: semc_clk, pin_signal: GPIO_EMC_26}
-  - {pin_num: E3, peripheral: SEMC, signal: 'DATA, 00', pin_signal: GPIO_EMC_00}
-  - {pin_num: F3, peripheral: SEMC, signal: 'DATA, 01', pin_signal: GPIO_EMC_01}
-  - {pin_num: F4, peripheral: SEMC, signal: 'DATA, 02', pin_signal: GPIO_EMC_02}
-  - {pin_num: G4, peripheral: SEMC, signal: 'DATA, 03', pin_signal: GPIO_EMC_03}
-  - {pin_num: F2, peripheral: SEMC, signal: 'DATA, 04', pin_signal: GPIO_EMC_04}
-  - {pin_num: G5, peripheral: SEMC, signal: 'DATA, 05', pin_signal: GPIO_EMC_05}
-  - {pin_num: H5, peripheral: SEMC, signal: 'DATA, 06', pin_signal: GPIO_EMC_06}
-  - {pin_num: H4, peripheral: SEMC, signal: 'DATA, 07', pin_signal: GPIO_EMC_07}
-  - {pin_num: C6, peripheral: SEMC, signal: 'DATA, 08', pin_signal: GPIO_EMC_30}
-  - {pin_num: C5, peripheral: SEMC, signal: 'DATA, 09', pin_signal: GPIO_EMC_31}
-  - {pin_num: D5, peripheral: SEMC, signal: 'DATA, 10', pin_signal: GPIO_EMC_32}
-  - {pin_num: C4, peripheral: SEMC, signal: 'DATA, 11', pin_signal: GPIO_EMC_33}
-  - {pin_num: D4, peripheral: SEMC, signal: 'DATA, 12', pin_signal: GPIO_EMC_34}
-  - {pin_num: E5, peripheral: SEMC, signal: 'DATA, 13', pin_signal: GPIO_EMC_35}
-  - {pin_num: C3, peripheral: SEMC, signal: 'DATA, 14', pin_signal: GPIO_EMC_36}
-  - {pin_num: E4, peripheral: SEMC, signal: 'DATA, 15', pin_signal: GPIO_EMC_37}
-  - {pin_num: H3, peripheral: SEMC, signal: 'DM, 0', pin_signal: GPIO_EMC_08}
-  - {pin_num: D6, peripheral: SEMC, signal: 'DM, 1', pin_signal: GPIO_EMC_38}
-  - {pin_num: D2, peripheral: SEMC, signal: semc_ras, pin_signal: GPIO_EMC_25}
-  - {pin_num: D1, peripheral: SEMC, signal: semc_we, pin_signal: GPIO_EMC_28}
-  - {pin_num: C7, peripheral: SEMC, signal: 'CSX, 0', pin_signal: GPIO_EMC_41}
+- pin_list: []
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -350,47 +307,6 @@ BOARD_InitSDRAM:
  *
  * END ****************************************************************************************************************/
 void BOARD_InitSDRAM(void) {
-  CLOCK_EnableClock(kCLOCK_Iomuxc);           
-
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_00_SEMC_DATA00, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_01_SEMC_DATA01, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_02_SEMC_DATA02, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_03_SEMC_DATA03, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_04_SEMC_DATA04, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_05_SEMC_DATA05, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_06_SEMC_DATA06, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_07_SEMC_DATA07, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_08_SEMC_DM00, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_09_SEMC_ADDR00, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_10_SEMC_ADDR01, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_11_SEMC_ADDR02, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_12_SEMC_ADDR03, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_13_SEMC_ADDR04, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_14_SEMC_ADDR05, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_15_SEMC_ADDR06, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_16_SEMC_ADDR07, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_17_SEMC_ADDR08, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_18_SEMC_ADDR09, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_19_SEMC_ADDR11, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_20_SEMC_ADDR12, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_21_SEMC_BA0, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_22_SEMC_BA1, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_23_SEMC_ADDR10, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_24_SEMC_CAS, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_25_SEMC_RAS, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_26_SEMC_CLK, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_27_SEMC_CKE, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_28_SEMC_WE, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_30_SEMC_DATA08, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_31_SEMC_DATA09, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_32_SEMC_DATA10, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_33_SEMC_DATA11, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_34_SEMC_DATA12, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_35_SEMC_DATA13, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_36_SEMC_DATA14, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_37_SEMC_DATA15, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_38_SEMC_DM01, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_41_SEMC_CSX00, 0U); 
 }
 
 
@@ -399,18 +315,6 @@ void BOARD_InitSDRAM(void) {
 BOARD_InitCSI:
 - options: {coreID: core0, enableClock: 'true'}
 - pin_list:
-  - {pin_num: H13, peripheral: CSI, signal: 'csi_data, 09', pin_signal: GPIO_AD_B1_08}
-  - {pin_num: M13, peripheral: CSI, signal: 'csi_data, 08', pin_signal: GPIO_AD_B1_09}
-  - {pin_num: L13, peripheral: CSI, signal: 'csi_data, 07', pin_signal: GPIO_AD_B1_10}
-  - {pin_num: J13, peripheral: CSI, signal: 'csi_data, 06', pin_signal: GPIO_AD_B1_11}
-  - {pin_num: H12, peripheral: CSI, signal: 'csi_data, 05', pin_signal: GPIO_AD_B1_12}
-  - {pin_num: H11, peripheral: CSI, signal: 'csi_data, 04', pin_signal: GPIO_AD_B1_13}
-  - {pin_num: J14, peripheral: CSI, signal: 'csi_data, 02', pin_signal: GPIO_AD_B1_15}
-  - {pin_num: G12, peripheral: CSI, signal: 'csi_data, 03', pin_signal: GPIO_AD_B1_14}
-  - {pin_num: L12, peripheral: CSI, signal: csi_pixclk, pin_signal: GPIO_AD_B1_04}
-  - {pin_num: K12, peripheral: CSI, signal: csi_mclk, pin_signal: GPIO_AD_B1_05}
-  - {pin_num: J12, peripheral: CSI, signal: csi_vsync, pin_signal: GPIO_AD_B1_06}
-  - {pin_num: K10, peripheral: CSI, signal: csi_hsync, pin_signal: GPIO_AD_B1_07}
   - {pin_num: J11, peripheral: LPI2C1, signal: SCL, pin_signal: GPIO_AD_B1_00, identifier: CSI_I2C_SCL, software_input_on: Disable, hysteresis_enable: Disable, pull_up_down_config: Pull_Up_22K_Ohm,
     pull_keeper_select: Keeper, pull_keeper_enable: Enable, open_drain: Enable, speed: MHZ_100, drive_strength: R0_6, slew_rate: Slow}
   - {pin_num: K11, peripheral: LPI2C1, signal: SDA, pin_signal: GPIO_AD_B1_01, identifier: CSI_I2C_SDA, software_input_on: Disable, hysteresis_enable: Disable, pull_up_down_config: Pull_Up_22K_Ohm,
@@ -431,18 +335,6 @@ void BOARD_InitCSI(void) {
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_04_GPIO1_IO04, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_04_CSI_PIXCLK, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_05_CSI_MCLK, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_06_CSI_VSYNC, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_07_CSI_HSYNC, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_08_CSI_DATA09, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_09_CSI_DATA08, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_10_CSI_DATA07, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_11_CSI_DATA06, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_12_CSI_DATA05, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_13_CSI_DATA04, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_14_CSI_DATA03, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_15_CSI_DATA02, 0U); 
   IOMUXC_GPR->GPR26 = ((IOMUXC_GPR->GPR26 &
     (~(BOARD_INITCSI_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK))) 
       | IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL(0x00U) 
@@ -457,27 +349,6 @@ void BOARD_InitCSI(void) {
 BOARD_InitLCD:
 - options: {coreID: core0, enableClock: 'true'}
 - pin_list:
-  - {pin_num: C8, peripheral: LCDIF, signal: 'lcdif_data, 00', pin_signal: GPIO_B0_04, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: B8, peripheral: LCDIF, signal: 'lcdif_data, 01', pin_signal: GPIO_B0_05, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: A8, peripheral: LCDIF, signal: 'lcdif_data, 02', pin_signal: GPIO_B0_06, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: D7, peripheral: LCDIF, signal: lcdif_clk, pin_signal: GPIO_B0_00, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: A9, peripheral: LCDIF, signal: 'lcdif_data, 03', pin_signal: GPIO_B0_07, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: B9, peripheral: LCDIF, signal: 'lcdif_data, 04', pin_signal: GPIO_B0_08, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: C9, peripheral: LCDIF, signal: 'lcdif_data, 05', pin_signal: GPIO_B0_09, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: D9, peripheral: LCDIF, signal: 'lcdif_data, 06', pin_signal: GPIO_B0_10, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: A10, peripheral: LCDIF, signal: 'lcdif_data, 07', pin_signal: GPIO_B0_11, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: C10, peripheral: LCDIF, signal: 'lcdif_data, 08', pin_signal: GPIO_B0_12, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: D10, peripheral: LCDIF, signal: 'lcdif_data, 09', pin_signal: GPIO_B0_13, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: E10, peripheral: LCDIF, signal: 'lcdif_data, 10', pin_signal: GPIO_B0_14, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: E11, peripheral: LCDIF, signal: 'lcdif_data, 11', pin_signal: GPIO_B0_15, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: A11, peripheral: LCDIF, signal: 'lcdif_data, 12', pin_signal: GPIO_B1_00, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: B11, peripheral: LCDIF, signal: 'lcdif_data, 13', pin_signal: GPIO_B1_01, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: C11, peripheral: LCDIF, signal: 'lcdif_data, 14', pin_signal: GPIO_B1_02, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: D11, peripheral: LCDIF, signal: 'lcdif_data, 15', pin_signal: GPIO_B1_03, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: E7, peripheral: LCDIF, signal: lcdif_enable, pin_signal: GPIO_B0_01, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: E8, peripheral: LCDIF, signal: lcdif_hsync, pin_signal: GPIO_B0_02, hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm, pull_keeper_select: Pull}
-  - {pin_num: D8, peripheral: LCDIF, signal: lcdif_vsync, pin_signal: GPIO_B0_03, identifier: '', hysteresis_enable: Enable, pull_up_down_config: Pull_Up_100K_Ohm,
-    pull_keeper_select: Pull}
   - {pin_num: B14, peripheral: GPIO2, signal: 'gpio_io, 31', pin_signal: GPIO_B1_15, slew_rate: Slow}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
@@ -491,51 +362,11 @@ BOARD_InitLCD:
 void BOARD_InitLCD(void) {
   CLOCK_EnableClock(kCLOCK_Iomuxc);           
 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_00_LCD_CLK, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_01_LCD_ENABLE, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_02_LCD_HSYNC, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_03_LCD_VSYNC, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_04_LCD_DATA00, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_05_LCD_DATA01, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_06_LCD_DATA02, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_07_LCD_DATA03, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_08_LCD_DATA04, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_09_LCD_DATA05, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_10_LCD_DATA06, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_11_LCD_DATA07, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_12_LCD_DATA08, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_13_LCD_DATA09, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_14_LCD_DATA10, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_15_LCD_DATA11, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_00_LCD_DATA12, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_01_LCD_DATA13, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_02_LCD_DATA14, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_03_LCD_DATA15, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_B1_15_GPIO2_IO31, 0U); 
   IOMUXC_GPR->GPR27 = ((IOMUXC_GPR->GPR27 &
     (~(BOARD_INITLCD_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK))) 
       | IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL(0x00U) 
     );
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_00_LCD_CLK, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_01_LCD_ENABLE, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_02_LCD_HSYNC, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_03_LCD_VSYNC, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_04_LCD_DATA00, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_05_LCD_DATA01, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_06_LCD_DATA02, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_07_LCD_DATA03, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_08_LCD_DATA04, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_09_LCD_DATA05, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_10_LCD_DATA06, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_11_LCD_DATA07, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_12_LCD_DATA08, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_13_LCD_DATA09, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_14_LCD_DATA10, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B0_15_LCD_DATA11, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B1_00_LCD_DATA12, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B1_01_LCD_DATA13, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B1_02_LCD_DATA14, 0x01B0B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_B1_03_LCD_DATA15, 0x01B0B0U); 
   IOMUXC_SetPinConfig(IOMUXC_GPIO_B1_15_GPIO2_IO31, 0x10B0U); 
 }
 
@@ -544,9 +375,7 @@ void BOARD_InitLCD(void) {
  * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 BOARD_InitCAN:
 - options: {coreID: core0, enableClock: 'true'}
-- pin_list:
-  - {pin_num: H14, peripheral: CAN2, signal: TX, pin_signal: GPIO_AD_B0_14}
-  - {pin_num: L10, peripheral: CAN2, signal: RX, pin_signal: GPIO_AD_B0_15}
+- pin_list: []
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -557,10 +386,6 @@ BOARD_InitCAN:
  *
  * END ****************************************************************************************************************/
 void BOARD_InitCAN(void) {
-  CLOCK_EnableClock(kCLOCK_Iomuxc);           
-
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_14_FLEXCAN2_TX, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_15_FLEXCAN2_RX, 0U); 
 }
 
 
@@ -568,17 +393,7 @@ void BOARD_InitCAN(void) {
  * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 BOARD_InitENET:
 - options: {coreID: core0, enableClock: 'true'}
-- pin_list:
-  - {pin_num: A7, peripheral: ENET, signal: enet_mdc, pin_signal: GPIO_EMC_40}
-  - {pin_num: C7, peripheral: ENET, signal: enet_mdio, pin_signal: GPIO_EMC_41}
-  - {pin_num: B13, peripheral: ENET, signal: enet_ref_clk, pin_signal: GPIO_B1_10}
-  - {pin_num: E12, peripheral: ENET, signal: 'enet_rx_data, 0', pin_signal: GPIO_B1_04}
-  - {pin_num: D12, peripheral: ENET, signal: 'enet_rx_data, 1', pin_signal: GPIO_B1_05}
-  - {pin_num: C12, peripheral: ENET, signal: enet_rx_en, pin_signal: GPIO_B1_06}
-  - {pin_num: C13, peripheral: ENET, signal: enet_rx_er, pin_signal: GPIO_B1_11}
-  - {pin_num: B12, peripheral: ENET, signal: 'enet_tx_data, 0', pin_signal: GPIO_B1_07}
-  - {pin_num: A12, peripheral: ENET, signal: 'enet_tx_data, 1', pin_signal: GPIO_B1_08}
-  - {pin_num: A13, peripheral: ENET, signal: enet_tx_en, pin_signal: GPIO_B1_09}
+- pin_list: []
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -589,18 +404,6 @@ BOARD_InitENET:
  *
  * END ****************************************************************************************************************/
 void BOARD_InitENET(void) {
-  CLOCK_EnableClock(kCLOCK_Iomuxc);           
-
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_04_ENET_RX_DATA00, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_05_ENET_RX_DATA01, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_06_ENET_RX_EN, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_07_ENET_TX_DATA00, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_08_ENET_TX_DATA01, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_09_ENET_TX_EN, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_10_ENET_REF_CLK, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_11_ENET_RX_ER, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_40_ENET_MDC, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_41_ENET_MDIO, 0U); 
 }
 
 

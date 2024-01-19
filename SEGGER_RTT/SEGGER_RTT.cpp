@@ -849,12 +849,15 @@ void SEGGER_RTT_WriteWithOverwriteNoLock(unsigned BufferIndex, const void* pBuff
   } else {
     Avail = pRing->RdOff - pRing->WrOff - 1u + pRing->SizeOfBuffer;
   }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvolatile"
   if (NumBytes > Avail) {
     pRing->RdOff += (NumBytes - Avail);
     while (pRing->RdOff >= pRing->SizeOfBuffer) {
       pRing->RdOff -= pRing->SizeOfBuffer;
     }
   }
+#pragma GCC diagnostic pop
   //
   // Write all data, no need to check the RdOff, but possibly handle multiple wrap-arounds
   //

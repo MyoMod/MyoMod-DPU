@@ -33,7 +33,7 @@
                 "__NEWLIB__"
             ],
             "compilerPath": "/usr/bin/arm-none-eabi-g++",
-            "cStandard": "c17",
+            "cStandard": "c23",
             "intelliSenseMode": "linux-gcc-arm",
             "cppStandard": "c++23"
         }
