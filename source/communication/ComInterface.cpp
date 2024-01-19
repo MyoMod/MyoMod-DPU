@@ -216,7 +216,6 @@ Status ComInterface::removeDevice(DeviceDescriptor* deviceDescriptor) {
  * @return Status 	Error if the device was not found, Ok otherwise
  */
 Status ComInterface::getDevice(std::string_view name, DeviceHandle** device) {
-	SEGGER_RTT_printf(0, "Searching for: %s\n", name.data());
 	for(auto& deviceVector : devices)
 	{
 		for(auto& deviceHandle : deviceVector)
@@ -224,7 +223,6 @@ Status ComInterface::getDevice(std::string_view name, DeviceHandle** device) {
 			std::string_view deviceName = deviceHandle.device->getName();
 			const char* str = deviceName.data();
 			int length = deviceName.length();
-			SEGGER_RTT_printf(0, "Checking: %s\n", deviceName.data());
 			if(deviceHandle.device->getName() == name)
 			{
 				*device = &deviceHandle;
@@ -322,9 +320,9 @@ void ComInterface::newDataCallback(uint8_t peripheralIndex) {
 
 	// Check if all peripherals have data available
 	bool allDataAvailable = true;
-	for (auto& dataAvailable : dataAvailable)
+	for (size_t i = 0; i < dataAvailable.size(); i++)
 	{
-		allDataAvailable &= dataAvailable;
+		allDataAvailable &= (dataAvailable[i] || !peripheralHandlers[i].hasDevices());
 	}
 
 	if (allDataAvailable)
@@ -562,9 +560,9 @@ Status ComInterface::getPds(ProcessDataStream** pds, uint32_t index, bool input)
  * @param pdsOut 		Vector to store the output PDSs in
  * @return Status 		Ok if the PDSs were returned, Error otherwise
  */
-Status ComInterface::getAllPds(std::vector<ProcessDataStream*>* pdsIn, std::vector<ProcessDataStream*>* pdsOut) {
-	pdsIn = &this->pdsIn;
-	pdsOut = &this->pdsOut;
+Status ComInterface::getAllPds(std::vector<ProcessDataStream*>** pdsIn, std::vector<ProcessDataStream*>** pdsOut) {
+	*pdsIn = &this->pdsIn;
+	*pdsOut = &this->pdsOut;
 	return Status::Ok;
 }
 
@@ -640,7 +638,12 @@ void ComInterface::CyclicHandler() {
 		for(auto& peripheralHandler : peripheralHandlers)
 		{
 			Status status = peripheralHandler.startCycle();
-			assert(status == Status::Ok);
+			if(status != Status::Ok)
+			{
+
+				GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, 1);
+				assert(status == Status::Ok);
+			}
 		}
 	}
 }

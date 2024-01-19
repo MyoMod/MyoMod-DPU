@@ -29,7 +29,7 @@ AnalysisAlgorithm::~AnalysisAlgorithm() {
 void AnalysisAlgorithm::setComInterface(ComInterface* comInterface)
 {
 	this->comInterface = comInterface;
-	comInterface->getAllPds(pdsIn, pdsOut);
+	comInterface->getAllPds(&pdsIn, &pdsOut);
 }
 
 /**

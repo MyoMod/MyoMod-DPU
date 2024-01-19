@@ -1,52 +1,43 @@
 
 
-Breakpoint=/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/communication/ComInterface.cpp:225, State=BP_STATE_ON
-Breakpoint=/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/communication/ComInterface.cpp:420, State=BP_STATE_DISABLED
-Breakpoint=/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/communication/ComInterface.cpp:436:52, State=BP_STATE_DISABLED
-Breakpoint=/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/RuntimeHandler.cpp:105:10, State=BP_STATE_DISABLED
-OpenDocument="ComInterface.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/communication/ComInterface.cpp", Line=213
-OpenDocument="BarDisplay.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/devices/BarDisplay.cpp", Line=0
-OpenDocument="cpp_config.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/cpp_config.cpp", Line=9
-OpenDocument="RuntimeHandler.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/RuntimeHandler.cpp", Line=135
-OpenDocument="string_view", FilePath="/usr/local/mcuxpressoide-11.8.1_1197/ide/plugins/com.nxp.mcuxpresso.tools.linux_11.8.1.202308071233/tools/arm-none-eabi/include/c++/12.2.1/string_view", Line=524
-OpenDocument="basic_string.h", FilePath="/usr/local/mcuxpressoide-11.8.1_1197/ide/plugins/com.nxp.mcuxpresso.tools.linux_11.8.1.202308071233/tools/arm-none-eabi/include/c++/12.2.1/bits/basic_string.h", Line=2562
-OpenDocument="Device.h", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/devices/Device.h", Line=56
-OpenDocument="Device.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/devices/Device.cpp", Line=0
-OpenDocument="alloc_traits.h", FilePath="/usr/local/mcuxpressoide-11.8.1_1197/ide/plugins/com.nxp.mcuxpresso.tools.linux_11.8.1.202308071233/tools/arm-none-eabi/include/c++/12.2.1/bits/alloc_traits.h", Line=500
-OpenDocument="stl_construct.h", FilePath="/usr/local/mcuxpressoide-11.8.1_1197/ide/plugins/com.nxp.mcuxpresso.tools.linux_11.8.1.202308071233/tools/arm-none-eabi/include/c++/12.2.1/bits/stl_construct.h", Line=76
+Breakpoint=/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/devices/Device.cpp:221, State=BP_STATE_DISABLED
+OpenDocument="PassAlgorithm.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/algorithms/PassAlgorithm.cpp", Line=11
+OpenDocument="Device.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/devices/Device.cpp", Line=207
+OpenDocument="semihost_hardfault.c", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/semihost_hardfault.c", Line=43
+OpenDocument="ComInterface.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/communication/ComInterface.cpp", Line=314
+OpenDocument="PeripheralHandler.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/communication/PeripheralHandler.cpp", Line=719
+OpenDocument="RuntimeHandler.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/RuntimeHandler.cpp", Line=49
 OpenDocument="startup_mimxrt1062.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/startup/startup_mimxrt1062.cpp", Line=644
-OpenDocument="stl_vector.h", FilePath="/usr/local/mcuxpressoide-11.8.1_1197/ide/plugins/com.nxp.mcuxpresso.tools.linux_11.8.1.202308071233/tools/arm-none-eabi/include/c++/12.2.1/bits/stl_vector.h", Line=516
-OpenDocument="ConfigurationManager.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/configurations/ConfigurationManager.cpp", Line=116
-OpenDocument="stl_iterator.h", FilePath="/usr/local/mcuxpressoide-11.8.1_1197/ide/plugins/com.nxp.mcuxpresso.tools.linux_11.8.1.202308071233/tools/arm-none-eabi/include/c++/12.2.1/bits/stl_iterator.h", Line=1095
-OpenDocument="vector.tcc", FilePath="/usr/local/mcuxpressoide-11.8.1_1197/ide/plugins/com.nxp.mcuxpresso.tools.linux_11.8.1.202308071233/tools/arm-none-eabi/include/c++/12.2.1/bits/vector.tcc", Line=99
+OpenDocument="ranges_base.h", FilePath="/usr/local/mcuxpressoide-11.8.1_1197/ide/plugins/com.nxp.mcuxpresso.tools.linux_11.8.1.202308071233/tools/arm-none-eabi/include/c++/12.2.1/bits/ranges_base.h", Line=530
+OpenDocument="fsl_lpi2c.h", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/drivers/fsl_lpi2c.h", Line=572
+OpenDocument="EmgElectrode6Chn.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/devices/EmgElectrode6Chn.cpp", Line=8
 OpenDocument="fsl_assert.c", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/utilities/fsl_assert.c", Line=30
-OpenDocument="PeripheralHandler.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/communication/PeripheralHandler.cpp", Line=628
 OpenToolbar="View", Floating=0, x=0, y=0
 OpenToolbar="Debug", Floating=0, x=1, y=0
 OpenToolbar="Breakpoints", Floating=0, x=2, y=0
-OpenWindow="Call Stack", DockArea=BOTTOM, x=1, y=0, w=995, h=301, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=0, w=498, h=605, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
+OpenWindow="Call Stack", DockArea=BOTTOM, x=1, y=0, w=995, h=301, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=0, w=498, h=605, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
 OpenWindow="Source Files", DockArea=LEFT, x=0, y=0, w=406, h=605, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Disassembly", DockArea=LEFT, x=0, y=0, w=406, h=605, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Break & Tracepoints", DockArea=BOTTOM, x=1, y=0, w=995, h=301, TabPos=3, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VectorCatchIndexMask=254
-OpenWindow="Memory 1", DockArea=BOTTOM, x=1, y=0, w=995, h=301, TabPos=4, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, EditorAddress=0x2001FC68
-OpenWindow="Local Data", DockArea=RIGHT, x=0, y=0, w=498, h=605, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Watched Data 1", DockArea=BOTTOM, x=1, y=0, w=995, h=301, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Break & Tracepoints", DockArea=BOTTOM, x=1, y=0, w=995, h=301, TabPos=4, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VectorCatchIndexMask=254
+OpenWindow="Memory 1", DockArea=BOTTOM, x=1, y=0, w=995, h=301, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=1, EditorAddress=0x200018C0
+OpenWindow="Local Data", DockArea=RIGHT, x=0, y=0, w=498, h=605, TabPos=0, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Watched Data 1", DockArea=BOTTOM, x=1, y=0, w=995, h=301, TabPos=2, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Functions", DockArea=LEFT, x=0, y=0, w=406, h=605, TabPos=2, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Terminal", DockArea=BOTTOM, x=0, y=0, w=857, h=301, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Data Sampling", DockArea=BOTTOM, x=1, y=0, w=995, h=301, TabPos=2, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VisibleTab=0, UniformSampleSpacing=0
+OpenWindow="Data Sampling", DockArea=BOTTOM, x=1, y=0, w=995, h=301, TabPos=3, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VisibleTab=0, UniformSampleSpacing=0
 OpenWindow="Console", DockArea=BOTTOM, x=0, y=0, w=857, h=301, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 SmartViewPlugin="", Page="", Toolbar="Hidden", Window="SmartView 1"
 TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[161;112;112;100;100;410]
-TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Type";"Access";"Scope"], ColWidths=[200;100;76;109;210;0;300]
-TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Description"], ColWidths=[166;121;266]
-TableHeader="Local Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[156;79;100;100;105;100;567]
-TableHeader="Vector Catches", SortCol="", SortOrder="ASCENDING", VisibleCols=["";"Vector Catch";"Description"], ColWidths=[50;300;623]
-TableHeader="Break & Tracepoints", SortCol="", SortOrder="ASCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[100;100;100;469]
-TableHeader="Data Sampling Table", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time"], ColWidths=[100;100]
-TableHeader="Data Sampling Setup", SortCol="Type", SortOrder="ASCENDING", VisibleCols=["Expression";"Type";"Value";"Min";"Max";"Average";"# Changes";"Min. Change";"Max. Change"], ColWidths=[231;100;100;100;100;100;100;100;100]
-TableHeader="Functions", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Class";"Source"], ColWidths=[917;100;100;100;280;100]
+TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Description"], ColWidths=[157;121;266]
+TableHeader="Vector Catches", SortCol="", SortOrder="ASCENDING", VisibleCols=["";"Vector Catch";"Description"], ColWidths=[50;300;630]
+TableHeader="Break & Tracepoints", SortCol="", SortOrder="ASCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[100;100;100;695]
+TableHeader="Functions", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Class";"Source"], ColWidths=[917;100;100;100;280;1162]
 TableHeader="Source Files", SortCol="File", SortOrder="ASCENDING", VisibleCols=["File";"Status";"Size";"#Insts";"Path"], ColWidths=[288;100;100;100;1358]
+TableHeader="Local Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[153;94;100;100;105;100;238]
+TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Type";"Access";"Scope"], ColWidths=[265;100;76;109;210;0;238]
+TableHeader="Data Sampling Table", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time"], ColWidths=[100;895]
+TableHeader="Data Sampling Setup", SortCol="Type", SortOrder="ASCENDING", VisibleCols=["Expression";"Type";"Value";"Min";"Max";"Average";"# Changes";"Min. Change";"Max. Change"], ColWidths=[231;100;100;100;100;100;100;100;100]
 TableHeader="Power Sampling", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Ch 0"], ColWidths=[100;100;100]
 TableHeader="Task List", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Name";"Run Count";"Priority";"Status";"Timeout";"Stack Info";"ID";"Mutex Count";"Notified Value";"Notify State"], ColWidths=[110;110;110;110;110;110;110;110;110;110]
 TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
@@ -56,3 +47,4 @@ WatchedExpression="g_pdsDataElectrode", Window=Watched Data 1
 WatchedExpression="g_pdsHInDataDisplay", Window=Watched Data 1
 WatchedExpression="g_HInTestValues", Window=Watched Data 1
 WatchedExpression="this->configurationHandles.data()[0]", Window=Watched Data 1
+WatchedExpression="inValue", Window=Watched Data 1

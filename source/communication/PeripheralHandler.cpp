@@ -108,15 +108,14 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::func
 
 	// Change baudrate
 	i2cConfig.baudRate_Hz = highSpeed ? 1'000'000U : 400'000U;
-	i2cConfig.ignoreAck = true;
+
+	// Init i2c hardware
+	LPI2C_MasterInit(i2cBase, &i2cConfig, LPI2C_CLOCK_FREQUENCY);
 
 	// Activate IRQ
 	LPI2C_MasterEnableInterrupts(i2cBase, kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag);
 	interrupt = static_cast<IRQn>((static_cast<uint32_t>(LPI2C1_IRQn) + i2cIndex));
     EnableIRQ(interrupt);
-
-	// Init i2c hardware
-	LPI2C_MasterInit(i2cBase, &i2cConfig, LPI2C_CLOCK_FREQUENCY);
 
 	// Set tx and rx fifo watermark
 	LPI2C_MasterSetWatermarks(i2cBase, 0, 0);
@@ -322,7 +321,6 @@ Status PeripheralHandler::sendSync() {
 	// Make a general call with a sync command to all devices
 	// The command may not be one of the following: 0b0000 0110, 0b0000 0100, 0b0000 0000
 
-	GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, 1);
 
 	static std::array<uint16_t, 3> syncCommand = {
 		LPI2C_MTDR_CMD(4) | 0x00 | kLPI2C_Write, //General Call 
@@ -331,7 +329,6 @@ Status PeripheralHandler::sendSync() {
 
 	// Send the command to all devices
 	sendCommand(std::span{ syncCommand });
-	GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, 0);
 	return Status::Ok;
 }
 
@@ -346,6 +343,13 @@ Status PeripheralHandler::startCycle() {
 	{
 		// It is not allowed to start a cycle when not in idle state
 		return Status::Error;
+	}
+
+	// Don't do anything if there are no devices
+	// Note each device has at least one inTcd
+	if(hInTcdhandles.size() == 0)
+	{
+		return Status::Ok;
 	}
 
 	tcdIndex = 0;
@@ -438,8 +442,37 @@ void PeripheralHandler::dmaInterruptHandler() {
  * 
  */
 void PeripheralHandler::i2cInterruptHandler() {
-	__NOP();
-	// TODO: Implement i2cInterruptHandler method
+	uint32_t i2cIndex = (uint32_t(i2cBase) - LPI2C1_BASE)/0x4000 + 1;
+	// If we receive a nack, the device is not present anymore -> stop transmission
+	if(LPI2C_MasterGetStatusFlags(i2cBase) & kLPI2C_MasterNackDetectFlag)
+	{
+		/* Reset fifos. */
+        i2cBase->MCR |= LPI2C_MCR_RRF_MASK | LPI2C_MCR_RTF_MASK;
+
+        /* If master is still busy and has not send out stop signal yet. */
+        if (LPI2C_MasterGetStatusFlags(i2cBase) & ((uint32_t)kLPI2C_MasterStopDetectFlag))
+        {
+            /* Send a stop command to finalize the transfer. */
+            i2cBase->MTDR = LPI2C_MTDR_CMD(2);//Stop
+        }
+
+		SEGGER_RTT_printf(0, "I2C%d detected a NAck\n", i2cIndex);
+
+		// Clear flag
+		LPI2C_MasterClearStatusFlags(i2cBase, kLPI2C_MasterNackDetectFlag);
+	}
+
+	if(LPI2C_MasterGetStatusFlags(i2cBase) & kLPI2C_MasterFifoErrFlag)
+	{
+		/* Reset fifos. */
+        i2cBase->MCR |= LPI2C_MCR_RRF_MASK | LPI2C_MCR_RTF_MASK;
+
+
+		SEGGER_RTT_printf(0, "I2C%d had a fifo error\n", i2cIndex);
+
+		// clear flag
+		LPI2C_MasterClearStatusFlags(i2cBase, kLPI2C_MasterFifoErrFlag);
+	}
 }
 
 /**
@@ -535,7 +568,8 @@ void PeripheralHandler::fillOutTcds(edma_tcd_t* tcd, uint8_t* data, uint32_t len
  * @param deviceAddress Address of the device
  */
 Status PeripheralHandler::appendTcdOut(std::array<MemoryRegion,2> data, uint32_t deviceAddress)  {
-	TcdOutHandle tcdHandle;
+	hOutTcdhandles.push_back({});
+	TcdOutHandle& tcdHandle = hOutTcdhandles[hOutTcdhandles.size() - 1];
 	// build command
 	uint8_t controlWord = 0x81; //Command for HOut PDS transfer
 	tcdHandle.command[0] = LPI2C_MTDR_CMD(4) | (deviceAddress & 0x7F) << 1 | kLPI2C_Write; //start
@@ -556,7 +590,6 @@ Status PeripheralHandler::appendTcdOut(std::array<MemoryRegion,2> data, uint32_t
 	}
 
 	tcdHandle.deviceAddress = deviceAddress;
-	hOutTcdhandles.push_back(tcdHandle);
 	return Status::Ok;
 }
 
@@ -582,6 +615,7 @@ Status PeripheralHandler::linkTcds() {
 		uint32_t i = hInTcdhandles.size();
 		while(i--)
 		{
+			EDMA_TcdEnableAutoStopRequest(&hInTcdhandles[i].tcd[pingPong], false);
 			hInTcdhandles[i].tcd[pingPong].DLAST_SGA = nextTcd;
 			nextTcd = (uint32_t)&hInTcdhandles[i].tcd[pingPong];
 		}
@@ -596,7 +630,14 @@ Status PeripheralHandler::linkTcds() {
 			{
 				hOutTcdhandles[handleIndex].tcds[pingPong][phaseIndex].DLAST_SGA = nextTcd;
 				nextTcd = (uint32_t)&hOutTcdhandles[handleIndex].tcds[pingPong][phaseIndex];
+				EDMA_TcdEnableAutoStopRequest(&hOutTcdhandles[handleIndex].tcds[pingPong][phaseIndex], false);
 			}
+			// Update the command addresses to the commands
+			hOutTcdhandles[handleIndex].tcds[pingPong][0].SADDR = (uint32_t)&hOutTcdhandles[handleIndex].command[0];
+			hOutTcdhandles[handleIndex].tcds[pingPong][2].SADDR = (uint32_t)&hOutTcdhandles[handleIndex].command[2];
+
+			// Disable interrupts that may have been enabled for a prior last tcd
+			hOutTcdhandles[handleIndex].tcds[pingPong][2].CSR &= ~DMA_CSR_INTMAJOR_MASK;
 		}
 	}
 
@@ -610,8 +651,16 @@ Status PeripheralHandler::linkTcds() {
 		edma_tcd_t* firstTcdIn = &hInTcdhandles[0].tcd[pingPong];
 		edma_tcd_t* firstTcdOutOpposed = &hOutTcdhandles[0].tcds[pingPong ^ 1][0];
 
+		// When there is no putput data, the last tcd in points to the first tcd in
+		if(hOutTcdhandles.size() == 0)
+		{
+			lastTcdIn->DLAST_SGA = (uint32_t)firstTcdIn;
+			continue;
+		}
+
 		lastTcdIn->DLAST_SGA = (uint32_t)firstTcdOutOpposed;
 		lastTcdOutOpposed->DLAST_SGA = (uint32_t)firstTcdIn;
+		lastTcdOutOpposed->CSR |= DMA_CSR_INTMAJOR(1);
 
 		// Enable auto stop request for direction changes
 		EDMA_TcdEnableAutoStopRequest(lastTcdIn, true);

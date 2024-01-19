@@ -11,7 +11,9 @@ Device::Device(std::string_view name)
 	initialized(false),
 	channels{{}, {}}
 {
-	SEGGER_RTT_printf(0, "Channel 0 length: %d\n", channels[0].size());
+	// Add status byte
+	StatusByte_t* statusByte = new StatusByte_t;
+	registerData.push_back((uint8_t*)&statusByte);
 	// Note: The inherited classes should add the appropriate channels in their constructor
 }
 

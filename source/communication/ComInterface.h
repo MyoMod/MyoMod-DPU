@@ -80,7 +80,7 @@ public:
 
 	Status getDevice(std::string_view name, DeviceHandle** device);
 	Status getPds(ProcessDataStream** pds, uint32_t index, bool input);
-	Status getAllPds(std::vector<ProcessDataStream*>* pdsIn, std::vector<ProcessDataStream*>* pdsOut);
+	Status getAllPds(std::vector<ProcessDataStream*>** pdsIn, std::vector<ProcessDataStream*>** pdsOut);
 
 	Status processOutgoingData();
 

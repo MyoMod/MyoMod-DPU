@@ -81,6 +81,8 @@ public:
 	void dmaInterruptHandler();
 	void i2cInterruptHandler();
 
+	bool hasDevices() { return !hInTcdhandles.empty(); }
+
 	static void DMA4_DMA20_IRQHandler();
 	static void DMA5_DMA21_IRQHandler();
 	static void DMA6_DMA22_IRQHandler();
