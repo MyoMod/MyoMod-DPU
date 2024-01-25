@@ -27,7 +27,7 @@ void ProcessDataStream::addChannel(PDSChannel* channel)
 {
 	channels.push_back(channel);
 	auto dataSize = channel->length * channel->sampleSize;
-	dataHandles.push_back(std::vector<uint8_t>(dataSize));
+	dataHandles.push_back(std::vector<uint8_t>(dataSize, 0xDF));
 }
 
 /**

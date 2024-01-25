@@ -112,6 +112,11 @@ Status ConfigurationManager::renumrateDevices() {
 	Status status;
 	std::vector<freesthetics::DeviceDescriptor> foundDevices;
 	status = comInterface->enumrateDevices(&foundDevices);
+
+	for (auto& device : foundDevices) {
+		SEGGER_RTT_printf(0, "Found device: %s %s at peripheral %d\n", device.deviceType.data(), device.deviceIdentifier.data(), device.peripheralIndex);
+	}
+
 	assert(status == freesthetics::Status::Ok);
 
 	/** Update which configurations are still possible and update the current configuration if needed**/

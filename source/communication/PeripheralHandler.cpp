@@ -6,6 +6,7 @@
  */
 
 #include "PeripheralHandler.h"
+#include "fsl_gpt.h"
 
 namespace freesthetics {
 
@@ -166,18 +167,33 @@ Status PeripheralHandler::listNewDevices(std::vector<DeviceDescriptor>* devices)
 		// TODO: scan for new devices and get their descriptors
 		devices->push_back(DeviceDescriptor{
 			.deviceType = "Elctr6Ch",
-			.deviceIdentifier = "Elctr1",
+			.deviceIdentifier = "SDSource0",
+			.peripheralIndex = -1,
+			.deviceAddress = 0x28,
+			.name = ""
+		});
+		devices->push_back(DeviceDescriptor{
+			.deviceType = "Elctr6Ch",
+			.deviceIdentifier = "Elctrode1",
 			.peripheralIndex = -1,
 			.deviceAddress = 0x08,
 			.name = ""
 		});
 		devices->push_back(DeviceDescriptor{
 			.deviceType = "BarDis6Ch",
-			.deviceIdentifier = "Display1",
+			.deviceIdentifier = "BDisplay1",
 			.peripheralIndex = -1,
 			.deviceAddress = 0x18,
 			.name = ""
 		});
+
+		static uint32_t i = 0;
+		i++;
+		for (auto& device : *devices) {
+			device.deviceIdentifier[device.deviceIdentifier.size() - 2] = '0' + i;
+		}
+
+
 		devicesChanged = false;
 	}
 	else
@@ -316,20 +332,28 @@ uint32_t PeripheralHandler::getPingPongIndex() {
  * @brief Sends a sync command to all devices
  * 
  * @return Status Returns Status::Ok if the function was successful
+ * 				  Returns Status::Timeout if the a timeout occured
  */
 Status PeripheralHandler::sendSync() {
 	// Make a general call with a sync command to all devices
 	// The command may not be one of the following: 0b0000 0110, 0b0000 0100, 0b0000 0000
 
 
-	static std::array<uint16_t, 3> syncCommand = {
+	/*static std::array<uint16_t, 3> syncCommand = {
 		LPI2C_MTDR_CMD(4) | 0x00 | kLPI2C_Write, //General Call 
 		LPI2C_MTDR_CMD(0) | 0xA5, //Sync command
 		LPI2C_MTDR_CMD(2)};//Stop
+	*/
+
+	// TODO: check sync command
+	static std::array<uint16_t, 2> syncCommand = {
+		LPI2C_MTDR_CMD(4) | 0x00 | kLPI2C_Write, //General Call 
+		LPI2C_MTDR_CMD(2)};//Stop
+
+	commState = CommState::Idle;
 
 	// Send the command to all devices
-	sendCommand(std::span{ syncCommand });
-	return Status::Ok;
+	return sendCommand(std::span{ syncCommand });
 }
 
 /**
@@ -337,6 +361,7 @@ Status PeripheralHandler::sendSync() {
  * 
  * @return Status Returns Status::Ok if the function was successful
  * 				  Returns Status::Error if the function was called while the handler was not in idle state
+ * 				  Returns Status::Timeout when a timeout occured
  */
 Status PeripheralHandler::startCycle() {
 	if(commState != CommState::Idle)
@@ -362,8 +387,7 @@ Status PeripheralHandler::startCycle() {
 	// TODO: Maybe send command at i2c callback (So we don't have to wait for the completion of the sync transfer)
 	// Write the first receive command to the fifo
 	// Note: This will trigger the dma to start
-	sendCommand(std::span{ hInTcdhandles[0].command });
-	return Status::Ok;
+	return sendCommand(std::span{ hInTcdhandles[0].command });
 }
 
 /**
@@ -414,14 +438,28 @@ void PeripheralHandler::dmaInterruptHandler() {
 	if(tcdIndex < hInTcdhandles.size())
 	{
 		// TODO: Handle tcdIns with length > 256
-		sendCommand(std::span{ hInTcdhandles[tcdIndex].command });
+		Status cmdStatus = sendCommand(std::span{ hInTcdhandles[tcdIndex].command });
+		if (cmdStatus != Status::Ok)
+		{
+			SEGGER_RTT_printf(0, "I2C%d had a timeout while sending a command\n", (uint32_t(i2cBase) - LPI2C1_BASE)/0x4000 + 1);
+			return;
+		}
 	}
 	else if(tcdIndex == hInTcdhandles.size())
 	{
-		// Change direction to tx
-		commState = CommState::Transmitting;
-		LPI2C_MasterEnableDMA(i2cBase, true, false);
-		EDMA_EnableChannelRequest(dmaBase, dmaChannel);
+		if(hOutTcdhandles.size() > 0)
+		{
+			// Change direction to tx
+			commState = CommState::Transmitting;
+			LPI2C_MasterEnableDMA(i2cBase, true, false);
+			EDMA_EnableChannelRequest(dmaBase, dmaChannel);
+		}
+		else
+		{
+			// All tcds are done
+			commState = CommState::Idle;
+		}
+		
 
 		//swap ping pong buffer
 		pingPongIndex ^= 1;
@@ -429,9 +467,9 @@ void PeripheralHandler::dmaInterruptHandler() {
 		// Call functions for handling the data
 		processDataCallback();
 	}
-	else if(tcdIndex == hInTcdhandles.size() + 1)
+	else
 	{
-		// All tcds are done, send sync command
+		// All tx-tcds are done
 		commState = CommState::Idle;
 	}
 	
@@ -456,7 +494,7 @@ void PeripheralHandler::i2cInterruptHandler() {
             i2cBase->MTDR = LPI2C_MTDR_CMD(2);//Stop
         }
 
-		SEGGER_RTT_printf(0, "I2C%d detected a NAck\n", i2cIndex);
+		//SEGGER_RTT_printf(0, "I2C%d detected a NAck\n", i2cIndex);
 
 		// Clear flag
 		LPI2C_MasterClearStatusFlags(i2cBase, kLPI2C_MasterNackDetectFlag);
@@ -647,6 +685,7 @@ Status PeripheralHandler::linkTcds() {
 	{
 		// Link last tcd in to opposing tcdOut
 		edma_tcd_t* lastTcdIn = &hInTcdhandles[hInTcdhandles.size() - 1].tcd[pingPong];
+		edma_tcd_t* lastTcdInOpposed = &hInTcdhandles[hInTcdhandles.size() - 1].tcd[pingPong ^ 1];
 		edma_tcd_t* lastTcdOutOpposed = &hOutTcdhandles[hOutTcdhandles.size() - 1].tcds[pingPong ^ 1][2];
 		edma_tcd_t* firstTcdIn = &hInTcdhandles[0].tcd[pingPong];
 		edma_tcd_t* firstTcdOutOpposed = &hOutTcdhandles[0].tcds[pingPong ^ 1][0];
@@ -654,7 +693,8 @@ Status PeripheralHandler::linkTcds() {
 		// When there is no putput data, the last tcd in points to the first tcd in
 		if(hOutTcdhandles.size() == 0)
 		{
-			lastTcdIn->DLAST_SGA = (uint32_t)firstTcdIn;
+			lastTcdInOpposed->DLAST_SGA = (uint32_t)firstTcdIn;
+			EDMA_TcdEnableAutoStopRequest(lastTcdIn, true);
 			continue;
 		}
 
@@ -678,9 +718,14 @@ Status PeripheralHandler::linkTcds() {
  * 			are supported but busy wait until there is space in the fifo
  * 
  * @param command 	Pointer to the command that should be send
+ * @param timeout 	Timeout in ms
+ * 
+ * @return Status::Ok if the command was send successfully
+ * 		   Status::Timeout if there was a timeout
  */
-void PeripheralHandler::sendCommand(std::span<const uint16_t> command) {
+Status PeripheralHandler::sendCommand(std::span<const uint16_t> command, uint32_t timeout) {
 	// TODO: Write a send command that can handle commands longer than the fifo
+	uint32_t startTime = GPT_GetCurrentTimerCount(GPT1);
 
 	// Write the command into the fifo as long as there is space
 	for(auto& cmd : command)
@@ -689,10 +734,14 @@ void PeripheralHandler::sendCommand(std::span<const uint16_t> command) {
 		while(((i2cBase->MFSR & LPI2C_MFSR_TXCOUNT_MASK) >> LPI2C_MFSR_TXCOUNT_SHIFT) == I2C_FIFO_DEPTH)
 		{
 			__NOP();
+			if(GPT_GetCurrentTimerCount(GPT1) - startTime > timeout)
+			{
+				return Status::Timeout;
+			}
 		}
 		i2cBase->MTDR = cmd;
 	}
-
+	return Status::Ok;
 }
 
 /**

@@ -411,7 +411,6 @@ Status ComInterface::buildFromConfiguration(Configuration* newConfig,  Configura
 	{
 		for (auto& channel : pds.channels)
 		{
-			// TODO seems not to work
 			newDevices.insert(channel.device);
 		}
 	}
@@ -490,15 +489,6 @@ Status ComInterface::enumrateDevices(std::vector<DeviceDescriptor>* foundDevices
 	uint32_t peripheralIndex = 0;
 	for(auto& peripheral : peripheralHandlers)
 	{
-		// TODO: Remove this!!!
-		// This is just for testing
-		#warning "Remove this, it is just for testing"
-		
-		if(peripheralIndex != 1)
-		{
-			peripheralIndex++;
-			continue;
-		}
 
 		// Get the devices from the peripheral (with filled addresses)
 		std::vector<DeviceDescriptor> peripheralDevices;
@@ -635,15 +625,16 @@ void ComInterface::CyclicHandler() {
 		Status status = sendSync();
 		assert(status == Status::Ok);
 
+		uint32_t index = 0;
 		for(auto& peripheralHandler : peripheralHandlers)
 		{
 			Status status = peripheralHandler.startCycle();
 			if(status != Status::Ok)
 			{
-
-				GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, 1);
-				assert(status == Status::Ok);
+				SEGGER_RTT_printf(0, "PeripheralHandler %d was not ready for the next cycle\n", index);
+				//assert(status == Status::Ok);
 			}
+			index++;
 		}
 	}
 }

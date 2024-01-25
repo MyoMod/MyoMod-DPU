@@ -224,7 +224,10 @@ Status Device::proccessInData() {
 
 	// Copy the data for the channels
 	for(auto& channel : channels[1]) {
-		char* ioBufferAddr = inBuffer.data() + channel.ioDataOffset;
+		if(!channel.isLinked) {
+			continue;
+		}
+		char* ioBufferAddr = inBuffer.data() + channel.ioDataOffset + STATUS_LENGTH;
 		memcpy(channel.pdsDataRegion.address,  ioBufferAddr, channel.pdsDataRegion.size);
 	}
 	return Status::Ok;
@@ -239,6 +242,9 @@ Status Device::proccessInData() {
 Status Device::proccessOutData(bool bufferIndex) {
 	// Copy the data for the channels
 	for(auto& channel : channels[0]) {
+		if(!channel.isLinked) {
+			continue;
+		}
 		char* ioBufferAddr = outBuffer[bufferIndex].data() + channel.ioDataOffset;
 		memcpy(ioBufferAddr, channel.pdsDataRegion.address, channel.pdsDataRegion.size);
 	}

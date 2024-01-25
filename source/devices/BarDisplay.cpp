@@ -53,6 +53,10 @@ BarDisplay::BarDisplay(std::string_view name) :
     inBuffer.resize(pdsInSize);
     outBuffer[0].resize(pdsOutSize);
     outBuffer[1].resize(pdsOutSize);
+
+    std::fill(inBuffer.begin(), inBuffer.end(), 0xDF);
+    std::fill(outBuffer[0].begin(), outBuffer[0].end(), 0xDF);
+    std::fill(outBuffer[1].begin(), outBuffer[1].end(), 0xDF);
 }
 
 BarDisplay::~BarDisplay() {

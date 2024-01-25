@@ -33,7 +33,7 @@ void OnProjectLoad (void) {
   //
   // User settings
   //
-  Edit.SysVar (VAR_HSS_SPEED, FREQ_200_HZ);
+  Edit.SysVar (VAR_HSS_SPEED, FREQ_100_HZ);
   Project.SetOSPlugin ("FreeRTOSPlugin_CM4");
   File.Open ("$(ProjectDir)/Debug/DPU.axf");
 }

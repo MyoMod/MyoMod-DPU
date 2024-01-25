@@ -35,6 +35,7 @@ EmgElectrode6Chn::EmgElectrode6Chn(std::string_view name) :
 
     // Allocate memory for the PDS
     inBuffer.resize(pdsInSize);
+    std::fill(inBuffer.begin(), inBuffer.end(), 0xDF);
 }
 
 EmgElectrode6Chn::~EmgElectrode6Chn() {

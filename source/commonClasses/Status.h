@@ -11,7 +11,8 @@ namespace freesthetics
         RegisterNotUpdated,
         RegisterInvalid,
         OutOfRange,
-        Warning
+        Warning,
+        Timeout
     };
 
 } // namespace freesthetics

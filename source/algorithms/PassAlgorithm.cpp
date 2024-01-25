@@ -17,19 +17,31 @@ long map(long x, long in_min, long in_max, long out_min, long out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+int32_t debugData[6];
+uint8_t buttonState;
+uint8_t debugDataOut[6];
+float min = 0;
+float max = 0;
+
 Status PassAlgorithm::run() {
-    const float min = -0x0fffff00;
-    const float max = 0x0fffff00;
     const float maxOut = 100;
 
     for (size_t channel = 0; channel < 6; channel++)
     {
         //get input values
-        std::span<uint32_t> pdsData;
-        Status status = pdsIn->at(0)->getChannelData(channel, pdsData);
+        std::span<int32_t> pdsData;
+        Status status = pdsIn->at(1)->getChannelData(channel, pdsData);
         assert(status == Status::Ok);
 
+        std::span<uint8_t> buttonStates;
+        status = pdsIn->at(2)->getChannelData(0, buttonStates);
+        assert(status == Status::Ok);
+        buttonState = buttonStates[0];
+
         float inValue = pdsData[0];
+        min = min > inValue ? inValue : min;
+        max = max < inValue ? inValue : max;
+        debugData[channel] = pdsData[0];
         inValue -= min;
         float result = inValue * maxOut / (max - min);
 
@@ -42,6 +54,7 @@ Status PassAlgorithm::run() {
         status = pdsOut->at(0)->getChannelData(channel, pdsOutData);
         assert(status == Status::Ok);
         pdsOutData[0] = result;
+        debugDataOut[channel] = result;
     }
 
     return Status::Ok;

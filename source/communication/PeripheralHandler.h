@@ -99,7 +99,7 @@ private:
 	Status appendTcdOut(std::array<MemoryRegion,2> data, uint32_t deviceAddress);
 	Status linkTcds();
 
-	void sendCommand(std::span<const uint16_t> command);
+	Status sendCommand(std::span<const uint16_t> command, uint32_t timeout = 50);
 
 	Status addrAvailable(uint32_t address);
 

@@ -77,14 +77,21 @@ void main()
 	// Devices
 	freesthetics::DeviceDescriptor electrode {
 		.deviceType = "Elctr6Ch",
-		.deviceIdentifier = "Elctr1",
+		.deviceIdentifier = "Elctrode2",
 		.peripheralIndex = -1,
 		.deviceAddress = -1,
 		.name = "Electrode"
 	};
+	freesthetics::DeviceDescriptor sdCard {
+		.deviceType = "Elctr6Ch",
+		.deviceIdentifier = "SDSource1",
+		.peripheralIndex = -1,
+		.deviceAddress = -1,
+		.name = "SD Card"
+	};
 	freesthetics::DeviceDescriptor display {
 		.deviceType = "BarDis6Ch",
-		.deviceIdentifier = "Display1",
+		.deviceIdentifier = "BDisplay2",
 		.peripheralIndex = -1,
 		.deviceAddress = -1,
 		.name = "Display"
@@ -96,9 +103,19 @@ void main()
 		.isInput = true
 	});
 	passConfiguration.PDSs.push_back({
+		.name = "SDCard",
+		.channels = {},
+		.isInput = true
+	});
+	passConfiguration.PDSs.push_back({
 		.name = "Display",
 		.channels = {},
 		.isInput = false
+	});
+	passConfiguration.PDSs.push_back({
+		.name = "DisplayButtons",
+		.channels = {},
+		.isInput = true
 	});
 
 	// Add channels
@@ -110,13 +127,30 @@ void main()
 			.name = "Channel " + std::to_string(i + 1)
 		};
 		passConfiguration.PDSs[0].channels.push_back(electrodeChannel);
+		freesthetics::ChannelDescriptor sdChannel {
+			.device = &sdCard,
+			.channelIndex = i,
+			.name = "Channel " + std::to_string(i + 1)
+		};
+		passConfiguration.PDSs[1].channels.push_back(sdChannel);
 		freesthetics::ChannelDescriptor displayChannel {
 			.device = &display,
 			.channelIndex = i,
 			.name = "Channel " + std::to_string(i + 1)
 		};
-		passConfiguration.PDSs[1].channels.push_back(displayChannel);
+		passConfiguration.PDSs[2].channels.push_back(displayChannel);
 	}
+	std::string buttonNames[4] = {"A", "B", "X", "Y"};
+	for (size_t i = 0; i < 4; i++)
+	{
+		freesthetics::ChannelDescriptor buttonChannel {
+			.device = &display,
+			.channelIndex = i,
+			.name = buttonNames[i]
+		};
+		passConfiguration.PDSs[3].channels.push_back(buttonChannel);
+	}
+	
 	configManager->addConfiguration(passConfiguration);
 
 	/** Initialzation done -> Enumerate the devices **/
