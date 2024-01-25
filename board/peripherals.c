@@ -174,6 +174,66 @@ static void PIT_init(void) {
 }
 
 /***********************************************************************************************************************
+ * GPT1 initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'GPT1'
+- type: 'gpt'
+- mode: 'general'
+- custom_name_enabled: 'false'
+- type_id: 'gpt_e92a0cbd07e389b82a1d19b05eb9fdda'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'GPT1'
+- config_sets:
+  - fsl_gpt:
+    - gpt_config:
+      - clockSource: 'kGPT_ClockSource_Osc'
+      - clockSourceFreq: 'BOARD_BootClockRUN_528M'
+      - oscDivider: '16'
+      - divider: '1500'
+      - enableFreeRun: 'true'
+      - enableRunInWait: 'true'
+      - enableRunInStop: 'true'
+      - enableRunInDoze: 'false'
+      - enableRunInDbg: 'false'
+      - enableMode: 'true'
+    - input_capture_channels: []
+    - output_compare_channels: []
+    - interrupt_requests: ''
+    - isInterruptEnabled: 'false'
+    - interrupt:
+      - IRQn: 'GPT1_IRQn'
+      - enable_interrrupt: 'enabled'
+      - enable_priority: 'false'
+      - priority: '0'
+      - enable_custom_name: 'false'
+    - EnableTimerInInit: 'true'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+const gpt_config_t GPT1_config = {
+  .clockSource = kGPT_ClockSource_Osc,
+  .divider = 1500UL,
+  .enableFreeRun = true,
+  .enableRunInWait = true,
+  .enableRunInStop = true,
+  .enableRunInDoze = false,
+  .enableRunInDbg = false,
+  .enableMode = true
+};
+
+static void GPT1_init(void) {
+  /* GPT device and channels initialization */
+  GPT_Init(GPT1_PERIPHERAL, &GPT1_config);
+  GPT_SetOscClockDivider(GPT1_PERIPHERAL, 16);
+  /* Enable GPT interrupt sources */
+  GPT_EnableInterrupts(GPT1_PERIPHERAL, 0);
+  /* Start the GPT timer */ 
+  GPT_StartTimer(GPT1_PERIPHERAL);
+}
+
+/***********************************************************************************************************************
  * Initialization functions
  **********************************************************************************************************************/
 void BOARD_InitPeripherals(void)
@@ -181,6 +241,7 @@ void BOARD_InitPeripherals(void)
   /* Initialize components */
   GPIO2_init();
   PIT_init();
+  GPT1_init();
 }
 
 /***********************************************************************************************************************

@@ -12,6 +12,8 @@
 #include "fsl_common.h"
 #include "fsl_gpio.h"
 #include "fsl_pit.h"
+#include "fsl_gpt.h"
+#include "fsl_clock.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -48,11 +50,16 @@ extern "C" {
 #define PIT_IRQN PIT_IRQn
 /* PIT interrupt handler identifier. */
 #define PIT_IRQHANDLER PIT_IRQHandler
+/* Definition of peripheral ID */
+#define GPT1_PERIPHERAL GPT1
+/* Definition of the clock source frequency */
+#define GPT1_CLOCK_SOURCE 24000000UL
 
 /***********************************************************************************************************************
  * Global variables
  **********************************************************************************************************************/
 extern const pit_config_t PIT_config;
+extern const gpt_config_t GPT1_config;
 
 /***********************************************************************************************************************
  * Initialization functions
