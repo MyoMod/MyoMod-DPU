@@ -33,11 +33,6 @@ Status PassAlgorithm::run() {
         Status status = pdsIn->at(1)->getChannelData(channel, pdsData);
         assert(status == Status::Ok);
 
-        std::span<uint8_t> buttonStates;
-        status = pdsIn->at(2)->getChannelData(0, buttonStates);
-        assert(status == Status::Ok);
-        buttonState = buttonStates[0];
-
         float inValue = pdsData[0];
         min = min > inValue ? inValue : min;
         max = max < inValue ? inValue : max;

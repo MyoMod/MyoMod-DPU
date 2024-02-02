@@ -89,13 +89,20 @@ void main()
 		.deviceAddress = -1,
 		.name = "SD Card"
 	};
-	freesthetics::DeviceDescriptor display {
+	/*freesthetics::DeviceDescriptor display {
 		.deviceType = "BarDis6Ch",
 		.deviceIdentifier = "BDisplay2",
 		.peripheralIndex = -1,
 		.deviceAddress = -1,
 		.name = "Display"
-	};
+	};*/
+	freesthetics::DeviceDescriptor btSink {
+		.deviceType = "BtSink6Ch",
+		.deviceIdentifier = "Blt_Sink1",
+		.peripheralIndex = -1,
+		.deviceAddress = -1,
+		.name = "Bt Sink"
+	};	
 
 	passConfiguration.PDSs.push_back({
 		.name = "Electrode",
@@ -107,7 +114,7 @@ void main()
 		.channels = {},
 		.isInput = true
 	});
-	passConfiguration.PDSs.push_back({
+	/*passConfiguration.PDSs.push_back({
 		.name = "Display",
 		.channels = {},
 		.isInput = false
@@ -116,6 +123,11 @@ void main()
 		.name = "DisplayButtons",
 		.channels = {},
 		.isInput = true
+	});*/
+	passConfiguration.PDSs.push_back({
+		.name = "BtSink",
+		.channels = {},
+		.isInput = false
 	});
 
 	// Add channels
@@ -133,14 +145,20 @@ void main()
 			.name = "Channel " + std::to_string(i + 1)
 		};
 		passConfiguration.PDSs[1].channels.push_back(sdChannel);
-		freesthetics::ChannelDescriptor displayChannel {
+		/*freesthetics::ChannelDescriptor displayChannel {
 			.device = &display,
 			.channelIndex = i,
 			.name = "Channel " + std::to_string(i + 1)
 		};
-		passConfiguration.PDSs[2].channels.push_back(displayChannel);
+		passConfiguration.PDSs[2].channels.push_back(displayChannel);*/
+		freesthetics::ChannelDescriptor btChannel {
+			.device = &btSink,
+			.channelIndex = i,
+			.name = "Channel " + std::to_string(i + 1)
+		};
+		passConfiguration.PDSs[2].channels.push_back(btChannel);
 	}
-	std::string buttonNames[4] = {"A", "B", "X", "Y"};
+	/*std::string buttonNames[4] = {"A", "B", "X", "Y"};
 	for (size_t i = 0; i < 4; i++)
 	{
 		freesthetics::ChannelDescriptor buttonChannel {
@@ -149,7 +167,7 @@ void main()
 			.name = buttonNames[i]
 		};
 		passConfiguration.PDSs[3].channels.push_back(buttonChannel);
-	}
+	}*/
 	
 	configManager->addConfiguration(passConfiguration);
 

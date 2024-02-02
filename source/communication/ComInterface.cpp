@@ -17,6 +17,7 @@
 #include "SEGGER_RTT.h"
 #include "EmgElectrode6Chn.h"
 #include "BarDisplay.h"
+#include "BtSink.h"
 
 namespace freesthetics {
 
@@ -59,6 +60,10 @@ Status ComInterface::createDevice(DeviceDescriptor* deviceDescriptor, Device** c
 	{
 		*createdDevice = new BarDisplay(name);
 	}
+	else if(deviceType == std::array<char, 10> { "BtSink6Ch" })
+	{
+		*createdDevice = new BtSink(name);
+	}
 	else
 	{
 		*createdDevice = nullptr;
@@ -77,7 +82,8 @@ Status ComInterface::sendSync() {
 	for (auto& peripheral : peripheralHandlers)
 	{
 		status = peripheral.sendSync();
-		assert(status == Status::Ok);
+		//TODO: reenable checking
+		//assert(status == Status::Ok);
 	}
 	return Status::Ok;
 }

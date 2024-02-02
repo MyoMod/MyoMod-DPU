@@ -186,6 +186,13 @@ Status PeripheralHandler::listNewDevices(std::vector<DeviceDescriptor>* devices)
 			.deviceAddress = 0x18,
 			.name = ""
 		});
+		devices->push_back(DeviceDescriptor{
+			.deviceType = "BtSink6Ch",
+			.deviceIdentifier = "Blt_Sink1",
+			.peripheralIndex = -1,
+			.deviceAddress = 0x38,
+			.name = ""
+		});
 
 		static uint32_t i = 0;
 		i++;
