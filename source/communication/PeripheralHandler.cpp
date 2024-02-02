@@ -38,6 +38,7 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::func
 	tcdIndex{ 0 },
 	pingPongIndex{ 0 },
 	devicesChanged{ true }, // Set to true to trigger the first listNewDevices call
+	noActiveDevices{ true },
 	processDataCallback{ processDataCallback }
 {
 	i2cIndex--; // i2cIndex is 1 based, but the array is 0 based
@@ -114,7 +115,8 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::func
 	LPI2C_MasterInit(i2cBase, &i2cConfig, LPI2C_CLOCK_FREQUENCY);
 
 	// Activate IRQ
-	LPI2C_MasterEnableInterrupts(i2cBase, kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag);
+	LPI2C_MasterEnableInterrupts(i2cBase, kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag
+										 | kLPI2C_MasterStopDetectFlag);
 	interrupt = static_cast<IRQn>((static_cast<uint32_t>(LPI2C1_IRQn) + i2cIndex));
     EnableIRQ(interrupt);
 
@@ -352,12 +354,13 @@ Status PeripheralHandler::sendSync() {
 		LPI2C_MTDR_CMD(2)};//Stop
 	*/
 
-	// TODO: check sync command
+	// If there are no active devices, we expect a nack, otherwise an ack
+	uint16_t startCmd = noActiveDevices ? LPI2C_MTDR_CMD(4) : LPI2C_MTDR_CMD(4);
 	static std::array<uint16_t, 2> syncCommand = {
-		LPI2C_MTDR_CMD(4) | 0x00 | kLPI2C_Write, //General Call 
+		startCmd | 0x00 | kLPI2C_Write, //General Call 
 		LPI2C_MTDR_CMD(2)};//Stop
 
-	commState = CommState::Idle;
+	commState = CommState::Sync;
 
 	// Send the command to all devices
 	return sendCommand(std::span{ syncCommand });
@@ -371,7 +374,7 @@ Status PeripheralHandler::sendSync() {
  * 				  Returns Status::Timeout when a timeout occured
  */
 Status PeripheralHandler::startCycle() {
-	if(commState != CommState::Idle)
+	if(commState != CommState::Sync)
 	{
 		// It is not allowed to start a cycle when not in idle state
 		return Status::Error;
@@ -385,7 +388,6 @@ Status PeripheralHandler::startCycle() {
 	}
 
 	tcdIndex = 0;
-	commState = CommState::Receiving;
 
 	// Enable rx dma
 	LPI2C_MasterEnableDMA(i2cBase, false, true);
@@ -488,23 +490,67 @@ void PeripheralHandler::dmaInterruptHandler() {
  */
 void PeripheralHandler::i2cInterruptHandler() {
 	uint32_t i2cIndex = (uint32_t(i2cBase) - LPI2C1_BASE)/0x4000 + 1;
-	// If we receive a nack, the device is not present anymore -> stop transmission
+	// If we receive a nack, no device are present anymore -> stop transmission
 	if(LPI2C_MasterGetStatusFlags(i2cBase) & kLPI2C_MasterNackDetectFlag)
 	{
-		/* Reset fifos. */
-        i2cBase->MCR |= LPI2C_MCR_RRF_MASK | LPI2C_MCR_RTF_MASK;
-
-        /* If master is still busy and has not send out stop signal yet. */
-        if (LPI2C_MasterGetStatusFlags(i2cBase) & ((uint32_t)kLPI2C_MasterStopDetectFlag))
-        {
-            /* Send a stop command to finalize the transfer. */
-            i2cBase->MTDR = LPI2C_MTDR_CMD(2);//Stop
-        }
-
-		//SEGGER_RTT_printf(0, "I2C%d detected a NAck\n", i2cIndex);
-
 		// Clear flag
 		LPI2C_MasterClearStatusFlags(i2cBase, kLPI2C_MasterNackDetectFlag);
+
+		if(commState == CommState::Sync && !noActiveDevices)
+		{
+			// Sync command was not acknowledged -> no devices are present
+			// and it is the first time we detected this
+
+			noActiveDevices = true;
+			/* Reset fifos. */
+			i2cBase->MCR |= LPI2C_MCR_RRF_MASK | LPI2C_MCR_RTF_MASK;
+
+			/* If master is still busy and has not send out stop signal yet. */
+			if (LPI2C_MasterGetStatusFlags(i2cBase) & ((uint32_t)kLPI2C_MasterStopDetectFlag))
+			{
+				/* Send a stop command to finalize the transfer. */
+				i2cBase->MTDR = LPI2C_MTDR_CMD(2);//Stop
+			}
+
+			SEGGER_RTT_printf(0, "I2C%d detected a NAck during sync call\n", i2cIndex);
+		}
+	}
+
+	if(LPI2C_MasterGetStatusFlags(i2cBase) & kLPI2C_MasterStopDetectFlag)
+	{
+		// Clear flag
+		LPI2C_MasterClearStatusFlags(i2cBase, kLPI2C_MasterStopDetectFlag);
+
+		// Stop condition was detected -> if we where in sync mode, 
+		//  we are done -> change to receiving
+		if(commState == CommState::Sync)
+		{
+			commState = CommState::Receiving;
+		}
+	}
+
+	if(LPI2C_MasterGetStatusFlags(i2cBase) & kLPI2C_MasterTxReadyFlag)
+	{
+		// Clear flag
+		LPI2C_MasterClearStatusFlags(i2cBase, kLPI2C_MasterTxReadyFlag);
+
+		uint32_t fifoAvailable = I2C_FIFO_DEPTH - 
+					((i2cBase->MSR & LPI2C_MSR_TDF_MASK) >> LPI2C_MSR_TDF_SHIFT);
+
+		// The tx fifo is ready for new commands from the queue
+		while(!commandQueue.empty() && fifoAvailable > 0)
+		{
+			uint16_t command = commandQueue.front();
+			commandQueue.pop();
+			i2cBase->MTDR = command;
+			fifoAvailable--;
+		}
+
+		// If there are no more commands, disable the tx interrupt
+		if(commandQueue.empty())
+		{
+			LPI2C_MasterDisableInterrupts(i2cBase, kLPI2C_MasterTxReadyFlag);
+		}
 	}
 
 	if(LPI2C_MasterGetStatusFlags(i2cBase) & kLPI2C_MasterFifoErrFlag)
@@ -731,22 +777,43 @@ Status PeripheralHandler::linkTcds() {
  * 		   Status::Timeout if there was a timeout
  */
 Status PeripheralHandler::sendCommand(std::span<const uint16_t> command, uint32_t timeout) {
-	// TODO: Write a send command that can handle commands longer than the fifo
-	uint32_t startTime = GPT_GetCurrentTimerCount(GPT1);
-
-	// Write the command into the fifo as long as there is space
-	for(auto& cmd : command)
+	// Check if the command fits into the fifo
+	uint32_t fifoCount = ((i2cBase->MFSR & LPI2C_MFSR_TXCOUNT_MASK) >> LPI2C_MFSR_TXCOUNT_SHIFT);
+	uint32_t fifoAvailable = I2C_FIFO_DEPTH - fifoCount;
+	if(fifoAvailable > command.size())
 	{
-		// Wait for space in the fifo
-		while(((i2cBase->MFSR & LPI2C_MFSR_TXCOUNT_MASK) >> LPI2C_MFSR_TXCOUNT_SHIFT) == I2C_FIFO_DEPTH)
+		// Write the entire command into the fifo
+		for(size_t i = 0; i < command.size(); i++)
 		{
-			__NOP();
-			if(GPT_GetCurrentTimerCount(GPT1) - startTime > timeout)
+			// Recheck if the fifo is still available
+			if(((i2cBase->MFSR & LPI2C_MFSR_TXCOUNT_MASK) >> LPI2C_MFSR_TXCOUNT_SHIFT) < I2C_FIFO_DEPTH)
 			{
-				return Status::Timeout;
+				i2cBase->MTDR = command[i];
+			}
+			else
+			{
+				// The fifo is not available anymore, return an error
+				return Status::Error;
 			}
 		}
-		i2cBase->MTDR = cmd;
+	}
+	else
+	{
+		// Write as much as possible into the fifo
+		for(size_t i = 0; i < fifoAvailable; i++)
+		{
+			i2cBase->MTDR = command[i];
+		}
+
+		// The rest of the command will be added to a 
+		//  buffer and send when the fifo has space again
+		for (size_t i = fifoAvailable; i < command.size(); i++)
+		{
+			commandQueue.push(command[i]);
+		}
+		
+		// Activate the interrupt for the fifo empty flag
+		LPI2C_MasterEnableInterrupts(i2cBase, kLPI2C_MasterTxReadyFlag);
 	}
 	return Status::Ok;
 }

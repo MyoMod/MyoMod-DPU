@@ -10,6 +10,7 @@
 #include "stdint.h"
 #include <vector>
 #include <array>
+#include <queue>
 #include <span>
 #include <map>
 #include <functional>
@@ -37,6 +38,7 @@ enum class CommState
 {
 	Stopped,
 	Idle,
+	Sync,
 	Receiving,
 	Transmitting,
 	Configuring
@@ -105,16 +107,18 @@ private:
 
 	std::vector<TcdOutHandle> hOutTcdhandles;
 	std::vector<TcdInHandle> hInTcdhandles;
-	std::map<uint32_t, uint8_t> cyclesSineLastSeen;
 
 	DMA_Type* dmaBase;
 	LPI2C_Type* i2cBase;
+
+	std::queue<uint16_t> commandQueue;
 
 	CommState commState;
 	uint32_t dmaChannel;
 	uint32_t tcdIndex;
 	uint32_t pingPongIndex;
 	bool devicesChanged;
+	bool noActiveDevices;
 
 	std::function<void(void)> processDataCallback;
 	//void (*processDataCallback)(uint8_t callbackParam, bool pingPongIndex);

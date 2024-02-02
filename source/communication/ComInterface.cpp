@@ -82,8 +82,7 @@ Status ComInterface::sendSync() {
 	for (auto& peripheral : peripheralHandlers)
 	{
 		status = peripheral.sendSync();
-		//TODO: reenable checking
-		//assert(status == Status::Ok);
+		assert(status == Status::Ok);
 	}
 	return Status::Ok;
 }

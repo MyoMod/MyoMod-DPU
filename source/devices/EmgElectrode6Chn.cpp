@@ -6,7 +6,7 @@ namespace freesthetics {
 EmgElectrode6Chn::EmgElectrode6Chn(std::string_view name) : 
     Device(name) 
 {
-    const uint32_t samplesPerCycle = 10;
+    const uint32_t samplesPerCycle = 15;
     const uint32_t sampleSize = 4;
     const uint32_t channelNumber = 6;
 
