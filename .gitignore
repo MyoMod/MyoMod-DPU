@@ -4,3 +4,5 @@ Debug/
 docs/
 
 mcu-boot/
+
+.settings/language.settings.xml
