@@ -26,6 +26,10 @@
 /*******************************************************************************
  * Defines
  ******************************************************************************/
+#define USE_ELECTRODE 1
+#define USE_SDCARD 0
+#define USE_DISPLAY 1
+#define USE_BTSINK 0
 
 /*******************************************************************************
  * Data Types
@@ -78,7 +82,7 @@ void main()
 	// Devices
 	freesthetics::DeviceDescriptor electrode {
 		.deviceType = "Elctr6Ch",
-		.deviceIdentifier = "Elctrode2",
+		.deviceIdentifier = "Elctrode1",
 		.peripheralIndex = -1,
 		.deviceAddress = -1,
 		.name = "Electrode"
@@ -90,13 +94,13 @@ void main()
 		.deviceAddress = -1,
 		.name = "SD Card"
 	};
-	/*freesthetics::DeviceDescriptor display {
+	freesthetics::DeviceDescriptor display {
 		.deviceType = "BarDis6Ch",
 		.deviceIdentifier = "BDisplay2",
 		.peripheralIndex = -1,
 		.deviceAddress = -1,
 		.name = "Display"
-	};*/
+	};
 	freesthetics::DeviceDescriptor btSink {
 		.deviceType = "BtSink6Ch",
 		.deviceIdentifier = "Blt_Sink1",
@@ -105,61 +109,84 @@ void main()
 		.name = "Bt Sink"
 	};	
 
-	passConfiguration.PDSs.push_back({
+	uint32_t pdsIndex = 0;
+#if USE_ELECTRODE
+	fftConfiguration.PDSs.push_back({
 		.name = "Electrode",
 		.channels = {},
 		.isInput = true
 	});
-	passConfiguration.PDSs.push_back({
+	const uint32_t electrodePdsIndex = pdsIndex++;
+#endif
+#if USE_SDCARD
+	fftConfiguration.PDSs.push_back({
 		.name = "SDCard",
 		.channels = {},
 		.isInput = true
 	});
-	/*passConfiguration.PDSs.push_back({
+	const uint32_t sdCardPdsIndex = pdsIndex++;
+#endif
+#if USE_DISPLAY
+	fftConfiguration.PDSs.push_back({
 		.name = "Display",
 		.channels = {},
 		.isInput = false
 	});
-	passConfiguration.PDSs.push_back({
+	const uint32_t displayPdsIndex = pdsIndex++;
+	fftConfiguration.PDSs.push_back({
 		.name = "DisplayButtons",
 		.channels = {},
 		.isInput = true
-	});*/
-	passConfiguration.PDSs.push_back({
+	});
+	const uint32_t displayButtonsPdsIndex = pdsIndex++;
+#endif
+#if USE_BTSINK
+	fftConfiguration.PDSs.push_back({
 		.name = "BtSink",
 		.channels = {},
 		.isInput = false
 	});
+	const uint32_t btSinkPdsIndex = pdsIndex++;
+#endif
 
 	// Add channels
 	for(uint32_t i = 0; i < 6; i++)
 	{
+		#if USE_ELECTRODE
 		freesthetics::ChannelDescriptor electrodeChannel {
 			.device = &electrode,
 			.channelIndex = i,
 			.name = "Channel " + std::to_string(i + 1)
 		};
-		passConfiguration.PDSs[0].channels.push_back(electrodeChannel);
+		fftConfiguration.PDSs[electrodePdsIndex].channels.push_back(electrodeChannel);
+		#endif
+		#if USE_SDCARD
 		freesthetics::ChannelDescriptor sdChannel {
 			.device = &sdCard,
 			.channelIndex = i,
 			.name = "Channel " + std::to_string(i + 1)
 		};
-		passConfiguration.PDSs[1].channels.push_back(sdChannel);
-		/*freesthetics::ChannelDescriptor displayChannel {
+		fftConfiguration.PDSs[sdCardPdsIndex].channels.push_back(sdChannel);
+		#endif
+		#if USE_DISPLAY
+		freesthetics::ChannelDescriptor displayChannel {
 			.device = &display,
 			.channelIndex = i,
 			.name = "Channel " + std::to_string(i + 1)
 		};
-		passConfiguration.PDSs[2].channels.push_back(displayChannel);*/
+		fftConfiguration.PDSs[displayPdsIndex].channels.push_back(displayChannel);
+		#endif
+		#if USE_BTSINK
 		freesthetics::ChannelDescriptor btChannel {
 			.device = &btSink,
 			.channelIndex = i,
 			.name = "Channel " + std::to_string(i + 1)
 		};
-		passConfiguration.PDSs[2].channels.push_back(btChannel);
+		fftConfiguration.PDSs[btSinkPdsIndex].channels.push_back(btChannel);
+		#endif
 	}
-	/*std::string buttonNames[4] = {"A", "B", "X", "Y"};
+	#if USE_DISPLAY
+	std::string buttonNames[4] = {"A", "B", "X", "Y"};
 	for (size_t i = 0; i < 4; i++)
 	{
 		freesthetics::ChannelDescriptor buttonChannel {
@@ -167,9 +194,9 @@ void main()
 			.channelIndex = i,
 			.name = buttonNames[i]
 		};
-		passConfiguration.PDSs[3].channels.push_back(buttonChannel);
-	}*/
-	
+		fftConfiguration.PDSs[displayButtonsPdsIndex].channels.push_back(buttonChannel);
+	}
+	#endif
 	configManager->addConfiguration(fftConfiguration);
 
 	/** Initialzation done -> Enumerate the devices **/
@@ -226,6 +253,8 @@ void renumrateDevices()
  */
 void start()
 {
+	SEGGER_RTT_printf(0, "Start realtime processing\n");
+
 	// Start the ComInterface
 	freesthetics::Status status = comInterface->enterRealTimeMode();
 	assert(status == freesthetics::Status::Ok);
@@ -243,6 +272,8 @@ void start()
  */
 void stop()
 {
+	SEGGER_RTT_printf(0, "Stop realtime processing\n");
+
 	// Stop the analysis algorithm
 	activeAnalysisAlgorithm->stop();
 
