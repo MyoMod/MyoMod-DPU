@@ -113,8 +113,9 @@ Status ConfigurationManager::renumrateDevices() {
 	std::vector<freesthetics::DeviceDescriptor> foundDevices;
 	status = comInterface->enumrateDevices(&foundDevices);
 
+	SEGGER_RTT_printf(0, "ConfigurationManager: Renumrate Devices\n");
 	for (auto& device : foundDevices) {
-		SEGGER_RTT_printf(0, "Found device: %s %s at peripheral %d\n", device.deviceType.data(), device.deviceIdentifier.data(), device.peripheralIndex);
+		SEGGER_RTT_printf(0, "ConfigurationManager: Found device: %s %s at peripheral %d\n", device.deviceType.data(), device.deviceIdentifier.data(), device.peripheralIndex);
 	}
 
 	assert(status == freesthetics::Status::Ok);
@@ -135,6 +136,7 @@ Status ConfigurationManager::renumrateDevices() {
  * 							 and has been updated to the first valid one
  */
 Status ConfigurationManager::updateValidConfigurations(const std::vector<DeviceDescriptor>& foundDevices) {
+	SEGGER_RTT_printf(0, "ConfigurationManager: Update Valid Configurations\n");
 	for(auto& configHandle : configurationHandles)
 	{
 		bool compatible = configHandle.config.isCompatibleWith(foundDevices);
@@ -166,11 +168,18 @@ Status ConfigurationManager::updateValidConfigurations(const std::vector<DeviceD
 		{
 			if(configurationHandles[i].isValid)
 			{
+				SEGGER_RTT_printf(0, "ConfigurationManager: Old configuration was no longer valid, set active configuration to %s\n", configurationHandles[i].config.name.data());
+
 				setActiveConfiguration(i);
 				break;
 			}
 		}
 	}
+	else
+	{
+		SEGGER_RTT_printf(0, "ConfigurationManager: Active configuration is still valid\n");
+	}
+
 	return activeConfigIsValid ? freesthetics::Status::Ok : freesthetics::Status::Warning;
 }
 
@@ -269,12 +278,14 @@ Status ConfigurationManager::incrementActiveConfiguration() {
 	if(nValid == 0)
 	{
 		setActiveConfiguration(0);
+		SEGGER_RTT_printf(0, "No valid configuration found, reset to nop configuration\n");
 		return freesthetics::Status::Warning;
 	}
 
 
 	int32_t nextIndex = (activeConfigIndex + 1) % nValid; // iterate through the valid configurations
 	nextIndex++; // But skip the NOP configuration
+	SEGGER_RTT_printf(0, "Increment active configuration to %s\n", configurationHandles[nextIndex].config.name.data());
 	return setActiveConfiguration(nextIndex);
 }
 

@@ -6,7 +6,6 @@
  */
 
 #include "PeripheralHandler.h"
-#include "fsl_gpt.h"
 
 namespace freesthetics {
 

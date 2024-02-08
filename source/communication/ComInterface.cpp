@@ -422,7 +422,7 @@ Status ComInterface::buildFromConfiguration(Configuration* newConfig,  Configura
 	
 	for (auto& device : newDevices)
 	{
-		SEGGER_RTT_printf(0, "Adding device: %s\n", device->name.data());
+		SEGGER_RTT_printf(0, "ComInterface: Adding device: %s\n", device->name.data());
 		status = addDevice(device);
 		assert(status == Status::Ok);
 	}

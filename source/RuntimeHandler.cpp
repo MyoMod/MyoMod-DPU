@@ -19,6 +19,7 @@
 #include "Configuration.h"
 #include "AnalysisAlgorithm.h"
 #include "PassAlgorithm.h"
+#include "FftAlgorithm.h"
 #include "Status.h"
 
 
@@ -69,10 +70,10 @@ void main()
 	activeAnalysisAlgorithm = configManager->getActiveConfiguration().algorithm;
 
 	// Add a configuration
-	freesthetics::AnalysisAlgorithm* passAlgorithm = new freesthetics::PassAlgorithm("Pass Algorithm");
-	freesthetics::Configuration passConfiguration {
-		"Pass",
-		passAlgorithm
+	freesthetics::AnalysisAlgorithm* fftAlgorithm = new freesthetics::FFTAlgorithm("FFT Algorithm");
+	freesthetics::Configuration fftConfiguration {
+		"FFT Filter Configuration",
+		fftAlgorithm
 	};
 	// Devices
 	freesthetics::DeviceDescriptor electrode {
@@ -169,7 +170,7 @@ void main()
 		passConfiguration.PDSs[3].channels.push_back(buttonChannel);
 	}*/
 	
-	configManager->addConfiguration(passConfiguration);
+	configManager->addConfiguration(fftConfiguration);
 
 	/** Initialzation done -> Enumerate the devices **/
 	renumrateDevices();
