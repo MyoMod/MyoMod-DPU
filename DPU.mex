@@ -29,12 +29,12 @@
                <pin_label pin_num="E3" pin_signal="GPIO_EMC_00" label="SEMC_D0" identifier="SEMC_D0"/>
                <pin_label pin_num="F3" pin_signal="GPIO_EMC_01" label="SEMC_D1" identifier="SEMC_D1"/>
                <pin_label pin_num="F4" pin_signal="GPIO_EMC_02" label="SEMC_D2" identifier="SEMC_D2"/>
-               <pin_label pin_num="F2" pin_signal="GPIO_EMC_04" label="SEMC_D4" identifier="SEMC_D4"/>
+               <pin_label pin_num="F2" pin_signal="GPIO_EMC_04" label="SW_UP" identifier="SEMC_D4;SW_UP"/>
                <pin_label pin_num="G4" pin_signal="GPIO_EMC_03" label="SEMC_D3" identifier="SEMC_D3"/>
-               <pin_label pin_num="G5" pin_signal="GPIO_EMC_05" label="SEMC_D5" identifier="SEMC_D5"/>
-               <pin_label pin_num="H5" pin_signal="GPIO_EMC_06" label="SEMC_D6" identifier="SEMC_D6"/>
+               <pin_label pin_num="G5" pin_signal="GPIO_EMC_05" label="SW_DOWN" identifier="SEMC_D5;SW_DOWN"/>
+               <pin_label pin_num="H5" pin_signal="GPIO_EMC_06" label="SW_RESET" identifier="SEMC_D6;SW_RESET"/>
                <pin_label pin_num="H4" pin_signal="GPIO_EMC_07" label="SEMC_D7" identifier="SEMC_D7"/>
-               <pin_label pin_num="H3" pin_signal="GPIO_EMC_08" label="SEMC_DM0" identifier="SEMC_DM0"/>
+               <pin_label pin_num="H3" pin_signal="GPIO_EMC_08" label="SW_MOD" identifier="SEMC_DM0;SW_MOD"/>
                <pin_label pin_num="C2" pin_signal="GPIO_EMC_09" label="SEMC_A0" identifier="SEMC_A0"/>
                <pin_label pin_num="G1" pin_signal="GPIO_EMC_10" label="SEMC_A1" identifier="SEMC_A1"/>
                <pin_label pin_num="G3" pin_signal="GPIO_EMC_11" label="SEMC_A2" identifier="SEMC_A2"/>
@@ -249,12 +249,22 @@
                         <data>true</data>
                      </feature>
                   </dependency>
+                  <dependency resourceType="Peripheral" resourceId="GPIO4" description="Peripheral GPIO4 is not initialized" problem_level="1" source="Pins:BOARD_InitPins">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
                   <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Pins initialization requires the COMMON Driver in the project." problem_level="2" source="Pins:BOARD_InitPins">
                      <feature name="enabled" evaluation="equal" configuration="core0">
                         <data>true</data>
                      </feature>
                   </dependency>
                   <dependency resourceType="SWComponent" resourceId="platform.drivers.iomuxc" description="Pins initialization requires the IOMUXC Driver in the project." problem_level="2" source="Pins:BOARD_InitPins">
+                     <feature name="enabled" evaluation="equal" configuration="core0">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.igpio" description="Pins initialization requires the IGPIO Driver in the project." problem_level="2" source="Pins:BOARD_InitPins">
                      <feature name="enabled" evaluation="equal" configuration="core0">
                         <data>true</data>
                      </feature>
@@ -299,6 +309,38 @@
                         <pin_feature name="identifier" value="SDA4"/>
                         <pin_feature name="software_input_on" value="Enable"/>
                         <pin_feature name="open_drain" value="Enable"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO4" signal="gpio_io, 04" pin_num="F2" pin_signal="GPIO_EMC_04">
+                     <pin_features>
+                        <pin_feature name="identifier" value="SW_UP"/>
+                        <pin_feature name="direction" value="INPUT"/>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_47K_Ohm"/>
+                        <pin_feature name="pull_keeper_select" value="Pull"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO4" signal="gpio_io, 08" pin_num="H3" pin_signal="GPIO_EMC_08">
+                     <pin_features>
+                        <pin_feature name="identifier" value="SW_MOD"/>
+                        <pin_feature name="direction" value="INPUT"/>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_47K_Ohm"/>
+                        <pin_feature name="pull_keeper_select" value="Pull"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO4" signal="gpio_io, 05" pin_num="G5" pin_signal="GPIO_EMC_05">
+                     <pin_features>
+                        <pin_feature name="identifier" value="SW_DOWN"/>
+                        <pin_feature name="direction" value="INPUT"/>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_47K_Ohm"/>
+                        <pin_feature name="pull_keeper_select" value="Pull"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO4" signal="gpio_io, 06" pin_num="H5" pin_signal="GPIO_EMC_06">
+                     <pin_features>
+                        <pin_feature name="identifier" value="SW_RESET"/>
+                        <pin_feature name="direction" value="INPUT"/>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_47K_Ohm"/>
+                        <pin_feature name="pull_keeper_select" value="Pull"/>
                      </pin_features>
                   </pin>
                </pins>

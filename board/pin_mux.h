@@ -39,6 +39,7 @@ void BOARD_InitBootPins(void);
 
 #define BOARD_INITPINS_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK 0x080000U /*!< GPIO1 and GPIO6 share same IO MUX function, GPIO_MUX1 selects one GPIO function: affected bits mask */
 #define BOARD_INITPINS_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK 0x08U /*!< GPIO2 and GPIO7 share same IO MUX function, GPIO_MUX2 selects one GPIO function: affected bits mask */
+#define BOARD_INITPINS_IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL_MASK 0x0170U /*!< GPIO4 and GPIO9 share same IO MUX function, GPIO_MUX4 selects one GPIO function: affected bits mask */
 
 /* GPIO_B0_03 (coord D8), USR_LED */
 /* Routed pin properties */
@@ -87,6 +88,62 @@ void BOARD_InitBootPins(void);
 /* Routed pin properties */
 #define BOARD_INITPINS_SDA4_PERIPHERAL                                    LPI2C4   /*!< Peripheral name */
 #define BOARD_INITPINS_SDA4_SIGNAL                                           SDA   /*!< Signal name */
+
+/* GPIO_EMC_04 (coord F2), SW_UP */
+/* Routed pin properties */
+#define BOARD_INITPINS_SW_UP_PERIPHERAL                                    GPIO4   /*!< Peripheral name */
+#define BOARD_INITPINS_SW_UP_SIGNAL                                      gpio_io   /*!< Signal name */
+#define BOARD_INITPINS_SW_UP_CHANNEL                                          4U   /*!< Signal channel */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_INITPINS_SW_UP_GPIO                                          GPIO4   /*!< GPIO peripheral base pointer */
+#define BOARD_INITPINS_SW_UP_GPIO_PIN                                         4U   /*!< GPIO pin number */
+#define BOARD_INITPINS_SW_UP_GPIO_PIN_MASK                            (1U << 4U)   /*!< GPIO pin mask */
+#define BOARD_INITPINS_SW_UP_PORT                                          GPIO4   /*!< PORT peripheral base pointer */
+#define BOARD_INITPINS_SW_UP_PIN                                              4U   /*!< PORT pin number */
+#define BOARD_INITPINS_SW_UP_PIN_MASK                                 (1U << 4U)   /*!< PORT pin mask */
+
+/* GPIO_EMC_08 (coord H3), SW_MOD */
+/* Routed pin properties */
+#define BOARD_INITPINS_SW_MOD_PERIPHERAL                                   GPIO4   /*!< Peripheral name */
+#define BOARD_INITPINS_SW_MOD_SIGNAL                                     gpio_io   /*!< Signal name */
+#define BOARD_INITPINS_SW_MOD_CHANNEL                                         8U   /*!< Signal channel */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_INITPINS_SW_MOD_GPIO                                         GPIO4   /*!< GPIO peripheral base pointer */
+#define BOARD_INITPINS_SW_MOD_GPIO_PIN                                        8U   /*!< GPIO pin number */
+#define BOARD_INITPINS_SW_MOD_GPIO_PIN_MASK                           (1U << 8U)   /*!< GPIO pin mask */
+#define BOARD_INITPINS_SW_MOD_PORT                                         GPIO4   /*!< PORT peripheral base pointer */
+#define BOARD_INITPINS_SW_MOD_PIN                                             8U   /*!< PORT pin number */
+#define BOARD_INITPINS_SW_MOD_PIN_MASK                                (1U << 8U)   /*!< PORT pin mask */
+
+/* GPIO_EMC_05 (coord G5), SW_DOWN */
+/* Routed pin properties */
+#define BOARD_INITPINS_SW_DOWN_PERIPHERAL                                  GPIO4   /*!< Peripheral name */
+#define BOARD_INITPINS_SW_DOWN_SIGNAL                                    gpio_io   /*!< Signal name */
+#define BOARD_INITPINS_SW_DOWN_CHANNEL                                        5U   /*!< Signal channel */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_INITPINS_SW_DOWN_GPIO                                        GPIO4   /*!< GPIO peripheral base pointer */
+#define BOARD_INITPINS_SW_DOWN_GPIO_PIN                                       5U   /*!< GPIO pin number */
+#define BOARD_INITPINS_SW_DOWN_GPIO_PIN_MASK                          (1U << 5U)   /*!< GPIO pin mask */
+#define BOARD_INITPINS_SW_DOWN_PORT                                        GPIO4   /*!< PORT peripheral base pointer */
+#define BOARD_INITPINS_SW_DOWN_PIN                                            5U   /*!< PORT pin number */
+#define BOARD_INITPINS_SW_DOWN_PIN_MASK                               (1U << 5U)   /*!< PORT pin mask */
+
+/* GPIO_EMC_06 (coord H5), SW_RESET */
+/* Routed pin properties */
+#define BOARD_INITPINS_SW_RESET_PERIPHERAL                                 GPIO4   /*!< Peripheral name */
+#define BOARD_INITPINS_SW_RESET_SIGNAL                                   gpio_io   /*!< Signal name */
+#define BOARD_INITPINS_SW_RESET_CHANNEL                                       6U   /*!< Signal channel */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_INITPINS_SW_RESET_GPIO                                       GPIO4   /*!< GPIO peripheral base pointer */
+#define BOARD_INITPINS_SW_RESET_GPIO_PIN                                      6U   /*!< GPIO pin number */
+#define BOARD_INITPINS_SW_RESET_GPIO_PIN_MASK                         (1U << 6U)   /*!< GPIO pin mask */
+#define BOARD_INITPINS_SW_RESET_PORT                                       GPIO4   /*!< PORT peripheral base pointer */
+#define BOARD_INITPINS_SW_RESET_PIN                                           6U   /*!< PORT pin number */
+#define BOARD_INITPINS_SW_RESET_PIN_MASK                              (1U << 6U)   /*!< PORT pin mask */
 
 /*!
  * @brief Configures pin routing and optionally pin electrical features.

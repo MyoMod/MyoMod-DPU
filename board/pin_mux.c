@@ -17,12 +17,12 @@ pin_labels:
 - {pin_num: E3, pin_signal: GPIO_EMC_00, label: SEMC_D0, identifier: SEMC_D0}
 - {pin_num: F3, pin_signal: GPIO_EMC_01, label: SEMC_D1, identifier: SEMC_D1}
 - {pin_num: F4, pin_signal: GPIO_EMC_02, label: SEMC_D2, identifier: SEMC_D2}
-- {pin_num: F2, pin_signal: GPIO_EMC_04, label: SEMC_D4, identifier: SEMC_D4}
+- {pin_num: F2, pin_signal: GPIO_EMC_04, label: SW_UP, identifier: SEMC_D4;SW_UP}
 - {pin_num: G4, pin_signal: GPIO_EMC_03, label: SEMC_D3, identifier: SEMC_D3}
-- {pin_num: G5, pin_signal: GPIO_EMC_05, label: SEMC_D5, identifier: SEMC_D5}
-- {pin_num: H5, pin_signal: GPIO_EMC_06, label: SEMC_D6, identifier: SEMC_D6}
+- {pin_num: G5, pin_signal: GPIO_EMC_05, label: SW_DOWN, identifier: SEMC_D5;SW_DOWN}
+- {pin_num: H5, pin_signal: GPIO_EMC_06, label: SW_RESET, identifier: SEMC_D6;SW_RESET}
 - {pin_num: H4, pin_signal: GPIO_EMC_07, label: SEMC_D7, identifier: SEMC_D7}
-- {pin_num: H3, pin_signal: GPIO_EMC_08, label: SEMC_DM0, identifier: SEMC_DM0}
+- {pin_num: H3, pin_signal: GPIO_EMC_08, label: SW_MOD, identifier: SEMC_DM0;SW_MOD}
 - {pin_num: C2, pin_signal: GPIO_EMC_09, label: SEMC_A0, identifier: SEMC_A0}
 - {pin_num: G1, pin_signal: GPIO_EMC_10, label: SEMC_A1, identifier: SEMC_A1}
 - {pin_num: G3, pin_signal: GPIO_EMC_11, label: SEMC_A2, identifier: SEMC_A2}
@@ -211,6 +211,7 @@ pin_labels:
 
 #include "fsl_common.h"
 #include "fsl_iomuxc.h"
+#include "fsl_gpio.h"
 #include "pin_mux.h"
 
 /* FUNCTION ************************************************************************************************************
@@ -237,6 +238,12 @@ BOARD_InitPins:
   - {pin_num: M12, peripheral: GPIO1, signal: 'gpio_io, 19', pin_signal: GPIO_AD_B1_03}
   - {pin_num: K14, peripheral: LPI2C4, signal: SCL, pin_signal: GPIO_AD_B0_12, identifier: SCL4, software_input_on: Enable, open_drain: Enable}
   - {pin_num: L14, peripheral: LPI2C4, signal: SDA, pin_signal: GPIO_AD_B0_13, identifier: SDA4, software_input_on: Enable, open_drain: Enable}
+  - {pin_num: F2, peripheral: GPIO4, signal: 'gpio_io, 04', pin_signal: GPIO_EMC_04, identifier: SW_UP, direction: INPUT, pull_up_down_config: Pull_Up_47K_Ohm, pull_keeper_select: Pull}
+  - {pin_num: H3, peripheral: GPIO4, signal: 'gpio_io, 08', pin_signal: GPIO_EMC_08, identifier: SW_MOD, direction: INPUT, pull_up_down_config: Pull_Up_47K_Ohm, pull_keeper_select: Pull}
+  - {pin_num: G5, peripheral: GPIO4, signal: 'gpio_io, 05', pin_signal: GPIO_EMC_05, identifier: SW_DOWN, direction: INPUT, pull_up_down_config: Pull_Up_47K_Ohm,
+    pull_keeper_select: Pull}
+  - {pin_num: H5, peripheral: GPIO4, signal: 'gpio_io, 06', pin_signal: GPIO_EMC_06, identifier: SW_RESET, direction: INPUT, pull_up_down_config: Pull_Up_47K_Ohm,
+    pull_keeper_select: Pull}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -249,6 +256,42 @@ BOARD_InitPins:
 void BOARD_InitPins(void) {
   CLOCK_EnableClock(kCLOCK_Iomuxc);           
 
+  /* GPIO configuration of SW_UP on GPIO_EMC_04 (pin F2) */
+  gpio_pin_config_t SW_UP_config = {
+      .direction = kGPIO_DigitalInput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_EMC_04 (pin F2) */
+  GPIO_PinInit(GPIO4, 4U, &SW_UP_config);
+
+  /* GPIO configuration of SW_DOWN on GPIO_EMC_05 (pin G5) */
+  gpio_pin_config_t SW_DOWN_config = {
+      .direction = kGPIO_DigitalInput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_EMC_05 (pin G5) */
+  GPIO_PinInit(GPIO4, 5U, &SW_DOWN_config);
+
+  /* GPIO configuration of SW_RESET on GPIO_EMC_06 (pin H5) */
+  gpio_pin_config_t SW_RESET_config = {
+      .direction = kGPIO_DigitalInput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_EMC_06 (pin H5) */
+  GPIO_PinInit(GPIO4, 6U, &SW_RESET_config);
+
+  /* GPIO configuration of SW_MOD on GPIO_EMC_08 (pin H3) */
+  gpio_pin_config_t SW_MOD_config = {
+      .direction = kGPIO_DigitalInput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_EMC_08 (pin H3) */
+  GPIO_PinInit(GPIO4, 8U, &SW_MOD_config);
+
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_12_LPI2C4_SCL, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_13_LPI2C4_SDA, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 1U); 
@@ -257,6 +300,10 @@ void BOARD_InitPins(void) {
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_06_LPI2C3_SDA, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_07_LPI2C3_SCL, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_B0_03_GPIO2_IO03, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_04_GPIO4_IO04, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_05_GPIO4_IO05, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_06_GPIO4_IO06, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_08_GPIO4_IO08, 0U); 
   IOMUXC_GPR->GPR26 = ((IOMUXC_GPR->GPR26 &
     (~(BOARD_INITPINS_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK))) 
       | IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL(0x00U) 
@@ -265,12 +312,20 @@ void BOARD_InitPins(void) {
     (~(BOARD_INITPINS_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK))) 
       | IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL(0x00U) 
     );
+  IOMUXC_GPR->GPR29 = ((IOMUXC_GPR->GPR29 &
+    (~(BOARD_INITPINS_IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL_MASK))) 
+      | IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL(0x00U) 
+    );
   IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B0_12_LPI2C4_SCL, 0x18B0U); 
   IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B0_13_LPI2C4_SDA, 0x18B0U); 
   IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 0x18B0U); 
   IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 0x18B0U); 
   IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_06_LPI2C3_SDA, 0x18B0U); 
   IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_07_LPI2C3_SCL, 0x18B0U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_EMC_04_GPIO4_IO04, 0x70B0U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_EMC_05_GPIO4_IO05, 0x70B0U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_EMC_06_GPIO4_IO06, 0x70B0U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_EMC_08_GPIO4_IO08, 0x70B0U); 
 }
 
 
