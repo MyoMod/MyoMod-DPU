@@ -11,7 +11,9 @@
 namespace freesthetics {
 
 FFTAlgorithm::FFTAlgorithm(std::string_view name) :
-    AnalysisAlgorithm(name)
+    AnalysisAlgorithm(name),
+    maxTracker(numChannels, MaxTracker(maxTrackerResolution, maxTrackerMemoryLength, F32_MIN, maxTrackerStartValue, fs, samplesPerCycle, maxTrackerOutlierCounter)),
+    minTracker(numChannels, MinTracker(minTrackerResolution, minTrackerMemoryLength, F32_MAX, minTrackerStartValue, fs, samplesPerCycle, minTrackerOutlierCounter))
 {
     arm_hanning_f32(fftWindow, samplesPerFFT);
     arm_rfft_fast_init_f32(&fftInstance, fftSize);
@@ -147,10 +149,10 @@ Status FFTAlgorithm::run() {
         outputValues[channel] = result;
 
         //auto scale
-        DspType diff = result - maxResult[channel];
-        maxResult[channel] *= (diff > 0) ? 1.05 : 0.999;
-        maxDebug = maxResult[0];
-        result = map(result, 0.0f, 35.0f, 0.0f, maxOut);
+        std::array<DspType, 1> values = {result};
+        DspType maxIn = maxTracker[channel].update(values);
+        DspType minIn = minTracker[channel].update(values);
+        result = map(result, minIn, maxIn, 0.0f, maxOut);
         result = MIN(MAX(result, 0), maxOut);
 
         //write result to output

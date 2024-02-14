@@ -29,8 +29,14 @@ public:
     static constexpr float normalisationStart = 3.0;
     static constexpr float normalisationEnd = 8.0;
 
-    static constexpr bool clipToZero = true;
-    
+    static constexpr float32_t maxTrackerResolution = 0.2;
+    static constexpr float32_t maxTrackerMemoryLength = 15;
+    static constexpr float32_t maxTrackerStartValue = 2;
+    static constexpr float32_t maxTrackerOutlierCounter = 2;
+    static constexpr float32_t minTrackerResolution = 0.2;
+    static constexpr float32_t minTrackerMemoryLength = 15;
+    static constexpr float32_t minTrackerStartValue = 2;
+    static constexpr float32_t minTrackerOutlierCounter = 2;
 
     // Sub-FFT slice claculation
     static constexpr float fBinSize = fs / (fftSize); // (fs / 2) / (fftSize / 2)
@@ -60,8 +66,9 @@ public:
     uint32_t nCycle = 0;
     DspType inputBuffer[samplesPerCycle] = {0};
 
-    uint32_t startTime = 0;
-    DspType maxResult[numChannels] = {1};
+    // Auto Scale
+    std::vector<MaxTracker> maxTracker;
+    std::vector<MinTracker> minTracker;
 
     // methods
     Status processFftFilter(uint32_t channel, std::span<const DspType> pdsIn, DspType& pdsOut);
