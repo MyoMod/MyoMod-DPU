@@ -33,10 +33,11 @@ public:
     static constexpr float32_t maxTrackerMemoryLength = 15;
     static constexpr float32_t maxTrackerStartValue = 2;
     static constexpr float32_t maxTrackerOutlierCounter = 2;
-    static constexpr float32_t minTrackerResolution = 0.2;
-    static constexpr float32_t minTrackerMemoryLength = 15;
-    static constexpr float32_t minTrackerStartValue = 2;
-    static constexpr float32_t minTrackerOutlierCounter = 2;
+
+    static constexpr float32_t minTrackerResolution = 0.5;
+    static constexpr float32_t minTrackerMemoryLength = 4;
+    static constexpr float32_t minTrackerStartValue = 0;
+    static constexpr float32_t minTrackerOutlierCounter = 1;
 
     // Sub-FFT slice claculation
     static constexpr float fBinSize = fs / (fftSize); // (fs / 2) / (fftSize / 2)

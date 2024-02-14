@@ -26,9 +26,8 @@ float32_t StatisticTracker::update(std::span<const float32_t> data)
     bins[0] = statistic(values);
 
     // shift bins if necessary and reset last bin
-    if ((cycleCounter % binDurationC) == 0)
+    if ((cycleCounter++ % binDurationC) == 0)
     {
-        cycleCounter = 0;
         for (size_t i = nBins - 1; i > 0; i--)
         {
             bins[i] = bins[i - 1];
