@@ -10,6 +10,12 @@
 
 namespace freesthetics {
 
+static DspType inputDebug[6];
+static DspType outputDebug[6];
+static DspType maxInDebug[6];
+static DspType minInDebug[6];
+static DspType normAccLengthDebug[6];
+
 FFTAlgorithm::FFTAlgorithm(std::string_view name) :
     AnalysisAlgorithm(name),
     maxTracker(numChannels, MaxTracker(maxTrackerResolution, maxTrackerMemoryLength, F32_MIN, maxTrackerStartValue, fs, samplesPerCycle, maxTrackerOutlierCounter)),
@@ -42,10 +48,6 @@ inline void vectorDivide(T* pSrcA, T* pSrcB, T* pDst, size_t blkCnt)
     }
 }
 
-DspType inputValues[6];
-DspType inputDerivation[6];
-DspType outputValues[6];
-DspType maxDebug;
 
 Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType> pdsIn, DspType& result) {
     // shift dataMemory
@@ -58,7 +60,6 @@ Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType>
     for (size_t i = 0; i < samplesPerCycle; i++)
     {
         dataMemory[channel][i + (samplesPerFFT - samplesPerCycle)] = pdsIn[i];
-        inputValues[channel] = pdsIn[i];
     }
     if(channel == (numChannels - 1) && !bufferFilled)
     {
@@ -81,7 +82,8 @@ Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType>
         arm_cmplx_mag_f32(complexFftPtr, subFft, subFftSize);
 
         float tNow = ((float) nCycle) / ((float) fCycle);
-        if( normalisationStart <= tNow && tNow <= normalisationEnd)
+        bool modPressed = !GPIO_PinRead(BOARD_INITPINS_SW_MOD_GPIO, BOARD_INITPINS_SW_MOD_PIN);
+        if( (normalisationStart <= tNow && tNow <= normalisationEnd) || modPressed)
         {
             arm_float_to_f64(subFft, normTemp, subFftSize);
             arm_add_f64(normAcc[channel], normTemp, normAcc[channel], subFftSize);
@@ -139,19 +141,26 @@ Status FFTAlgorithm::run() {
         //convert input values to float
         for (size_t i = 0; i < samplesPerCycle; i++)
         {
-            inputValues[channel] = (((float32_t) pdsData[i]) * (1 << 23)) * 3.0f;
+            inputBuffer[channel] = (((float32_t) pdsData[i]) / (1 << 23)) * 3.0f;
         }
+        inputDebug[channel] = inputBuffer[0];
 
         //process FFT
         processFftFilter(channel, inputBuffer, result);
         
         // scale result
-        outputValues[channel] = result;
+        outputDebug[channel] = result;
 
         //auto scale
         std::array<DspType, 1> values = {result};
         DspType maxIn = maxTracker[channel].update(values);
         DspType minIn = minTracker[channel].update(values);
+
+        //debug
+        maxInDebug[channel] = maxIn;
+        minInDebug[channel] = minIn;
+        normAccLengthDebug[channel] = normAccCounter[channel];
+
         result = map(result, minIn, maxIn, 0.0f, maxOut);
         result = MIN(MAX(result, 0), maxOut);
 
