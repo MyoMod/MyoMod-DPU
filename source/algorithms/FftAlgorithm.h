@@ -4,57 +4,67 @@
 #include <cassert>
 #include "arm_math.h"
 
+#include "StatisticTracker.h"
+
 namespace freesthetics {
 
 using DspType = float32_t;
 
 class FFTAlgorithm : public AnalysisAlgorithm {
 public:
-    static constexpr uint32_t numChannels = 6;
-    static constexpr DspType maxOut = 100;
 
-    static constexpr float normalisationStart = 0.5;
-    static constexpr float normalisationEnd = 2.5;
-    static constexpr float normalisationAlpha = 0.98;
-
-    static constexpr uint32_t samplesPerCycle = 15;
+    // Configuration
     static constexpr uint32_t samplesPerFFT = 256;
     static constexpr uint32_t fftSize = 256;
+    static constexpr uint32_t numChannels = 6;
+    static constexpr uint32_t samplesPerCycle = 15;
+    static constexpr uint32_t fCycle = 100;
 
-    static constexpr float fs = 100 * samplesPerCycle;
+    static constexpr float fs = fCycle * samplesPerCycle;
     static constexpr float fMin = 50;
     static constexpr float fMax = 300;
+    static constexpr bool clipToZero = true;
 
-    DspType fftWindow[samplesPerFFT];
+    static constexpr DspType maxOut = 100;
+    static constexpr float normalisationStart = 3.0;
+    static constexpr float normalisationEnd = 8.0;
 
     static constexpr bool clipToZero = true;
     
-    static constexpr float fBinSize = fs / (fftSize); // (fs / 2) / (fftSize / 2)
 
-    // The sub-FFT is the FFT of the frequency range we are interested in (bandpassed) 
+    // Sub-FFT slice claculation
+    static constexpr float fBinSize = fs / (fftSize); // (fs / 2) / (fftSize / 2)
     static constexpr uint32_t subFftStart = fMin / fBinSize;
     static constexpr uint32_t subFftEnd = fMax / fBinSize;
     static constexpr uint32_t subFftSize = subFftEnd - subFftStart;
 
-    DspType normalisationFFT[subFftSize] = {1};
-    bool normalisationFFTInitialised = false;
+    // FFT Buffers
+    DspType fftWindow[samplesPerFFT];
+    DspType windowedData[fftSize] = {0};
+    DspType complexFft[fftSize] = {0};
+    DspType subFft[subFftSize] = {0}; // this is real
+    arm_rfft_fast_instance_f32 fftInstance;
+
+    // Normalisation
+    float64_t normAcc[numChannels][subFftSize] = {0};
+    DspType normFFT[numChannels][subFftSize] = {1};
+    uint32_t normAccCounter[numChannels] = {0};
+    float64_t normTemp[subFftSize];
+
+    // Data Memory
     DspType dataMemory[numChannels][fftSize] = {0};
     uint32_t elementsInMemory = 0;
     bool bufferFilled = false;
-    DspType windowedData[fftSize] = {0};
-    DspType fft[fftSize+10] = {0};
-    DspType realFft[fftSize/2+10] = {0};
-    DspType *subFft = &realFft[subFftStart];
 
-    DspType filteredFft[subFftSize] = {0};
-
-    // dsp instances
-    arm_rfft_fast_instance_f32 fftInstance;
+    // Misc variables
+    uint32_t nCycle = 0;
+    DspType inputBuffer[samplesPerCycle] = {0};
 
     uint32_t startTime = 0;
     DspType maxResult[numChannels] = {1};
 
-    uint32_t nCycle = 0;
+    // methods
+    Status processFftFilter(uint32_t channel, std::span<const DspType> pdsIn, DspType& pdsOut);
 public:
     FFTAlgorithm(std::string_view name);
     virtual ~FFTAlgorithm();

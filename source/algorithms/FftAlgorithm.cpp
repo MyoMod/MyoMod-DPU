@@ -15,21 +15,111 @@ FFTAlgorithm::FFTAlgorithm(std::string_view name) :
 {
     arm_hanning_f32(fftWindow, samplesPerFFT);
     arm_rfft_fast_init_f32(&fftInstance, fftSize);
-
-    startTime = GPT_GetCurrentTimerCount(GPT1);
 }
 
 FFTAlgorithm::~FFTAlgorithm() {
 }
 
 template <typename T>
-T map(T x, T in_min, T in_max, T out_min, T out_max) {
+inline T map(T x, T in_min, T in_max, T out_min, T out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+template <typename T>
+inline void vectorDivide(T* pSrcA, T* pSrcB, T* pDst, size_t blkCnt)
+{
+    while (blkCnt > 0U)
+    {
+        /* C = A * B */
+
+        /* Multiply input and store result in destination buffer. */
+        *pDst++ = (*pSrcA++) * (*pSrcB++);
+
+        /* Decrement loop counter */
+        blkCnt--;
+    }
+}
+
 DspType inputValues[6];
+DspType inputDerivation[6];
 DspType outputValues[6];
 DspType maxDebug;
+
+Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType> pdsIn, DspType& result) {
+    // shift dataMemory
+    for (size_t i = 0; i < (samplesPerFFT - samplesPerCycle); i++)
+    {
+        dataMemory[channel][i] = dataMemory[channel][i + samplesPerCycle];
+    }
+
+    // fill dataMemory with new data
+    for (size_t i = 0; i < samplesPerCycle; i++)
+    {
+        dataMemory[channel][i + (samplesPerFFT - samplesPerCycle)] = pdsIn[i];
+        inputValues[channel] = pdsIn[i];
+    }
+    if(channel == (numChannels - 1) && !bufferFilled)
+    {
+        elementsInMemory += samplesPerCycle;
+        bufferFilled = elementsInMemory >= samplesPerFFT;
+    }
+
+    // proceed only if buffer is filled, as otherwise the FFT would contain zeros
+    if(bufferFilled)
+    {
+        // apply window to data
+        arm_mult_f32(dataMemory[channel], fftWindow, windowedData, samplesPerFFT);
+
+        // calculate FFT
+        arm_rfft_fast_f32(&fftInstance, windowedData, complexFft, 0);
+        // calculate magnitude only for needed frequencies 
+        // (this is a bandpass filter and saves computation time)
+        // complexFft is packed as [real0, imag0, real1, imag1, ...]
+        DspType* complexFftPtr = &complexFft[subFftStart * 2];
+        arm_cmplx_mag_f32(complexFftPtr, subFft, subFftSize);
+
+        float tNow = ((float) nCycle) / ((float) fCycle);
+        if( normalisationStart <= tNow && tNow <= normalisationEnd)
+        {
+            arm_float_to_f64(subFft, normTemp, subFftSize);
+            arm_add_f64(normAcc[channel], normTemp, normAcc[channel], subFftSize);
+            normAccCounter[channel]++;
+            
+            // update norm FFT
+            float64_t normCoeff = 1.0 / normAccCounter[channel];
+            arm_scale_f64(normAcc[channel], normCoeff, normTemp, subFftSize);
+            arm_f64_to_float(normTemp, normFFT[channel], subFftSize);
+            arm_clip_f32(normFFT[channel], normFFT[channel], 1e-15f, 10000.0f, subFftSize);
+
+            // get reciprocal of normFFT so that it can be applied by multiplication
+            uint32_t blockSize = subFftSize;
+            float32_t* pSrcA = normFFT[channel];
+            float32_t* pDst = normFFT[channel];
+            while (blockSize > 0U)
+            {
+                *pDst++ = 1.0f / (*pSrcA++);
+                blockSize--;
+            }
+        }
+
+        // apply normalisation
+        if(normAccCounter[channel] > 0)
+        {
+            // apply normalisation
+            arm_mult_f32(subFft, normFFT[channel], subFft, subFftSize);
+            arm_offset_f32(subFft, -1.0f, subFft, subFftSize);
+        }
+
+        arm_mean_f32(subFft, subFftSize, &result);
+    }
+    else
+    {   
+        // if buffer is not filled, return 0
+        result = 0;
+    }
+
+    return Status::Ok;
+}
 
 Status FFTAlgorithm::run() {
     GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_PIN, 1);
@@ -44,63 +134,16 @@ Status FFTAlgorithm::run() {
         Status status = pdsIn->at(0)->getChannelData(channel, pdsData);
         assert(status == Status::Ok);
 
-        // shift dataMemory
-        for (size_t i = 0; i < (samplesPerFFT - samplesPerCycle); i++)
-        {
-            dataMemory[channel][i] = dataMemory[channel][i + samplesPerCycle];
-        }
-
-        // fill dataMemory with new data
+        //convert input values to float
         for (size_t i = 0; i < samplesPerCycle; i++)
         {
-            float transformedValue = ((DspType)pdsData[i] / (1 << 23)) * 3.0;
-            //transformedValue = pdsData[i];
-            dataMemory[channel][i + (samplesPerFFT - samplesPerCycle)] = transformedValue;
-            inputValues[channel] = transformedValue;
-        }
-        if(channel == (numChannels - 1) && !bufferFilled)
-        {
-            elementsInMemory += samplesPerCycle;
-            bufferFilled = elementsInMemory >= samplesPerFFT;
+            inputValues[channel] = (((float32_t) pdsData[i]) * (1 << 23)) * 3.0f;
         }
 
-        // proceed only if buffer is filled, as otherwise the FFT would contain zeros
-        if(bufferFilled)
-        {
-            // apply window to data
-            arm_mult_f32(dataMemory[channel], fftWindow, windowedData, samplesPerFFT);
-
-            // calculate FFT
-            arm_rfft_fast_f32(&fftInstance, windowedData, fft, 0);
-            // convert complex to real (fft now has length fftSize/2)
-            arm_cmplx_mag_f32(fft, realFft, fftSize/2);
-
-            float time = ((float) nCycle) / (fs / samplesPerCycle);
-            if( normalisationStart <= time && time <= normalisationEnd)
-            {
-                if(!normalisationFFTInitialised)
-                {
-                    arm_copy_f32(subFft, normalisationFFT, subFftSize);
-                    normalisationFFTInitialised = true;
-                }
-
-                // normalise FFT
-                for (size_t i = 0; i < subFftSize; i++)
-                {
-                    normalisationFFT[i] = normalisationFFT[i] * normalisationAlpha + subFft[i] * (1 - normalisationAlpha);
-                }
-                arm_clip_f32(normalisationFFT, normalisationFFT, 1e-8, 10000, subFftSize);
-            }
-
-            // apply normalisation
-            for (size_t i = 0; i < subFftSize; i++)
-            {
-                subFft[i] = (subFft[i] / normalisationFFT[i]) - 1;
-            }
-
-            arm_mean_f32(subFft, subFftSize, &result);
-        }
-
+        //process FFT
+        processFftFilter(channel, inputBuffer, result);
+        
+        // scale result
         outputValues[channel] = result;
 
         //auto scale
@@ -108,17 +151,13 @@ Status FFTAlgorithm::run() {
         maxResult[channel] *= (diff > 0) ? 1.05 : 0.999;
         maxDebug = maxResult[0];
         result = map(result, 0.0f, 35.0f, 0.0f, maxOut);
-
-        //bound result to minOut and maxOut
-        result = result < 0 ? 0 : result;
-        result = result > maxOut ? maxOut : result;
+        result = MIN(MAX(result, 0), maxOut);
 
         //write result to output
         std::span<uint8_t> pdsOutData;
         status = pdsOut->at(0)->getChannelData(channel, pdsOutData);
         assert(status == Status::Ok);
         pdsOutData[channel] = result;
-        //outputValues[channel] = result;
     }
 
     nCycle++;
