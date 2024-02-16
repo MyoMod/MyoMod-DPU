@@ -155,6 +155,7 @@ Status FFTAlgorithm::run() {
         std::array<DspType, 1> values = {result};
         DspType maxIn = maxTracker[channel].update(values);
         DspType minIn = minTracker[channel].update(values);
+        bool channelActive = channel <= 1;
 
         //debug
         maxInDebug[channel] = maxIn;
@@ -168,7 +169,7 @@ Status FFTAlgorithm::run() {
         std::span<uint8_t> pdsOutData;
         status = pdsOut->at(0)->getChannelData(channel, pdsOutData);
         assert(status == Status::Ok);
-        pdsOutData[channel] = result;
+        pdsOutData[0] = channelActive ? (uint8_t) result : 0;
     }
 
     nCycle++;
