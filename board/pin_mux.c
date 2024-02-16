@@ -45,13 +45,13 @@ pin_labels:
 - {pin_num: D1, pin_signal: GPIO_EMC_28, label: SEMC_WE, identifier: SEMC_WE}
 - {pin_num: E1, pin_signal: GPIO_EMC_29, label: SEMC_CS0, identifier: SEMC_CS0}
 - {pin_num: C6, pin_signal: GPIO_EMC_30, label: SEMC_D8, identifier: SEMC_D8}
-- {pin_num: C5, pin_signal: GPIO_EMC_31, label: SEMC_D9, identifier: SEMC_D9}
+- {pin_num: C5, pin_signal: GPIO_EMC_31, label: DEBUG1, identifier: SEMC_D9;DEBUG1}
 - {pin_num: D5, pin_signal: GPIO_EMC_32, label: SEMC_D10, identifier: SEMC_D10}
 - {pin_num: C4, pin_signal: GPIO_EMC_33, label: SEMC_D11, identifier: SEMC_D11}
 - {pin_num: D4, pin_signal: GPIO_EMC_34, label: SEMC_D12, identifier: SEMC_D12}
 - {pin_num: E5, pin_signal: GPIO_EMC_35, label: SEMC_D13, identifier: SEMC_D13}
-- {pin_num: C3, pin_signal: GPIO_EMC_36, label: SEMC_D14, identifier: SEMC_D14}
-- {pin_num: E4, pin_signal: GPIO_EMC_37, label: SEMC_D15, identifier: SEMC_D15}
+- {pin_num: C3, pin_signal: GPIO_EMC_36, label: DEBUG3, identifier: DEBUG3}
+- {pin_num: E4, pin_signal: GPIO_EMC_37, label: DEBUG2, identifier: SEMC_D15;DEBUG2}
 - {pin_num: D6, pin_signal: GPIO_EMC_38, label: SEMC_DM1, identifier: SEMC_DM1}
 - {pin_num: B7, pin_signal: GPIO_EMC_39, label: SEMC_DQS, identifier: SEMC_DQS}
 - {pin_num: A7, pin_signal: GPIO_EMC_40, label: ENET_MDC, identifier: ENET_MDC}
@@ -68,7 +68,7 @@ pin_labels:
 - {pin_num: C9, pin_signal: GPIO_B0_09, label: 'LCDIF_D5/BT_CFG[5]', identifier: LCDIF_D5}
 - {pin_num: D9, pin_signal: GPIO_B0_10, label: 'LCDIF_D6/BT_CFG[6]', identifier: LCDIF_D6}
 - {pin_num: A10, pin_signal: GPIO_B0_11, label: 'LCDIF_D7/BT_CFG[7]', identifier: LCDIF_D7}
-- {pin_num: C10, pin_signal: GPIO_B0_12, label: 'LCDIF_D8/BT_CFG[8]', identifier: LCDIF_D8}
+- {pin_num: C10, pin_signal: GPIO_B0_12, label: DEBUG4, identifier: DEBUG4}
 - {pin_num: D10, pin_signal: GPIO_B0_13, label: 'LCDIF_D9/BT_CFG[9]', identifier: LCDIF_D9}
 - {pin_num: E10, pin_signal: GPIO_B0_14, label: 'LCDIF_D10/BT_CFG[10]', identifier: LCDIF_D10}
 - {pin_num: E11, pin_signal: GPIO_B0_15, label: 'LCDIF_D11/BT_CFG[11]', identifier: LCDIF_D11}
@@ -244,6 +244,10 @@ BOARD_InitPins:
     pull_keeper_select: Pull}
   - {pin_num: H5, peripheral: GPIO4, signal: 'gpio_io, 06', pin_signal: GPIO_EMC_06, identifier: SW_RESET, direction: INPUT, pull_up_down_config: Pull_Up_47K_Ohm,
     pull_keeper_select: Pull}
+  - {pin_num: C5, peripheral: GPIO4, signal: 'gpio_io, 31', pin_signal: GPIO_EMC_31, identifier: DEBUG1, direction: OUTPUT}
+  - {pin_num: E4, peripheral: GPIO3, signal: 'gpio_io, 23', pin_signal: GPIO_EMC_37, identifier: DEBUG2, direction: OUTPUT}
+  - {pin_num: C3, peripheral: GPIO3, signal: 'gpio_io, 22', pin_signal: GPIO_EMC_36, direction: OUTPUT}
+  - {pin_num: C10, peripheral: GPIO2, signal: 'gpio_io, 12', pin_signal: GPIO_B0_12, direction: OUTPUT}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -255,6 +259,33 @@ BOARD_InitPins:
  * END ****************************************************************************************************************/
 void BOARD_InitPins(void) {
   CLOCK_EnableClock(kCLOCK_Iomuxc);           
+
+  /* GPIO configuration of DEBUG4 on GPIO_B0_12 (pin C10) */
+  gpio_pin_config_t DEBUG4_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_B0_12 (pin C10) */
+  GPIO_PinInit(GPIO2, 12U, &DEBUG4_config);
+
+  /* GPIO configuration of DEBUG3 on GPIO_EMC_36 (pin C3) */
+  gpio_pin_config_t DEBUG3_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_EMC_36 (pin C3) */
+  GPIO_PinInit(GPIO3, 22U, &DEBUG3_config);
+
+  /* GPIO configuration of DEBUG2 on GPIO_EMC_37 (pin E4) */
+  gpio_pin_config_t DEBUG2_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_EMC_37 (pin E4) */
+  GPIO_PinInit(GPIO3, 23U, &DEBUG2_config);
 
   /* GPIO configuration of SW_UP on GPIO_EMC_04 (pin F2) */
   gpio_pin_config_t SW_UP_config = {
@@ -292,6 +323,15 @@ void BOARD_InitPins(void) {
   /* Initialize GPIO functionality on GPIO_EMC_08 (pin H3) */
   GPIO_PinInit(GPIO4, 8U, &SW_MOD_config);
 
+  /* GPIO configuration of DEBUG1 on GPIO_EMC_31 (pin C5) */
+  gpio_pin_config_t DEBUG1_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_EMC_31 (pin C5) */
+  GPIO_PinInit(GPIO4, 31U, &DEBUG1_config);
+
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_12_LPI2C4_SCL, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_13_LPI2C4_SDA, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 1U); 
@@ -300,10 +340,14 @@ void BOARD_InitPins(void) {
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_06_LPI2C3_SDA, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_07_LPI2C3_SCL, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_B0_03_GPIO2_IO03, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_12_GPIO2_IO12, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_04_GPIO4_IO04, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_05_GPIO4_IO05, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_06_GPIO4_IO06, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_08_GPIO4_IO08, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_31_GPIO4_IO31, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_36_GPIO3_IO22, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_37_GPIO3_IO23, 0U); 
   IOMUXC_GPR->GPR26 = ((IOMUXC_GPR->GPR26 &
     (~(BOARD_INITPINS_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK))) 
       | IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL(0x00U) 
@@ -311,6 +355,10 @@ void BOARD_InitPins(void) {
   IOMUXC_GPR->GPR27 = ((IOMUXC_GPR->GPR27 &
     (~(BOARD_INITPINS_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK))) 
       | IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL(0x00U) 
+    );
+  IOMUXC_GPR->GPR28 = ((IOMUXC_GPR->GPR28 &
+    (~(BOARD_INITPINS_IOMUXC_GPR_GPR28_GPIO_MUX3_GPIO_SEL_MASK))) 
+      | IOMUXC_GPR_GPR28_GPIO_MUX3_GPIO_SEL(0x00U) 
     );
   IOMUXC_GPR->GPR29 = ((IOMUXC_GPR->GPR29 &
     (~(BOARD_INITPINS_IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL_MASK))) 

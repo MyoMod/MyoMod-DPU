@@ -57,13 +57,13 @@
                <pin_label pin_num="D1" pin_signal="GPIO_EMC_28" label="SEMC_WE" identifier="SEMC_WE"/>
                <pin_label pin_num="E1" pin_signal="GPIO_EMC_29" label="SEMC_CS0" identifier="SEMC_CS0"/>
                <pin_label pin_num="C6" pin_signal="GPIO_EMC_30" label="SEMC_D8" identifier="SEMC_D8"/>
-               <pin_label pin_num="C5" pin_signal="GPIO_EMC_31" label="SEMC_D9" identifier="SEMC_D9"/>
+               <pin_label pin_num="C5" pin_signal="GPIO_EMC_31" label="DEBUG1" identifier="SEMC_D9;DEBUG1"/>
                <pin_label pin_num="D5" pin_signal="GPIO_EMC_32" label="SEMC_D10" identifier="SEMC_D10"/>
                <pin_label pin_num="C4" pin_signal="GPIO_EMC_33" label="SEMC_D11" identifier="SEMC_D11"/>
                <pin_label pin_num="D4" pin_signal="GPIO_EMC_34" label="SEMC_D12" identifier="SEMC_D12"/>
                <pin_label pin_num="E5" pin_signal="GPIO_EMC_35" label="SEMC_D13" identifier="SEMC_D13"/>
-               <pin_label pin_num="C3" pin_signal="GPIO_EMC_36" label="SEMC_D14" identifier="SEMC_D14"/>
-               <pin_label pin_num="E4" pin_signal="GPIO_EMC_37" label="SEMC_D15" identifier="SEMC_D15"/>
+               <pin_label pin_num="C3" pin_signal="GPIO_EMC_36" label="DEBUG3" identifier="DEBUG3"/>
+               <pin_label pin_num="E4" pin_signal="GPIO_EMC_37" label="DEBUG2" identifier="SEMC_D15;DEBUG2"/>
                <pin_label pin_num="D6" pin_signal="GPIO_EMC_38" label="SEMC_DM1" identifier="SEMC_DM1"/>
                <pin_label pin_num="B7" pin_signal="GPIO_EMC_39" label="SEMC_DQS" identifier="SEMC_DQS"/>
                <pin_label pin_num="A7" pin_signal="GPIO_EMC_40" label="ENET_MDC" identifier="ENET_MDC"/>
@@ -80,7 +80,7 @@
                <pin_label pin_num="C9" pin_signal="GPIO_B0_09" label="LCDIF_D5/BT_CFG[5]" identifier="LCDIF_D5"/>
                <pin_label pin_num="D9" pin_signal="GPIO_B0_10" label="LCDIF_D6/BT_CFG[6]" identifier="LCDIF_D6"/>
                <pin_label pin_num="A10" pin_signal="GPIO_B0_11" label="LCDIF_D7/BT_CFG[7]" identifier="LCDIF_D7"/>
-               <pin_label pin_num="C10" pin_signal="GPIO_B0_12" label="LCDIF_D8/BT_CFG[8]" identifier="LCDIF_D8"/>
+               <pin_label pin_num="C10" pin_signal="GPIO_B0_12" label="DEBUG4" identifier="DEBUG4"/>
                <pin_label pin_num="D10" pin_signal="GPIO_B0_13" label="LCDIF_D9/BT_CFG[9]" identifier="LCDIF_D9"/>
                <pin_label pin_num="E10" pin_signal="GPIO_B0_14" label="LCDIF_D10/BT_CFG[10]" identifier="LCDIF_D10"/>
                <pin_label pin_num="E11" pin_signal="GPIO_B0_15" label="LCDIF_D11/BT_CFG[11]" identifier="LCDIF_D11"/>
@@ -341,6 +341,28 @@
                         <pin_feature name="direction" value="INPUT"/>
                         <pin_feature name="pull_up_down_config" value="Pull_Up_47K_Ohm"/>
                         <pin_feature name="pull_keeper_select" value="Pull"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO4" signal="gpio_io, 31" pin_num="C5" pin_signal="GPIO_EMC_31">
+                     <pin_features>
+                        <pin_feature name="identifier" value="DEBUG1"/>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO3" signal="gpio_io, 23" pin_num="E4" pin_signal="GPIO_EMC_37">
+                     <pin_features>
+                        <pin_feature name="identifier" value="DEBUG2"/>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO3" signal="gpio_io, 22" pin_num="C3" pin_signal="GPIO_EMC_36">
+                     <pin_features>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO2" signal="gpio_io, 12" pin_num="C10" pin_signal="GPIO_B0_12">
+                     <pin_features>
+                        <pin_feature name="direction" value="OUTPUT"/>
                      </pin_features>
                   </pin>
                </pins>

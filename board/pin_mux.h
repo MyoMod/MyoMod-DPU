@@ -38,8 +38,9 @@ extern "C" {
 void BOARD_InitBootPins(void);
 
 #define BOARD_INITPINS_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK 0x080000U /*!< GPIO1 and GPIO6 share same IO MUX function, GPIO_MUX1 selects one GPIO function: affected bits mask */
-#define BOARD_INITPINS_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK 0x08U /*!< GPIO2 and GPIO7 share same IO MUX function, GPIO_MUX2 selects one GPIO function: affected bits mask */
-#define BOARD_INITPINS_IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL_MASK 0x0170U /*!< GPIO4 and GPIO9 share same IO MUX function, GPIO_MUX4 selects one GPIO function: affected bits mask */
+#define BOARD_INITPINS_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK 0x1008U /*!< GPIO2 and GPIO7 share same IO MUX function, GPIO_MUX2 selects one GPIO function: affected bits mask */
+#define BOARD_INITPINS_IOMUXC_GPR_GPR28_GPIO_MUX3_GPIO_SEL_MASK 0xC00000U /*!< GPIO3 and GPIO8 share same IO MUX function, GPIO_MUX3 selects one GPIO function: affected bits mask */
+#define BOARD_INITPINS_IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL_MASK 0x80000170U /*!< GPIO4 and GPIO9 share same IO MUX function, GPIO_MUX4 selects one GPIO function: affected bits mask */
 
 /* GPIO_B0_03 (coord D8), USR_LED */
 /* Routed pin properties */
@@ -144,6 +145,62 @@ void BOARD_InitBootPins(void);
 #define BOARD_INITPINS_SW_RESET_PORT                                       GPIO4   /*!< PORT peripheral base pointer */
 #define BOARD_INITPINS_SW_RESET_PIN                                           6U   /*!< PORT pin number */
 #define BOARD_INITPINS_SW_RESET_PIN_MASK                              (1U << 6U)   /*!< PORT pin mask */
+
+/* GPIO_EMC_31 (coord C5), DEBUG1 */
+/* Routed pin properties */
+#define BOARD_INITPINS_DEBUG1_PERIPHERAL                                   GPIO4   /*!< Peripheral name */
+#define BOARD_INITPINS_DEBUG1_SIGNAL                                     gpio_io   /*!< Signal name */
+#define BOARD_INITPINS_DEBUG1_CHANNEL                                        31U   /*!< Signal channel */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_INITPINS_DEBUG1_GPIO                                         GPIO4   /*!< GPIO peripheral base pointer */
+#define BOARD_INITPINS_DEBUG1_GPIO_PIN                                       31U   /*!< GPIO pin number */
+#define BOARD_INITPINS_DEBUG1_GPIO_PIN_MASK                          (1U << 31U)   /*!< GPIO pin mask */
+#define BOARD_INITPINS_DEBUG1_PORT                                         GPIO4   /*!< PORT peripheral base pointer */
+#define BOARD_INITPINS_DEBUG1_PIN                                            31U   /*!< PORT pin number */
+#define BOARD_INITPINS_DEBUG1_PIN_MASK                               (1U << 31U)   /*!< PORT pin mask */
+
+/* GPIO_EMC_37 (coord E4), DEBUG2 */
+/* Routed pin properties */
+#define BOARD_INITPINS_DEBUG2_PERIPHERAL                                   GPIO3   /*!< Peripheral name */
+#define BOARD_INITPINS_DEBUG2_SIGNAL                                     gpio_io   /*!< Signal name */
+#define BOARD_INITPINS_DEBUG2_CHANNEL                                        23U   /*!< Signal channel */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_INITPINS_DEBUG2_GPIO                                         GPIO3   /*!< GPIO peripheral base pointer */
+#define BOARD_INITPINS_DEBUG2_GPIO_PIN                                       23U   /*!< GPIO pin number */
+#define BOARD_INITPINS_DEBUG2_GPIO_PIN_MASK                          (1U << 23U)   /*!< GPIO pin mask */
+#define BOARD_INITPINS_DEBUG2_PORT                                         GPIO3   /*!< PORT peripheral base pointer */
+#define BOARD_INITPINS_DEBUG2_PIN                                            23U   /*!< PORT pin number */
+#define BOARD_INITPINS_DEBUG2_PIN_MASK                               (1U << 23U)   /*!< PORT pin mask */
+
+/* GPIO_EMC_36 (coord C3), DEBUG3 */
+/* Routed pin properties */
+#define BOARD_INITPINS_DEBUG3_PERIPHERAL                                   GPIO3   /*!< Peripheral name */
+#define BOARD_INITPINS_DEBUG3_SIGNAL                                     gpio_io   /*!< Signal name */
+#define BOARD_INITPINS_DEBUG3_CHANNEL                                        22U   /*!< Signal channel */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_INITPINS_DEBUG3_GPIO                                         GPIO3   /*!< GPIO peripheral base pointer */
+#define BOARD_INITPINS_DEBUG3_GPIO_PIN                                       22U   /*!< GPIO pin number */
+#define BOARD_INITPINS_DEBUG3_GPIO_PIN_MASK                          (1U << 22U)   /*!< GPIO pin mask */
+#define BOARD_INITPINS_DEBUG3_PORT                                         GPIO3   /*!< PORT peripheral base pointer */
+#define BOARD_INITPINS_DEBUG3_PIN                                            22U   /*!< PORT pin number */
+#define BOARD_INITPINS_DEBUG3_PIN_MASK                               (1U << 22U)   /*!< PORT pin mask */
+
+/* GPIO_B0_12 (coord C10), DEBUG4 */
+/* Routed pin properties */
+#define BOARD_INITPINS_DEBUG4_PERIPHERAL                                   GPIO2   /*!< Peripheral name */
+#define BOARD_INITPINS_DEBUG4_SIGNAL                                     gpio_io   /*!< Signal name */
+#define BOARD_INITPINS_DEBUG4_CHANNEL                                        12U   /*!< Signal channel */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_INITPINS_DEBUG4_GPIO                                         GPIO2   /*!< GPIO peripheral base pointer */
+#define BOARD_INITPINS_DEBUG4_GPIO_PIN                                       12U   /*!< GPIO pin number */
+#define BOARD_INITPINS_DEBUG4_GPIO_PIN_MASK                          (1U << 12U)   /*!< GPIO pin mask */
+#define BOARD_INITPINS_DEBUG4_PORT                                         GPIO2   /*!< PORT peripheral base pointer */
+#define BOARD_INITPINS_DEBUG4_PIN                                            12U   /*!< PORT pin number */
+#define BOARD_INITPINS_DEBUG4_PIN_MASK                               (1U << 12U)   /*!< PORT pin mask */
 
 /*!
  * @brief Configures pin routing and optionally pin electrical features.
