@@ -141,7 +141,7 @@ Status FFTAlgorithm::run() {
         //convert input values to float
         for (size_t i = 0; i < samplesPerCycle; i++)
         {
-            inputBuffer[channel] = (((float32_t) pdsData[i]) / (1 << 23)) * 3.0f;
+            inputBuffer[i] = (((float32_t) pdsData[i]) / (1 << 23)) * 3.0f;
         }
         inputDebug[channel] = inputBuffer[0];
 

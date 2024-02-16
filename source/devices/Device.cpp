@@ -220,7 +220,7 @@ std::array<MemoryRegion, 2> Device::getOutBuffer() {
  */
 Status Device::proccessInData() {
 	// Copy the data for the status byte
-	*(StatusByte_t*)registerData[0] = *(StatusByte_t*)inBuffer.data();
+	*(StatusByte_t*)(registerData[0]) = *(StatusByte_t*)inBuffer.data();
 
 	// Copy the data for the channels
 	for(auto& channel : channels[1]) {
