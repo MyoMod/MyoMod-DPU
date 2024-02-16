@@ -14,28 +14,28 @@ class FFTAlgorithm : public AnalysisAlgorithm {
 public:
 
     // Configuration
-    static constexpr uint32_t samplesPerFFT = 256;
-    static constexpr uint32_t fftSize = 256;
+    static constexpr uint32_t samplesPerFFT = 512;
+    static constexpr uint32_t fftSize = 512;
     static constexpr uint32_t numChannels = 6;
     static constexpr uint32_t samplesPerCycle = 15;
     static constexpr uint32_t fCycle = 100;
 
     static constexpr float fs = fCycle * samplesPerCycle;
-    static constexpr float fMin = 50;
+    static constexpr float fMin = 60;
     static constexpr float fMax = 300;
     static constexpr bool clipToZero = true;
 
     static constexpr DspType maxOut = 100;
     static constexpr float normalisationStart = 3.0;
-    static constexpr float normalisationEnd = 8.0;
+    static constexpr float normalisationEnd = 5.0;
 
     static constexpr float32_t maxTrackerResolution = 0.2;
     static constexpr float32_t maxTrackerMemoryLength = 15;
     static constexpr float32_t maxTrackerStartValue = 2;
     static constexpr float32_t maxTrackerOutlierCounter = 2;
 
-    static constexpr float32_t minTrackerResolution = 0.5;
-    static constexpr float32_t minTrackerMemoryLength = 4;
+    static constexpr float32_t minTrackerResolution = 1.0;
+    static constexpr float32_t minTrackerMemoryLength = 15;
     static constexpr float32_t minTrackerStartValue = 0;
     static constexpr float32_t minTrackerOutlierCounter = 1;
 
