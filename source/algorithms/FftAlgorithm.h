@@ -30,12 +30,12 @@ public:
     static constexpr float normalisationEnd = 5.0;
 
     static constexpr float32_t maxTrackerResolution = 0.2;
-    static constexpr float32_t maxTrackerMemoryLength = 15;
+    static constexpr float32_t maxTrackerMemoryLength = 120;
     static constexpr float32_t maxTrackerStartValue = 2;
     static constexpr float32_t maxTrackerOutlierCounter = 2;
 
     static constexpr float32_t minTrackerResolution = 1.0;
-    static constexpr float32_t minTrackerMemoryLength = 15;
+    static constexpr float32_t minTrackerMemoryLength = 60;
     static constexpr float32_t minTrackerStartValue = 0;
     static constexpr float32_t minTrackerOutlierCounter = 1;
 

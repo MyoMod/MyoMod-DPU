@@ -11,7 +11,7 @@ StatisticTracker::StatisticTracker(float timeResolution, float memoryLength, flo
         cycleCounter(0),
         outlierCounter(outlierCounter),
         bins(nBins, startValue), 
-        sortedBins(nBins)
+        noOoutliersBins(nBins)
 {
     arm_sort_init_f32(&sortInstance, ARM_SORT_INSERTION, ARM_SORT_ASCENDING);
     assert(nBins > 2 * outlierCounter);
@@ -36,9 +36,15 @@ float32_t StatisticTracker::update(std::span<const float32_t> data)
     }
 
     // calculate result
-    arm_sort_f32(&sortInstance, bins.data(), sortedBins.data(), nBins);
-    std::span<float32_t> subSpan {&sortedBins[outlierCounter], &sortedBins[nBins - outlierCounter]};
-    result = statistic(subSpan);
+    // remove outlierCount outliers
+    memcpy(noOoutliersBins.data(), bins.data(), nBins * sizeof(float32_t));
+    for (size_t i = 0; i < outlierCounter; i++)
+    {
+        uint32_t pos;
+        statistic(noOoutliersBins, &pos);
+        noOoutliersBins[pos] = resetValue;
+    }
+    result = statistic(noOoutliersBins);
     return result;
 }
 

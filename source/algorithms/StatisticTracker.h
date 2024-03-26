@@ -11,7 +11,7 @@ public:
     StatisticTracker(float timeResolution, float memoryLength, float32_t resetValue, float32_t startValue, float fs, uint32_t samplesPerCycle, uint32_t outlierCounter = 2);
     virtual ~StatisticTracker() = default;
 
-    virtual float32_t statistic(std::span<const float32_t> data) = 0;
+    virtual float32_t statistic(std::span<const float32_t> data, uint32_t* index = NULL) = 0;
 
     float32_t update(std::span<const float32_t> data);
 private:
@@ -23,7 +23,7 @@ private:
     const uint32_t outlierCounter;
     
     std::vector<float32_t> bins;
-    std::vector<float32_t> sortedBins;
+    std::vector<float32_t> noOoutliersBins;
 };
 
 class MaxTracker: public StatisticTracker {
@@ -42,11 +42,11 @@ public:
     {};
     ~MaxTracker(){};
 
-    float32_t statistic(std::span<const float32_t> data)
+    float32_t statistic(std::span<const float32_t> data, uint32_t* index = NULL)
     {
         float32_t result;
         uint32_t pos;
-        arm_max_f32(data.data(), data.size(), &result, &pos);
+        arm_max_f32(data.data(), data.size(), &result, (index == NULL) ? &pos: index);
         return result;
     }
 };
@@ -68,11 +68,11 @@ public:
     {};
     ~MinTracker(){};
 
-    float32_t statistic(std::span<const float32_t> data)
+    float32_t statistic(std::span<const float32_t> data, uint32_t* index = NULL)
     {
         float32_t result;
         uint32_t pos;
-        arm_min_f32(data.data(), data.size(), &result, &pos);
+        arm_min_f32(data.data(), data.size(), &result, (index == NULL) ? &pos: index) ;
         return result;
     }
 };

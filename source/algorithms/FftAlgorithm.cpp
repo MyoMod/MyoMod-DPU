@@ -10,8 +10,16 @@
 
 namespace freesthetics {
 
+#define DEBUG_PIN_1(x) GPIO_PinWrite(BOARD_INITPINS_DEBUG1_GPIO, BOARD_INITPINS_DEBUG1_PIN, x)
+#define DEBUG_PIN_2(x) GPIO_PinWrite(BOARD_INITPINS_DEBUG2_GPIO, BOARD_INITPINS_DEBUG2_PIN, x)
+#define DEBUG_PIN_3(x) GPIO_PinWrite(BOARD_INITPINS_DEBUG3_GPIO, BOARD_INITPINS_DEBUG3_PIN, x)
+#define DEBUG_PIN_4(x) GPIO_PinWrite(BOARD_INITPINS_DEBUG4_GPIO, BOARD_INITPINS_DEBUG4_PIN, x)
+#define DEBUG_PINS(x) DEBUG_PIN_1(x&1); DEBUG_PIN_2((x>>1) & 1); DEBUG_PIN_3((x>>2) & 1); DEBUG_PIN_4((x>>3) & 1)
+
 static DspType inputDebug[6];
 static DspType outputDebug[6];
+static DspType scaledOutputDebug[6];
+static DspType preNormDebug[6];
 static DspType maxInDebug[6];
 static DspType minInDebug[6];
 static DspType normAccLengthDebug[6];
@@ -67,19 +75,27 @@ Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType>
         bufferFilled = elementsInMemory >= samplesPerFFT;
     }
 
+    DEBUG_PINS(3);
+
     // proceed only if buffer is filled, as otherwise the FFT would contain zeros
     if(bufferFilled)
     {
         // apply window to data
         arm_mult_f32(dataMemory[channel], fftWindow, windowedData, samplesPerFFT);
 
+        DEBUG_PINS(4);
+
         // calculate FFT
         arm_rfft_fast_f32(&fftInstance, windowedData, complexFft, 0);
+
+        DEBUG_PINS(5);
         // calculate magnitude only for needed frequencies 
         // (this is a bandpass filter and saves computation time)
         // complexFft is packed as [real0, imag0, real1, imag1, ...]
         DspType* complexFftPtr = &complexFft[subFftStart * 2];
         arm_cmplx_mag_f32(complexFftPtr, subFft, subFftSize);
+
+        DEBUG_PINS(6);
 
         float tNow = ((float) nCycle) / ((float) fCycle);
         bool modPressed = !GPIO_PinRead(BOARD_INITPINS_SW_MOD_GPIO, BOARD_INITPINS_SW_MOD_PIN);
@@ -105,6 +121,11 @@ Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType>
                 blockSize--;
             }
         }
+        DEBUG_PINS(7);
+
+        arm_mean_f32(subFft, subFftSize, &preNormDebug[channel]);
+
+        DEBUG_PINS(8);
 
         // apply normalisation
         if(normAccCounter[channel] > 0)
@@ -113,6 +134,8 @@ Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType>
             arm_mult_f32(subFft, normFFT[channel], subFft, subFftSize);
             arm_offset_f32(subFft, -1.0f, subFft, subFftSize);
         }
+
+        DEBUG_PINS(9);
 
         arm_mean_f32(subFft, subFftSize, &result);
     }
@@ -131,6 +154,7 @@ Status FFTAlgorithm::run() {
     // iterate over all channels
     for (size_t channel = 0; channel < numChannels; channel++)
     {
+        DEBUG_PINS(1);
         DspType result = 0;
 
         //get input values
@@ -144,10 +168,10 @@ Status FFTAlgorithm::run() {
             inputBuffer[i] = (((float32_t) pdsData[i]) / (1 << 23)) * 3.0f;
         }
         inputDebug[channel] = inputBuffer[0];
-
+        DEBUG_PINS(2);
         //process FFT
         processFftFilter(channel, inputBuffer, result);
-        
+        DEBUG_PINS(14);
         // scale result
         outputDebug[channel] = result;
 
@@ -155,7 +179,8 @@ Status FFTAlgorithm::run() {
         std::array<DspType, 1> values = {result};
         DspType maxIn = maxTracker[channel].update(values);
         DspType minIn = minTracker[channel].update(values);
-        bool channelActive = channel <= 1;
+        bool channelActive = channel == 0 || channel == 5;
+        DEBUG_PINS(15);
 
         //debug
         maxInDebug[channel] = maxIn;
@@ -170,6 +195,7 @@ Status FFTAlgorithm::run() {
         status = pdsOut->at(0)->getChannelData(channel, pdsOutData);
         assert(status == Status::Ok);
         pdsOutData[0] = channelActive ? (uint8_t) result : 0;
+        DEBUG_PINS(0);
     }
 
     nCycle++;
