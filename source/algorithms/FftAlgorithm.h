@@ -28,16 +28,9 @@ public:
     static constexpr DspType maxOut = 100;
     static constexpr float normalisationStart = 3.0;
     static constexpr float normalisationEnd = 5.0;
-
-    static constexpr float32_t maxTrackerResolution = 0.2;
-    static constexpr float32_t maxTrackerMemoryLength = 120;
-    static constexpr float32_t maxTrackerStartValue = 2;
-    static constexpr float32_t maxTrackerOutlierCounter = 2;
-
-    static constexpr float32_t minTrackerResolution = 1.0;
-    static constexpr float32_t minTrackerMemoryLength = 60;
-    static constexpr float32_t minTrackerStartValue = 0;
-    static constexpr float32_t minTrackerOutlierCounter = 1;
+    static constexpr float mvcPeriodStart = 6.0;
+    static constexpr float mvcPeriodEnd = 15.0;
+    static constexpr float mvcAlpha = 0.1;
 
     // Sub-FFT slice claculation
     static constexpr float fBinSize = fs / (fftSize); // (fs / 2) / (fftSize / 2)
@@ -67,12 +60,14 @@ public:
     uint32_t nCycle = 0;
     DspType inputBuffer[samplesPerCycle] = {0};
 
-    // Auto Scale
-    std::vector<MaxTracker> maxTracker;
-    std::vector<MinTracker> minTracker;
+    // MVC-Rescaling
+    DspType mvcFft[numChannels][subFftSize] = {1};
+    DspType mvcMax[numChannels] = {0};
+    DspType mvcMovAvgFft[numChannels][subFftSize] = {0};
 
     // methods
     Status processFftFilter(uint32_t channel, std::span<const DspType> pdsIn, DspType& pdsOut);
+    Status recalculateNormFft(uint32_t channel, bool rescale);
 public:
     FFTAlgorithm(std::string_view name);
     virtual ~FFTAlgorithm();

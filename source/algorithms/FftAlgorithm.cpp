@@ -25,9 +25,7 @@ static DspType minInDebug[6];
 static DspType normAccLengthDebug[6];
 
 FFTAlgorithm::FFTAlgorithm(std::string_view name) :
-    AnalysisAlgorithm(name),
-    maxTracker(numChannels, MaxTracker(maxTrackerResolution, maxTrackerMemoryLength, F32_MIN, maxTrackerStartValue, fs, samplesPerCycle, maxTrackerOutlierCounter)),
-    minTracker(numChannels, MinTracker(minTrackerResolution, minTrackerMemoryLength, F32_MAX, minTrackerStartValue, fs, samplesPerCycle, minTrackerOutlierCounter))
+    AnalysisAlgorithm(name)
 {
     arm_hanning_f32(fftWindow, samplesPerFFT);
     arm_rfft_fast_init_f32(&fftInstance, fftSize);
@@ -46,16 +44,69 @@ inline void vectorDivide(T* pSrcA, T* pSrcB, T* pDst, size_t blkCnt)
 {
     while (blkCnt > 0U)
     {
-        /* C = A * B */
+        /* C = A / B */
 
-        /* Multiply input and store result in destination buffer. */
-        *pDst++ = (*pSrcA++) * (*pSrcB++);
+        /* Divide input and store result in destination buffer. */
+        *pDst++ = (*pSrcA++) / (*pSrcB++);
 
         /* Decrement loop counter */
         blkCnt--;
     }
 }
 
+template <typename T>
+inline void vectorReciprocal(T* pSrcA, T* pDst, size_t blkCnt)
+{
+    while (blkCnt > 0U)
+    {
+        /* C = 1 / A */
+
+        /* Store result in destination buffer. */
+        *pDst++ = 1.0f / (*pSrcA++);
+
+        /* Decrement loop counter */
+        blkCnt--;
+    }
+}
+
+inline void vectorWeightedAddition(DspType* pSrcA, DspType* pSrcB, DspType* pDst, DspType weightA, DspType weightB, size_t blkCnt)
+{
+    while (blkCnt > 0U)
+    {
+        /* C = A * weightA + B * weightB */
+
+        /* Add input and store result in destination buffer. */
+        *pDst++ = (*pSrcA++) * weightA + (*pSrcB++) * weightB;
+
+        /* Decrement loop counter */
+        blkCnt--;
+    }
+}
+
+Status FFTAlgorithm::recalculateNormFft(uint32_t channel, bool rescale) {
+    if(normAccCounter[channel] > 0)
+    {
+        // update norm FFT
+        float64_t normCoeff = 1.0 / normAccCounter[channel];
+        arm_scale_f64(normAcc[channel], normCoeff, normTemp, subFftSize);
+        arm_f64_to_float(normTemp, normFFT[channel], subFftSize);
+        arm_clip_f32(normFFT[channel], normFFT[channel], 1e-15f, 10000.0f, subFftSize);
+
+        // get reciprocal of normFFT so that it can be applied by multiplication
+        vectorReciprocal(normFFT[channel], normFFT[channel], subFftSize);
+
+        // Rescale normFFT, so that it is 1.0 at mvc input
+        if(rescale)
+        {
+            DspType mvcResponse;
+            arm_dot_prod_f32(mvcFft[channel], normFFT[channel], subFftSize, &mvcResponse);
+            // normFFT = normFFT / mvcResponse
+            mvcResponse = 1.0 / mvcResponse;
+            arm_scale_f32(normFFT[channel], mvcResponse, normFFT[channel], subFftSize);
+        }
+    }
+    return Status::Ok;
+}
 
 Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType> pdsIn, DspType& result) {
     // shift dataMemory
@@ -105,39 +156,53 @@ Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType>
             arm_add_f64(normAcc[channel], normTemp, normAcc[channel], subFftSize);
             normAccCounter[channel]++;
             
-            // update norm FFT
-            float64_t normCoeff = 1.0 / normAccCounter[channel];
-            arm_scale_f64(normAcc[channel], normCoeff, normTemp, subFftSize);
-            arm_f64_to_float(normTemp, normFFT[channel], subFftSize);
-            arm_clip_f32(normFFT[channel], normFFT[channel], 1e-15f, 10000.0f, subFftSize);
-
-            // get reciprocal of normFFT so that it can be applied by multiplication
-            uint32_t blockSize = subFftSize;
-            float32_t* pSrcA = normFFT[channel];
-            float32_t* pDst = normFFT[channel];
-            while (blockSize > 0U)
-            {
-                *pDst++ = 1.0f / (*pSrcA++);
-                blockSize--;
-            }
+            // update norm FFT and rescale if mvc period is over
+            recalculateNormFft(channel, tNow > mvcPeriodEnd);
         }
         DEBUG_PINS(7);
+        
+        // Calculate MVC for rescaling
+        if((mvcPeriodStart <= tNow && tNow <= mvcPeriodEnd))
+        {
+            // set usefull initial values to mvcFft
+            if(mvcFft[channel][0] == 0)
+            {
+                arm_copy_f32(subFft, mvcFft[channel], subFftSize);
+            }
 
-        arm_mean_f32(subFft, subFftSize, &preNormDebug[channel]);
+            // Update moving average of subFft
+            vectorWeightedAddition(mvcMovAvgFft[channel], subFft, mvcMovAvgFft[channel], 1.0 - mvcAlpha, mvcAlpha, subFftSize);
 
-        DEBUG_PINS(8);
+            // calculate max of subFft
+            DspType mvcSum;
+            arm_dot_prod_f32(mvcMovAvgFft[channel], normFFT[channel], subFftSize, &mvcSum);
 
-        // apply normalisation
-        if(normAccCounter[channel] > 0)
+            // update mvcMax if new max is found
+            if(mvcSum > mvcMax[channel])
+            {
+                mvcMax[channel] = mvcSum;
+                arm_copy_f32(subFft, mvcFft[channel], subFftSize);
+            }
+
+            // update normFFT in last cycle of mvc period
+            if((tNow + 1.0 / fCycle) > mvcPeriodEnd)
+            {
+                recalculateNormFft(channel, true);
+            }
+        }
+
+        // apply normalisation when normalisation and scale periods are over
+        if(tNow > mvcPeriodEnd)
         {
             // apply normalisation
-            arm_mult_f32(subFft, normFFT[channel], subFft, subFftSize);
-            arm_offset_f32(subFft, -1.0f, subFft, subFftSize);
+            arm_dot_prod_f32(subFft, normFFT[channel], subFftSize, &result);
+        }
+        else
+        {
+            result = 0;
         }
 
         DEBUG_PINS(9);
-
-        arm_mean_f32(subFft, subFftSize, &result);
     }
     else
     {   
@@ -149,7 +214,7 @@ Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType>
 }
 
 Status FFTAlgorithm::run() {
-    GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_PIN, 1);
+    const uint32_t activeChannels = 0b111111;
 
     // iterate over all channels
     for (size_t channel = 0; channel < numChannels; channel++)
@@ -169,37 +234,34 @@ Status FFTAlgorithm::run() {
         }
         inputDebug[channel] = inputBuffer[0];
         DEBUG_PINS(2);
+
         //process FFT
         processFftFilter(channel, inputBuffer, result);
         DEBUG_PINS(14);
-        // scale result
-        outputDebug[channel] = result;
 
-        //auto scale
-        std::array<DspType, 1> values = {result};
-        DspType maxIn = maxTracker[channel].update(values);
-        DspType minIn = minTracker[channel].update(values);
-        bool channelActive = channel == 0 || channel == 5;
-        DEBUG_PINS(15);
-
-        //debug
-        maxInDebug[channel] = maxIn;
-        minInDebug[channel] = minIn;
-        normAccLengthDebug[channel] = normAccCounter[channel];
-
-        result = map(result, minIn, maxIn, 0.0f, maxOut);
-        result = MIN(MAX(result, 0), maxOut);
+        //clip result
+        result = MIN(MAX(result * maxOut, 0), maxOut);
 
         //write result to output
-        std::span<uint8_t> pdsOutData;
-        status = pdsOut->at(0)->getChannelData(channel, pdsOutData);
+        std::span<uint8_t> pdsOutDisplayData;
+        status = pdsOut->at(0)->getChannelData(channel, pdsOutDisplayData);
         assert(status == Status::Ok);
-        pdsOutData[0] = channelActive ? (uint8_t) result : 0;
+        pdsOutDisplayData[0] = ((activeChannels>>channel)&1) ? (uint8_t) result : 0;
+
+
+        std::span<uint8_t> pdsOutBTData;
+        status = pdsOut->at(1)->getChannelData(channel, pdsOutBTData);
+        assert(status == Status::Ok);
+        pdsOutBTData[0] = ((activeChannels>>channel)&1) ? (uint8_t) result : 0;
         DEBUG_PINS(0);
     }
 
+
+    float tNow = ((float) nCycle) / ((float) fCycle);
+    bool inScalePeriod = (mvcPeriodStart < tNow) && (tNow < mvcPeriodEnd);
+    GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_PIN, inScalePeriod);
+
     nCycle++;
-    GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_PIN, 0);
     return Status::Ok;
 }
 
