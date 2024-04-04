@@ -95,7 +95,7 @@ void main()
 		.name = "SD Card"
 	};
 	freesthetics::DeviceDescriptor display {
-		.deviceType = "BarDis6Ch",
+		.deviceType = "BarDis7Ch",
 		.deviceIdentifier = "BDisplay2",
 		.peripheralIndex = -1,
 		.deviceAddress = -1,
@@ -186,6 +186,15 @@ void main()
 		#endif
 	}
 	#if USE_DISPLAY
+	// add 7nth Channel
+	freesthetics::ChannelDescriptor displayChannel {
+		.device = &display,
+		.channelIndex = 6,
+		.name = "Channel 7"
+	};
+	fftConfiguration.PDSs[displayPdsIndex].channels.push_back(displayChannel);
+
+	// add buttons
 	std::string buttonNames[4] = {"A", "B", "X", "Y"};
 	for (size_t i = 0; i < 4; i++)
 	{
@@ -197,6 +206,7 @@ void main()
 		fftConfiguration.PDSs[displayButtonsPdsIndex].channels.push_back(buttonChannel);
 	}
 	#endif
+	
 	configManager->addConfiguration(fftConfiguration);
 
 	/** Initialzation done -> Enumerate the devices **/

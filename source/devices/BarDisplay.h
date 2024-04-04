@@ -12,7 +12,7 @@ public:
     // Destructor
     ~BarDisplay();
 
-    std::array<char, 10> getDeviceType() override { return std::array<char, 10> { "BarDis6Ch" }; }
+    std::array<char, 10> getDeviceType() override { return std::array<char, 10> { "BarDis7Ch" }; }
     // Other member functions and variables
 };
 

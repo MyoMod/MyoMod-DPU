@@ -56,7 +56,7 @@ Status ComInterface::createDevice(DeviceDescriptor* deviceDescriptor, Device** c
 	{
 		*createdDevice = new EmgElectrode6Chn(name);
 	}
-	else if(deviceType == std::array<char, 10> { "BarDis6Ch" })
+	else if(deviceType == std::array<char, 10> { "BarDis7Ch" })
 	{
 		*createdDevice = new BarDisplay(name);
 	}

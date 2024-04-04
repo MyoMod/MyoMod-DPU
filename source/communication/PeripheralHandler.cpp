@@ -181,7 +181,7 @@ Status PeripheralHandler::listNewDevices(std::vector<DeviceDescriptor>* devices)
 			.name = ""
 		});
 		devices->push_back(DeviceDescriptor{
-			.deviceType = "BarDis6Ch",
+			.deviceType = "BarDis7Ch",
 			.deviceIdentifier = "BDisplay1",
 			.peripheralIndex = -1,
 			.deviceAddress = 0x18,
