@@ -29,9 +29,6 @@ public:
     static constexpr DspType maxOut = 100;
     static constexpr float normalisationStart = 3.0;
     static constexpr float normalisationEnd = 5.0;
-    static constexpr float mvcPeriodStart = 6.0;
-    static constexpr float mvcPeriodEnd = 15.0;
-    static constexpr float mvcAlpha = 0.1;
 
     // Sub-FFT slice claculation
     static constexpr float fBinSize = fs / (fftSize); // (fs / 2) / (fftSize / 2)
@@ -60,11 +57,6 @@ public:
     // Misc variables
     uint32_t nCycle = 0;
     DspType inputBuffer[samplesPerCycle] = {0};
-
-    // MVC-Rescaling
-    DspType mvcFft[numChannels][subFftSize] = {1};
-    DspType mvcMax[numChannels] = {0};
-    DspType mvcMovAvgFft[numChannels][subFftSize] = {0};
 
     // Gesture Estimation
     GestureEstimator gestureEstimator;

@@ -8,6 +8,8 @@
 #include "fsl_gpio.h"
 #include "pin_mux.h"
 
+#include "mvcSpectrum.h"
+
 namespace freesthetics {
 
 #define DEBUG_PIN_1(x) GPIO_PinWrite(BOARD_INITPINS_DEBUG1_GPIO, BOARD_INITPINS_DEBUG1_PIN, x)
@@ -99,7 +101,7 @@ Status FFTAlgorithm::recalculateNormFft(uint32_t channel, bool rescale) {
         if(rescale)
         {
             DspType mvcResponse;
-            arm_dot_prod_f32(mvcFft[channel], normFFT[channel], subFftSize, &mvcResponse);
+            arm_dot_prod_f32(mvcFft_person1[channel], normFFT[channel], subFftSize, &mvcResponse);
             // normFFT = normFFT / mvcResponse
             mvcResponse = 1.0 / mvcResponse;
             arm_scale_f32(normFFT[channel], mvcResponse, normFFT[channel], subFftSize);
@@ -156,43 +158,13 @@ Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType>
             arm_add_f64(normAcc[channel], normTemp, normAcc[channel], subFftSize);
             normAccCounter[channel]++;
             
-            // update norm FFT and rescale if mvc period is over
-            recalculateNormFft(channel, tNow > mvcPeriodEnd);
+            // update norm FFT
+            recalculateNormFft(channel, true);
         }
         DEBUG_PINS(7);
-        
-        // Calculate MVC for rescaling
-        if((mvcPeriodStart <= tNow && tNow <= mvcPeriodEnd))
-        {
-            // set usefull initial values to mvcFft
-            if(mvcFft[channel][0] == 0)
-            {
-                arm_copy_f32(subFft, mvcFft[channel], subFftSize);
-            }
-
-            // Update moving average of subFft
-            vectorWeightedAddition(mvcMovAvgFft[channel], subFft, mvcMovAvgFft[channel], 1.0 - mvcAlpha, mvcAlpha, subFftSize);
-
-            // calculate max of subFft
-            DspType mvcSum;
-            arm_dot_prod_f32(mvcMovAvgFft[channel], normFFT[channel], subFftSize, &mvcSum);
-
-            // update mvcMax if new max is found
-            if(mvcSum > mvcMax[channel])
-            {
-                mvcMax[channel] = mvcSum;
-                arm_copy_f32(subFft, mvcFft[channel], subFftSize);
-            }
-
-            // update normFFT in last cycle of mvc period
-            if((tNow + 1.0 / fCycle) > mvcPeriodEnd)
-            {
-                recalculateNormFft(channel, true);
-            }
-        }
 
         // apply normalisation when normalisation and scale periods are over
-        if(tNow > mvcPeriodEnd)
+        if(tNow > normalisationEnd)
         {
             // apply normalisation
             arm_dot_prod_f32(subFft, normFFT[channel], subFftSize, &result);
@@ -281,8 +253,7 @@ Status FFTAlgorithm::run() {
     DEBUG_PINS(0);
 
     float tNow = ((float) nCycle) / ((float) fCycle);
-    bool inScalePeriod = (mvcPeriodStart < tNow) && (tNow < mvcPeriodEnd);
-    GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_PIN, inScalePeriod);
+    GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_PIN, tNow < normalisationEnd);
 
     nCycle++;
     return Status::Ok;
