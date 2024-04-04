@@ -215,6 +215,8 @@ Status FFTAlgorithm::processFftFilter(uint32_t channel, std::span<const DspType>
 
 Status FFTAlgorithm::run() {
     const uint32_t activeChannels = 0b111111;
+    std::array<DspType, numChannels> emgData;
+    HandAxes axes;
 
     // iterate over all channels
     for (size_t channel = 0; channel < numChannels; channel++)
@@ -240,22 +242,43 @@ Status FFTAlgorithm::run() {
         DEBUG_PINS(14);
 
         //clip result
-        result = MIN(MAX(result * maxOut, 0), maxOut);
+        result = MIN(MAX(result, 0.0f), 1.0f);
+
 
         //write result to output
         std::span<uint8_t> pdsOutDisplayData;
         status = pdsOut->at(0)->getChannelData(channel, pdsOutDisplayData);
         assert(status == Status::Ok);
-        pdsOutDisplayData[0] = ((activeChannels>>channel)&1) ? (uint8_t) result : 0;
+        pdsOutDisplayData[0] = ((activeChannels>>channel)&1) ? (uint8_t) (result * 100) : 0;
+
+        emgData[channel] = result;
+    }
+
+    // update gesture estimator
+    gestureEstimator.update(emgData);
+
+    // update output
+    gestureEstimator.getAxes(axes);
 
 
+    // Write axes to output
+    for (size_t channel = 0; channel < 6; channel++)
+    {
+        Status status;
         std::span<uint8_t> pdsOutBTData;
         status = pdsOut->at(1)->getChannelData(channel, pdsOutBTData);
         assert(status == Status::Ok);
-        pdsOutBTData[0] = ((activeChannels>>channel)&1) ? (uint8_t) result : 0;
-        DEBUG_PINS(0);
+        pdsOutBTData[0] = axes[channel];
     }
 
+    // Write active gesture to output
+    std::span<uint8_t> pdsOutDisplayData;
+    Status status = pdsOut->at(0)->getChannelData(6, pdsOutDisplayData);
+    assert(status == Status::Ok);
+    pdsOutDisplayData[0] = gestureEstimator.getActiveGesture() * 100 / 6;
+
+    
+    DEBUG_PINS(0);
 
     float tNow = ((float) nCycle) / ((float) fCycle);
     bool inScalePeriod = (mvcPeriodStart < tNow) && (tNow < mvcPeriodEnd);

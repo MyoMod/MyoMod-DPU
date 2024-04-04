@@ -5,6 +5,7 @@
 #include "arm_math.h"
 
 #include "StatisticTracker.h"
+#include "GestureEstimator.h"
 
 namespace freesthetics {
 
@@ -64,6 +65,9 @@ public:
     DspType mvcFft[numChannels][subFftSize] = {1};
     DspType mvcMax[numChannels] = {0};
     DspType mvcMovAvgFft[numChannels][subFftSize] = {0};
+
+    // Gesture Estimation
+    GestureEstimator gestureEstimator;
 
     // methods
     Status processFftFilter(uint32_t channel, std::span<const DspType> pdsIn, DspType& pdsOut);

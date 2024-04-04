@@ -29,7 +29,7 @@
 #define USE_ELECTRODE 1
 #define USE_SDCARD 0
 #define USE_DISPLAY 1
-#define USE_BTSINK 0
+#define USE_BTSINK 1
 
 /*******************************************************************************
  * Data Types
@@ -103,7 +103,7 @@ void main()
 	};
 	freesthetics::DeviceDescriptor btSink {
 		.deviceType = "BtSink6Ch",
-		.deviceIdentifier = "Blt_Sink1",
+		.deviceIdentifier = "Blt_Sink2",
 		.peripheralIndex = -1,
 		.deviceAddress = -1,
 		.name = "Bt Sink"
