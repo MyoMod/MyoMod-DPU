@@ -59,7 +59,7 @@ public:
     DspType inputBuffer[samplesPerCycle] = {0};
 
     // Gesture Estimation
-    GestureEstimator gestureEstimator;
+    GestureEstimator *gestureEstimator;
 
     // methods
     Status processFftFilter(uint32_t channel, std::span<const DspType> pdsIn, DspType& pdsOut);

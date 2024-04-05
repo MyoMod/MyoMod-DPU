@@ -8,7 +8,9 @@
 #include "fsl_gpio.h"
 #include "pin_mux.h"
 
-#include "mvcSpectrum.h"
+#include "config.h"
+#include "DirectControl.h"
+#include "LinearRegression.h"
 
 namespace freesthetics {
 
@@ -29,6 +31,7 @@ static DspType normAccLengthDebug[6];
 FFTAlgorithm::FFTAlgorithm(std::string_view name) :
     AnalysisAlgorithm(name)
 {
+    gestureEstimator = new LinearRegression();
     arm_hanning_f32(fftWindow, samplesPerFFT);
     arm_rfft_fast_init_f32(&fftInstance, fftSize);
 }
@@ -101,7 +104,7 @@ Status FFTAlgorithm::recalculateNormFft(uint32_t channel, bool rescale) {
         if(rescale)
         {
             DspType mvcResponse;
-            arm_dot_prod_f32(mvcFft_person1[channel], normFFT[channel], subFftSize, &mvcResponse);
+            arm_dot_prod_f32(CONFIG_MVC_FFT_PERSON1[channel].data(), normFFT[channel], subFftSize, &mvcResponse);
             // normFFT = normFFT / mvcResponse
             mvcResponse = 1.0 / mvcResponse;
             arm_scale_f32(normFFT[channel], mvcResponse, normFFT[channel], subFftSize);
