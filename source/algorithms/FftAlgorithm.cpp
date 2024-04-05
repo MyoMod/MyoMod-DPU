@@ -227,10 +227,10 @@ Status FFTAlgorithm::run() {
     }
 
     // update gesture estimator
-    gestureEstimator.update(emgData);
+    gestureEstimator->update(emgData);
 
     // update output
-    gestureEstimator.getAxes(axes);
+    gestureEstimator->getAxes(axes);
 
 
     // Write axes to output
@@ -247,7 +247,7 @@ Status FFTAlgorithm::run() {
     std::span<uint8_t> pdsOutDisplayData;
     Status status = pdsOut->at(0)->getChannelData(6, pdsOutDisplayData);
     assert(status == Status::Ok);
-    pdsOutDisplayData[0] = gestureEstimator.getActiveGesture() * 100 / 6;
+    pdsOutDisplayData[0] = 0;
 
     
     DEBUG_PINS(0);

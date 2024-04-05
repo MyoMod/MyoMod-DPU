@@ -1,26 +1,26 @@
 /*
- * GestureEstimator.cpp
+ * DirectControl.cpp
  *
  *  Created on: Apr 2, 2024
  *      Author: leon
  */
 
-#include <GestureEstimator.h>
+#include <DirectControl.h>
 
 namespace freesthetics {
 
-GestureEstimator::GestureEstimator():
+DirectControl::DirectControl():
 		axes{0.5, 0.5, 0,1,0,1},
 		activeAxes{false, false, false, false, false, false}
 	// TODO Auto-generated constructor stub
 {
 }
 
-GestureEstimator::~GestureEstimator() {
+DirectControl::~DirectControl() {
 	// TODO Auto-generated destructor stub
 }
 
-Status GestureEstimator::update(std::span<const float32_t> data) {
+Status DirectControl::update(std::span<const float32_t> data) {
 	
 	// check which axes are active
 	for (uint8_t i = 0; i < 6; i++) {
@@ -81,7 +81,7 @@ Status GestureEstimator::update(std::span<const float32_t> data) {
 	return Status::Ok;
 }
 
-Status GestureEstimator::getAxes(HandAxes& axes) {
+Status DirectControl::getAxes(HandAxes& axes) const{
 	for (size_t i = 0; i < 6; i++)
 	{
 		axes[i] = this->axes[i] * 100;
