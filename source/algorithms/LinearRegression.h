@@ -31,7 +31,7 @@ private:
 	std::array<bool, 6> activeAxes;
 	float32_t hystRising = 0.25;
 	float32_t hystFalling = 0.15;
-	float32_t speedFactor = 0.1;
+	float32_t speedFactor = 0.01;
 
 	float32_t scale(float32_t x) const{
 		return speedFactor * x;

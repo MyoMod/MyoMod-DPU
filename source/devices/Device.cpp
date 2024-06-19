@@ -12,8 +12,8 @@ Device::Device(std::string_view name)
 	channels{{}, {}}
 {
 	// Add status byte
-	StatusByte_t* statusByte = new StatusByte_t;
-	registerData.push_back((uint8_t*)&statusByte);
+	StatusByte_t* statusByte = new StatusByte_t; 
+	registerData.push_back((uint8_t*)&statusByte);//TODO: Do I really want this?
 	// Note: The inherited classes should add the appropriate channels in their constructor
 }
 

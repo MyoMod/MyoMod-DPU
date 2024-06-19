@@ -66,5 +66,6 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "set": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/leon/Programs/FreeThetics/DPU/firmware/DPU/CMSIS/DSP/Source"
 }

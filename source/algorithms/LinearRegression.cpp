@@ -32,17 +32,17 @@ Status LinearRegression::update(std::span<const float32_t> data) {
 		yPrediction[i] = 0;
 		// Check this, there is a warning here
 		arm_dot_prod_f32(data.data(), CONFIG_COEF_PERSON1[i].data(), data.size(), &yPrediction[i]);
-		yPrediction[i] += CONFIG_COEF_PERSON1[i][PREDICTION_N];
+		yPrediction[i] += CONFIG_COEF_PERSON1[i][CONFIG_COEF_PERSON1[0].size() - 1];
 	}
 	
 	
 	// check which predictions are active
 	for (uint32_t i = 0; i < PREDICTION_N; i++) {
 		if(activeAxes[i]) {
-			activeAxes[i] = (yPrediction[i] > hystFalling);
+			activeAxes[i] = abs(yPrediction[i]) > hystFalling;
 		}
 		else {
-			activeAxes[i] = (yPrediction[i] > hystRising);
+			activeAxes[i] = abs(yPrediction[i]) > hystRising;
 		}
 	}
 
@@ -55,6 +55,8 @@ Status LinearRegression::update(std::span<const float32_t> data) {
 			axes[i] = MIN(0.99, MAX(0.01, axes[i]));
 		}
 	}
+
+	// remap axes
 	return Status::Ok;
 }
 

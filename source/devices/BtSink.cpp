@@ -7,7 +7,9 @@ namespace freesthetics {
 BtSink::BtSink(std::string_view name) : 
     Device(name) 
 {
+
     // Add display channels
+    // Reserve space for 7 channels in the vector
     for (uint32_t i = 0; i < 7; i++) {
         PDSChannel channel {
             .name = "Channel " + std::to_string(i + 1),
