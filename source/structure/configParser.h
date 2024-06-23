@@ -15,9 +15,13 @@
 #include <map>
 #include <memory>
 #include <string_view>
+#include <vector>
+#include <tuple>
+#include <string>
+
 #include "lwjson/lwjson.h"
 
-#include "nodeFactory.h"
+#include "node.h"
 
 // Tuple that consists of input devices, algorithms and output devices
 using NodesTuple = std::tuple<
@@ -27,7 +31,7 @@ using NodesTuple = std::tuple<
 
 struct NodeData
 {
-    NodeType type;
+    std::string type;
     std::map<std::string, std::string> scalarParams;
     std::map<std::string, std::vector<std::string>> arrayParams;
 };
@@ -70,11 +74,11 @@ public:
     ConfigParser& operator=(const ConfigParser&) = delete;
 
 private:
-
     static void speceficTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_type_t type);
     std::unique_ptr<DeviceNode> createDeviceNode(const NodeData& nodeData);
     std::unique_ptr<AlgorithmicNode> createAlgorithmicNode(const NodeData& nodeData);
     bool linkNodes(const PortDescriptor& inputPort, const PortDescriptor& outputPort);
+
 
     lwjson_stream_parser_t m_parser;
     NodeData m_currentNodeData;
@@ -87,15 +91,7 @@ private:
     std::vector<std::unique_ptr<AlgorithmicNode>> m_algorithms;
 
 
-    ConfigParser():
-        m_currentNodeData{},
-        m_configId{0},
-        m_currentConfigId{0},
-        m_currentConfigSection{ConfigSection::None},
-        m_parseError{false},
-        m_devices{},
-        m_algorithms{}
-    {};
+    ConfigParser();
 };
 
         

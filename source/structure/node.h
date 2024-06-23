@@ -58,7 +58,7 @@ protected:
 class AdditonNode : public AlgorithmicNode
 {
 public:
-    AdditonNode();
+    AdditonNode(bool subtraction);
     ~AdditonNode() = default;
 
     void process() override;
@@ -66,6 +66,8 @@ protected :
     std::shared_ptr<OutputPort<int>> m_outputPort;
     std::shared_ptr<InputPort<int>> m_inputPortA;
     std::shared_ptr<InputPort<int>> m_inputPortB;
+
+    bool m_subtraction = false;
 };
 
 template <typename T_in, typename T_out>
@@ -124,7 +126,7 @@ protected:
 class AdvancedTestNode : public AlgorithmicNode
 {
 public:
-    AdvancedTestNode(std::array<int, 3> numericalParameters, std::array<bool, 3> booleanParameters):
+    AdvancedTestNode(const std::array<int, 3>& numericalParameters, const std::array<bool, 3>& booleanParameters):
         m_outputPort{std::make_shared<OutputPort<int>>()},
         m_inputPort{std::make_shared<InputPort<int>>()},
         m_numericalParameters{numericalParameters},

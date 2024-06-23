@@ -10,20 +10,35 @@
  */
 
 #include <fstream>
-#include "configParser.h"
+#include <limits>
 
+#include "configParser.h"
+#include "node.h"
 // Data structures
 
 // private functions
-static NodeType getNodeType(const char* const type);
 static bool getID(const NodeData& nodeData, std::array<char, 10>& ID);
 static bool createPortDescriptor(std::string_view stringDescriptor, PortDescriptor& PortDescriptor);
+template <typename T>
+static bool parseParameter(const std::string& parameterName, const NodeData& nodeData, T& parameter);
+template <typename T, size_t N>
+static bool parseParameter(const std::string& parameterName, const NodeData& nodeData, std::array<T, N>& parameter);
+static uint32_t stringToUint(std::string_view str, bool& success);
+static int32_t stringToInt(std::string_view str, bool& success);
+static float stringToFloat(std::string_view str, bool& success);
 
-static std::unique_ptr<DeviceNode> createSimpleInputNode(const NodeData& nodeData);
-static std::unique_ptr<DeviceNode> createSimpleOutputNode(const NodeData& nodeData);
-static std::unique_ptr<AlgorithmicNode> createAdvancedTestNode(const NodeData& nodeData);
 
+ConfigParser::ConfigParser():
+        m_currentNodeData{},
+        m_configId{0},
+        m_currentConfigId{0},
+        m_currentConfigSection{ConfigSection::None},
+        m_parseError{false},
+        m_devices{},
+        m_algorithms{}
+{
 
+}
 
 NodesTuple ConfigParser::parseConfig(std::string_view configPath, uint32_t configId)
 {
@@ -86,10 +101,18 @@ void ConfigParser::speceficTokenParser(lwjson_stream_parser_t* jsp, lwjson_strea
     ConfigParser& parser = ConfigParser::getInstance();
 
     // Handle config id
+    // config object start
+    if (jsp->stack_pos == 2 && type == LWJSON_STREAM_TYPE_OBJECT)
+    {
+        std::cout << "Config[" << parser.m_currentConfigId << "]:" << std::endl;
+        if (parser.m_currentConfigId != parser.m_configId)
+        {
+            std::cout << " - ignore" << std::endl;
+        }
+    }
     if (jsp->stack_pos == 1 && type == LWJSON_STREAM_TYPE_OBJECT_END)
     {
         // new config ended, increase config id
-        std::cout << "^Config id: " << parser.m_currentConfigId << std::endl;
         parser.m_currentConfigId++;
     }
 
@@ -120,7 +143,7 @@ void ConfigParser::speceficTokenParser(lwjson_stream_parser_t* jsp, lwjson_strea
         }
 
         // print section
-        std::cout << "ConfigSection: " << jsp->stack[2].meta.name << std::endl;
+        std::cout << std::endl << " Load " << jsp->stack[2].meta.name << std::endl;
     }
     else if (lwjson_stack_seq_4(jsp, 0, ARRAY, OBJECT, KEY, OBJECT)
          && type == LWJSON_STREAM_TYPE_OBJECT
@@ -136,7 +159,7 @@ void ConfigParser::speceficTokenParser(lwjson_stream_parser_t* jsp, lwjson_strea
         }
 
         // print section
-        std::cout << "ConfigSection: " << jsp->stack[2].meta.name << std::endl;
+        std::cout << std::endl << " Load Links" << std::endl;
     }
 
     // Handle NodeData
@@ -157,29 +180,29 @@ void ConfigParser::speceficTokenParser(lwjson_stream_parser_t* jsp, lwjson_strea
         // type field
         if (type == LWJSON_STREAM_TYPE_STRING && strcmp(jsp->stack[5].meta.name, "type") == 0)
         {
-            parser.m_currentNodeData.type = getNodeType(jsp->data.str.buff);
-            std::cout << "Type: " << jsp->data.str.buff << std::endl;
+            parser.m_currentNodeData.type = std::string{jsp->data.str.buff};
+            std::cout << "  " << parser.m_currentNodeData.type << std::endl;
         }
 
         // scalar string field
         else if (type == LWJSON_STREAM_TYPE_STRING)
         {
             parser.m_currentNodeData.scalarParams[jsp->stack[5].meta.name] = jsp->data.str.buff;
-            std::cout << "Scalar(s): " << jsp->stack[5].meta.name << " " << jsp->data.str.buff << std::endl;
+            std::cout << "   " << jsp->stack[5].meta.name << ": \"" << jsp->data.str.buff << "\"" << std::endl;
         }
 
         // scalar number field
         else if (type == LWJSON_STREAM_TYPE_NUMBER)
         {
             parser.m_currentNodeData.scalarParams[jsp->stack[5].meta.name] = jsp->data.str.buff;
-            std::cout << "Scalar(n): " << jsp->stack[5].meta.name << " " << jsp->data.str.buff << std::endl;
+            std::cout << "   " << jsp->stack[5].meta.name << ": " << jsp->data.str.buff << std::endl;
         }
 
         // scalar boolean field
         else if (type == LWJSON_STREAM_TYPE_TRUE || type == LWJSON_STREAM_TYPE_FALSE)
         {
             parser.m_currentNodeData.scalarParams[jsp->stack[5].meta.name] = type == LWJSON_STREAM_TYPE_TRUE?"1":"0";
-            std::cout << "Scalar(b): " << jsp->stack[5].meta.name << " " << jsp->data.str.buff << std::endl;
+            std::cout << "   " << jsp->stack[5].meta.name << ": " << (LWJSON_STREAM_TYPE_TRUE?"true":"false") << std::endl;
         }
     }
 
@@ -193,22 +216,36 @@ void ConfigParser::speceficTokenParser(lwjson_stream_parser_t* jsp, lwjson_strea
         {
             lastArrayName = jsp->data.str.buff;
             parser.m_currentNodeData.arrayParams[lastArrayName] = std::vector<std::string>{};
-            std::cout << "Array: " << lastArrayName << ":" << std::endl;
+            std::cout << "   " << lastArrayName << ": [";
         }
 
-        // scalar string field
-        if (type == LWJSON_STREAM_TYPE_STRING || type == LWJSON_STREAM_TYPE_NUMBER)
+        // array string field
+        if (type == LWJSON_STREAM_TYPE_STRING)
         {
             parser.m_currentNodeData.arrayParams[lastArrayName].push_back(jsp->data.str.buff);
-            std::cout << " - " << jsp->data.str.buff << std::endl;
+            std::cout << "\"" << jsp->data.str.buff << "\", ";
         }
 
-        // scalar boolean field
+        // array number field
+        else if (type == LWJSON_STREAM_TYPE_NUMBER)
+        {
+            parser.m_currentNodeData.arrayParams[lastArrayName].push_back(jsp->data.str.buff);
+            std::cout << jsp->data.str.buff << ", ";
+        }
+
+        // array boolean field
         else if (type == LWJSON_STREAM_TYPE_TRUE || type == LWJSON_STREAM_TYPE_FALSE)
         {
             parser.m_currentNodeData.arrayParams[lastArrayName].push_back(type == LWJSON_STREAM_TYPE_TRUE?"1":"0");
-            std::cout << " - " << jsp->data.str.buff << std::endl;
+            std::cout << jsp->data.str.buff << ", ";
         }
+    }
+    else if (lwjson_stack_seq_5(jsp, 0, ARRAY, OBJECT, KEY, ARRAY, OBJECT)
+         && jsp->stack_pos == 5
+         && type == LWJSON_STREAM_TYPE_ARRAY_END)
+    {
+        // close array
+        std::cout << "]" << std::endl;
     }
 
     // Node is finished
@@ -249,7 +286,7 @@ void ConfigParser::speceficTokenParser(lwjson_stream_parser_t* jsp, lwjson_strea
          && jsp->stack_pos == 5
          && parser.m_currentConfigSection == ConfigSection::Links)
     {
-        std::cout << "Link: " << jsp->data.str.buff << "->" << jsp->stack[4].meta.name;
+        std::cout << "  " << jsp->data.str.buff << "->" << jsp->stack[4].meta.name;
         PortDescriptor inputPort;
         PortDescriptor outputPort;
         if (createPortDescriptor(jsp->stack[4].meta.name, inputPort) && createPortDescriptor(jsp->data.str.buff, outputPort))
@@ -269,40 +306,72 @@ void ConfigParser::speceficTokenParser(lwjson_stream_parser_t* jsp, lwjson_strea
 
 std::unique_ptr<DeviceNode> ConfigParser::createDeviceNode(const NodeData& nodeData)
 {
-    switch (nodeData.type)
+    bool parseSuccess = false;
+    std::array<char, 10> ID;
+    if (!getID(nodeData, ID))
     {
-    case NodeType::InputNode:       // fallthrough
-    case NodeType::FloatInputNode:  // fallthrough
-    case NodeType::ArrayInputNode:  
-        return createSimpleInputNode(nodeData);
-    case NodeType::OutputNode:
-        return createSimpleOutputNode(nodeData);
-    default:
+        return nullptr;
+    }
+    if (nodeData.type == "InputNode")
+    {
+        return std::make_unique<InputNode>(ID);
+    }
+    else if (nodeData.type == "OutputNode")
+    {
+        return std::make_unique<OutputNode>(ID);
+    }
+    else if (nodeData.type == "FloatInputNode")
+    {
+        return std::make_unique<FloatInputNode>(ID);
+    }
+    else if (nodeData.type == "ArrayInputNode")
+    {
+        return std::make_unique<ArrayInputNode>(ID);
+    }
+    else
+    {
         return nullptr;
     }
 }
 
 std::unique_ptr<AlgorithmicNode> ConfigParser::createAlgorithmicNode(const NodeData& nodeData)
 {
-    switch (nodeData.type)
+    bool parseSuccess = false;
+    if (nodeData.type == "AdditonNode")
     {
-    case NodeType::Float2IntNode:   // fallthrough - no specific params needed
-    case NodeType::Int2FloatNode:
-        return NodeFactory::createAlgorithmicNode(nodeData.type);
-    case NodeType::AdditonNode:
-        if (nodeData.scalarParams.find("subtraction") == nodeData.scalarParams.end())
+        bool subtract;
+        if (!parseParameter("subtract", nodeData, subtract))
         {
             return nullptr;
         }
-        return NodeFactory::createAlgorithmicNode(nodeData.type, std::stoi(nodeData.scalarParams.at("subtraction")));
-    case NodeType::ArraySelectorNode:
-        if (nodeData.scalarParams.find("index") == nodeData.scalarParams.end())
+        return std::make_unique<AdditonNode>(subtract);
+    }
+    else if (nodeData.type == "Float2IntNode")
+    {
+        return std::make_unique<CastNode<float, int>>();
+    }
+    else if (nodeData.type == "ArraySelectorNode")
+    {
+        uint32_t index;
+        if (!parseParameter("index", nodeData, index))
         {
             return nullptr;
         }
-        return NodeFactory::createAlgorithmicNode<uint32_t>(NodeType::ArraySelectorNode, std::stoi(nodeData.scalarParams.at("index")));
-
-    default:
+        return std::make_unique<ArraySelectorNode>(index);
+    }
+    else if (nodeData.type == "AdvancedTestNode")
+    {
+        std::array<int, 3> numericalParameters;
+        std::array<bool, 3> booleanParameters;
+        if (!parseParameter("numericalParameters", nodeData, numericalParameters) 
+            || !parseParameter("booleanParameters", nodeData, booleanParameters))
+        {
+            return nullptr;
+        }
+        return std::make_unique<AdvancedTestNode>(numericalParameters, booleanParameters);
+    }
+    else
+    {
         return nullptr;
     }
 }
@@ -353,99 +422,6 @@ bool ConfigParser::linkNodes(const PortDescriptor& inputPort, const PortDescript
 }
 
 // private functions
-static NodeType getNodeType(const char* const type)
-{
-    if (strcmp(type, "InputNode") == 0)
-    {
-        return NodeType::InputNode;
-    }
-    else if (strcmp(type, "FloatInputNode") == 0)
-    {
-        return NodeType::FloatInputNode;
-    }
-    else if (strcmp(type, "ArrayInputNode") == 0)
-    {
-        return NodeType::ArrayInputNode;
-    }
-    else if (strcmp(type, "Float2IntNode") == 0)
-    {
-        return NodeType::Float2IntNode;
-    }
-    else if (strcmp(type, "AdditonNode") == 0)
-    {
-        return NodeType::AdditonNode;
-    }
-    else if (strcmp(type, "ArraySelectorNode") == 0)
-    {
-        return NodeType::ArraySelectorNode;
-    }
-    else if (strcmp(type, "OutputNode") == 0)
-    {
-        return NodeType::OutputNode;
-    }
-    else
-    {
-        return NodeType::None;
-    }
-}
-
-
-/**
- * @brief Create a Simple Input Node object from the given NodeData.
- *          If the nodeData does not contain the ID field, nullptr is returned.
- * 
- * @param nodeData                      NodeData to create the node from 
- * @return std::unique_ptr<DeviceNode>  Created node or nullptr if the ID field is missing
- */
-static std::unique_ptr<DeviceNode> createSimpleInputNode(const NodeData& nodeData)
-{
-    std::array<char, 10> ID;
-    if (!getID(nodeData, ID))
-    {
-        return nullptr;
-    }
-    return NodeFactory::createDeviceNode(nodeData.type, ID);
-}
-
-/**
- * @brief Create a Simple Output Node object from the given NodeData.
- *          If the nodeData does not contain the ID field, nullptr is returned.
- * 
- * @param nodeData                      NodeData to create the node from 
- * @return std::unique_ptr<DeviceNode>  Created node or nullptr if the ID field is missing
- */
-static std::unique_ptr<DeviceNode> createSimpleOutputNode(const NodeData& nodeData)
-{
-    std::array<char, 10> ID;
-    if (!getID(nodeData, ID))
-    {
-        return nullptr;
-    }
-    return NodeFactory::createDeviceNode(nodeData.type, ID);
-}
-
-/*
-static std::unique_ptr<AlgorithmicNode> createAdvancedTestNode(const NodeData& nodeData)
-{
-    // Parameters; std::array<int, 3> numericalParameters, std::array<bool, 3> booleanParameters
-
-    if (nodeData.arrayParams.find("numericalParameters") == nodeData.arrayParams.end() || nodeData.arrayParams.find("booleanParameters") == nodeData.arrayParams.end())
-    {
-        return nullptr;
-    }
-
-    std::array<int, 3> numericalParameters;
-    std::array<bool, 3> booleanParameters;
-
-    for (int i = 0; i < 3; i++)
-    {
-        numericalParameters[i] = std::stoi(nodeData.arrayParams.at("numericalParameters")[i]);
-        booleanParameters[i] = nodeData.arrayParams.at("booleanParameters")[i] == "1";
-    }
-
-    return NodeFactory::createAlgorithmicNode(NodeType::AdvancedTestNode, numericalParameters, booleanParameters);
-}
-*/
 
 /**
  * @brief Get the ID from the given NodeData.
@@ -469,6 +445,271 @@ static bool getID(const NodeData& nodeData, std::array<char, 10>& ID)
     }
     std::copy(idString.begin(), idString.end(), ID.data());
     return true;
+}
+
+template <typename T>
+static bool parseParameter(const std::string& parameterName, const NodeData& nodeData, T& parameter)
+{
+    if (nodeData.scalarParams.find(parameterName) == nodeData.scalarParams.end())
+    {
+        return false;
+    }
+
+    bool success = false;
+    if (!std::numeric_limits<T>::is_integer)
+    {
+        // parse float parameter
+        T value = stringToFloat(nodeData.scalarParams.at(parameterName), success);
+        if (!success)
+        {
+            return false;
+        }
+        parameter = value;
+        return true;
+    }
+    uint32_t maxValue = std::numeric_limits<T>::max();
+    uint32_t minValue = std::numeric_limits<T>::min();
+    if (std::is_signed<T>::value)
+    {
+        int32_t value = stringToInt(nodeData.scalarParams.at(parameterName), success);
+        if (!success || value > maxValue || value < minValue)
+        {
+            return false;
+        }
+        parameter = value;
+    }
+    else
+    {
+        uint32_t value = stringToUint(nodeData.scalarParams.at(parameterName), success);
+        if (!success || value > maxValue)
+        {
+            return false;
+        }
+        parameter = value;
+    }
+    return true;
+}
+
+template <typename T, size_t N>
+static bool parseParameter(const std::string& parameterName, const NodeData& nodeData, std::array<T, N>& parameter)
+{
+    if (nodeData.arrayParams.find(parameterName) == nodeData.arrayParams.end())
+    {
+        return false;
+    }
+
+    // check if array has the correct size
+    auto& paramStringArray = nodeData.arrayParams.at(parameterName);
+    if (paramStringArray.size() != N)
+    {
+        return false;
+    }
+
+    bool success = false;
+    for (size_t i = 0; i < N; i++)
+    {
+        if (!std::numeric_limits<T>::is_integer)
+        {
+            // parse float parameter
+            T value = stringToFloat(paramStringArray[i], success);
+            if (!success)
+            {
+                return false;
+            }
+            parameter[i] = value;
+        }
+        else
+        {
+            // parse integer parameter
+            uint32_t maxValue = std::numeric_limits<T>::max();
+            int32_t minValue = std::numeric_limits<T>::min();
+            if (std::is_signed<T>::value)
+            {
+                int32_t value = stringToInt(paramStringArray[i], success);
+                if (!success || value > maxValue || value < minValue)
+                {
+                    return false;
+                }
+                parameter[i] = value;
+            }
+            else
+            {
+                uint32_t value = stringToUint(paramStringArray[i], success);
+                if (!success || value > maxValue)
+                {
+                    return false;
+                }
+                parameter[i] = value;
+            }
+        }
+    }
+
+
+    return true;
+}
+
+static int32_t stringToInt(std::string_view str, bool& success)
+{
+    if (str.empty())
+    {
+        success = false;
+        return 0;
+    }
+
+    // remove leading whitespace
+    str.remove_prefix(std::min(str.find_first_not_of(" "), str.size()));
+
+    bool negative = str[0] == '-';
+    if (negative)
+    {
+        str.remove_prefix(1);
+    }
+    uint32_t value = stringToUint(str, success);
+    if(value <= INT32_MAX)
+    {
+        return negative?-value:value;
+    }
+    else
+    {
+        success = false;
+        return 0;
+    }
+}
+
+/**
+ * @brief Convert the given string to an unsigned integer.
+ * 
+ * @param str                           String to convert
+ * @param success                       Success flag, set to false if conversion failed
+ * @return uint32_t                     Converted value
+ */
+static uint32_t stringToUint(std::string_view str, bool& success)
+{
+    if (str.empty())
+    {
+        success = false;
+        return 0;
+    }
+
+    // remove leading whitespace
+    str.remove_prefix(std::min(str.find_first_not_of(" "), str.size()));
+
+    // check if possible negative
+    bool negative = str[0] == '-';
+    if (negative)
+    {
+        success = false;
+        return 0;
+    }
+
+    // Check if hexadeciaml
+    bool hex = str.size() > 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X');
+    if (hex)
+    {
+        str.remove_prefix(2);
+    }
+
+    uint32_t value = 0;
+    uint32_t lastValue = 0;
+    for (char c : str)
+    {
+        if (c >= '0' && c <= '9')
+        {
+            value = value * (hex?16:10) + c - '0';
+        }
+        else if (hex && c >= 'A' && c <= 'F')
+        {
+            value = value * 16 + c - 'A' + 10;
+        }
+        else if (hex && c >= 'a' && c <= 'f')
+        {
+            value = value * 16 + c - 'a' + 10;
+        }
+        else
+        {
+            // invalid character
+            success = false;
+            return 0;
+        }
+        if (value < lastValue)
+        {
+            // overflow
+            success = false;
+            return 0;
+        }
+        lastValue = value;
+    }
+    success = true;
+    return value;
+}
+
+/**
+ * @brief Convert the given string to a float.
+ * 
+ * @param str                           String to convert
+ * @param success                       Success flag, set to false if conversion failed
+ * @return float                        Converted value
+ */
+static float stringToFloat(std::string_view str, bool& success)
+{
+    if (str.empty())
+    {
+        success = false;
+        return 0;
+    }
+
+    // remove leading whitespace
+    str.remove_prefix(std::min(str.find_first_not_of(" "), str.size()));
+
+    bool negative = str[0] == '-';
+    if (negative)
+    {
+        str.remove_prefix(1);
+    }
+
+    float value = 0;
+    float lastValue = 0;
+    bool decimal = false;
+    float decimalFactor = 1;
+    for (char c : str)
+    {
+        if (c >= '0' && c <= '9')
+        {
+            if (decimal)
+            {
+                decimalFactor *= 0.1;
+                value += (c - '0') * decimalFactor;
+            }
+            else
+            {
+                value = value * 10 + c - '0';
+            }
+        }
+        else if (c == '.')
+        {
+            if (decimal)
+            {
+                success = false;
+                return 0;
+            }
+            decimal = true;
+        }
+        else
+        {
+            // invalid character
+            success = false;
+            return 0;
+        }
+        if (value < lastValue)
+        {
+            // overflow
+            success = false;
+            return 0;
+        }
+        lastValue = value;
+    }
+    success = true;
+    return negative?-value:value;
 }
 
 /**
