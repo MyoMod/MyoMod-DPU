@@ -1,0 +1,32 @@
+[0]
+name = "Config 1"
+[0.0]
+type = "InputNode"
+[0.1]
+type = "InputNode"
+[0.2]
+type = "FloatInputNode"
+[0.3]
+type = "ArrayInputNode"
+[0.4]
+type = "Float2IntNode"
+link = [2.0]
+[0.5]
+type = "ArraySelectorNode"
+link = [3.0]
+index = 5
+[0.6]
+type = "AdditonNode"
+link = [0.0, 5.0]
+[0.7]
+type = "AdditonNode"
+link = [6.0, 4.0]
+[0.7]
+type = "FilterNode"
+link = [6.0, 4.0]
+param1 = [0xAB, 0xCD]
+[0.8]
+type = "OutputNode"
+link = [7.0]
+
+

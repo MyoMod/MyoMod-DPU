@@ -96,7 +96,7 @@ protected:
 class ArraySelectorNode : public AlgorithmicNode
 {
 public:
-    ArraySelectorNode(uint32_t index):
+    ArraySelectorNode(uint32_t index = 0):
         m_outputPort{std::make_shared<OutputPort<int>>()},
         m_inputPort{std::make_shared<InputPort<std::array<int, 10>>>()},
         m_index{index}
