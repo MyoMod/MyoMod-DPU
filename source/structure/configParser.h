@@ -15,6 +15,7 @@
 #include <map>
 #include <memory>
 #include <string_view>
+#include <array>
 #include <vector>
 #include <tuple>
 #include <string>
@@ -59,6 +60,18 @@ struct PortDescriptor
     uint32_t nodePort;
 };
 
+struct NodeIdentifier
+{
+    std::array<char, 10> type;
+    std::array<char, 10> id;
+};
+
+struct Configuration
+{
+    std::string name;
+    std::vector<NodeIdentifier> deviceNodes;
+};
+
 class ConfigParser
 {
 public:
@@ -68,13 +81,15 @@ public:
         return instance;
     }
 
-    NodesTuple parseConfig(std::string_view configPath, uint32_t configId);
+    NodesTuple loadConfig(std::string_view configPath, uint32_t configId);
+    std::vector<Configuration> scanConfigurations(std::string_view configPath);
 
     ConfigParser(const ConfigParser&) = delete;
     ConfigParser& operator=(const ConfigParser&) = delete;
 
 private:
-    static void speceficTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_type_t type);
+    static void deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_type_t type);
+    static void shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_type_t type);
     std::unique_ptr<DeviceNode> createDeviceNode(const NodeData& nodeData);
     std::unique_ptr<AlgorithmicNode> createAlgorithmicNode(const NodeData& nodeData);
     bool linkNodes(const PortDescriptor& inputPort, const PortDescriptor& outputPort);
@@ -82,14 +97,18 @@ private:
 
     lwjson_stream_parser_t m_parser;
     NodeData m_currentNodeData;
+    NodeIdentifier m_currentNodeIdentifier;
     uint32_t m_configId;
     uint32_t m_currentConfigId;
     ConfigSection m_currentConfigSection;
     bool m_parseError;
+    bool m_configIdFound;
+    bool m_typeFound;
 
     std::vector<std::unique_ptr<DeviceNode>> m_devices;
     std::vector<std::unique_ptr<AlgorithmicNode>> m_algorithms;
 
+    std::vector<Configuration> m_configurations;
 
     ConfigParser();
 };

@@ -40,7 +40,7 @@ ConfigParser::ConfigParser():
 
 }
 
-NodesTuple ConfigParser::parseConfig(std::string_view configPath, uint32_t configId)
+NodesTuple ConfigParser::loadConfig(std::string_view configPath, uint32_t configId)
 {
     // Reset parsed data
     m_devices.clear();
@@ -50,7 +50,7 @@ NodesTuple ConfigParser::parseConfig(std::string_view configPath, uint32_t confi
 
     // initialize parser
     m_configId = configId;
-    lwjson_stream_init(&m_parser, speceficTokenParser);
+    lwjson_stream_init(&m_parser, deepTokenParser);
 
     // Open file
     std::ifstream configFile = std::ifstream(configPath.data());
@@ -96,7 +96,200 @@ NodesTuple ConfigParser::parseConfig(std::string_view configPath, uint32_t confi
     return std::make_tuple(std::move(m_devices), std::move(m_algorithms));
 }
 
-void ConfigParser::speceficTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_type_t type)
+std::vector<Configuration> ConfigParser::scanConfigurations(std::string_view configPath)
+{
+    // Reset parsed data
+    m_currentNodeIdentifier;
+    m_configurations.clear();
+    m_currentConfigId = 0;
+
+    // initialize parser
+    lwjson_stream_init(&m_parser, shallowTokenParser);
+
+    // Open file
+    std::ifstream configFile = std::ifstream(configPath.data());
+    if (!configFile.is_open())
+    {
+        throw std::runtime_error("Could not open file: " + std::string(configPath));
+    }
+
+    // Parse file
+    // iterate over all characters in the file
+    lwjsonr_t parseRes;
+    while (configFile.good())
+    {
+        char c = configFile.get();
+        parseRes = lwjson_stream_parse(&m_parser, c);
+        if (parseRes == lwjsonSTREAMINPROG) {} 
+        else if (parseRes == lwjsonSTREAMWAITFIRSTCHAR) {
+            printf("Waiting first character\r\n");
+        } 
+        else if (parseRes == lwjsonSTREAMDONE) {
+            printf("Done\r\n");
+            break;
+        } 
+        else {
+            printf("Error\r\n");
+            m_parseError = true;
+            break;
+        }
+
+        if (m_parseError)
+        {
+            std::cerr << "Parse error" << std::endl;
+            break;
+        }
+    }
+
+    if (m_parseError)
+    {
+        return std::vector<Configuration>{};
+    }
+
+    // Move nodes to vectors 
+    return std::move(m_configurations);
+}
+
+void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_type_t type)
+{
+    ConfigParser& parser = ConfigParser::getInstance();
+
+    // Handle config id
+    // config object start
+    if (jsp->stack_pos == 2 && type == LWJSON_STREAM_TYPE_OBJECT)
+    {
+        std::cout << "\nConfig[" << parser.m_currentConfigId << "]: " ;
+        parser.m_configurations.push_back(Configuration{});
+    }
+    if (jsp->stack_pos == 1 && type == LWJSON_STREAM_TYPE_OBJECT_END)
+    {
+        // new config ended, increase config id
+        parser.m_currentConfigId++;
+    }
+
+    // Get config name
+    if (lwjson_stack_seq_3(jsp, 0, ARRAY, OBJECT, KEY)
+         && type == LWJSON_STREAM_TYPE_STRING
+         && jsp->stack_pos == 3)
+    {
+        parser.m_configurations.back().name = jsp->data.str.buff;
+        std::cout << jsp->data.str.buff << std::endl;
+    }
+
+    // Handle ConfigSection
+    if (lwjson_stack_seq_4(jsp, 0, ARRAY, OBJECT, KEY, ARRAY)
+         && type == LWJSON_STREAM_TYPE_ARRAY
+         && jsp->stack_pos == 4)
+    {
+
+        // set current node category
+        if (strcmp(jsp->stack[2].meta.name, "deviceNodes") == 0)
+        {
+            parser.m_currentConfigSection = ConfigSection::DeviceNodes;// print section
+            std::cout << std::endl << " Scan " << jsp->stack[2].meta.name << std::endl;
+        }
+        else if (strcmp(jsp->stack[2].meta.name, "algorithmicNodes") == 0)
+        {
+            parser.m_currentConfigSection = ConfigSection::AlgorithmicNodes;
+        }
+        else
+        {
+            parser.m_currentConfigSection = ConfigSection::None;
+        }
+    }
+
+    // Only load device nodes
+    if (parser.m_currentConfigSection != ConfigSection::DeviceNodes)
+    {
+        return;
+    }
+
+    // Handle NodeData
+    // New node started
+    else if (lwjson_stack_seq_5(jsp, 0, ARRAY, OBJECT, KEY, ARRAY, OBJECT)
+         && type == LWJSON_STREAM_TYPE_OBJECT
+         && jsp->stack_pos == 4)
+    {
+        // reset current node data
+        parser.m_currentNodeIdentifier = NodeIdentifier{};
+        parser.m_configIdFound = false;
+        parser.m_typeFound = false;
+    }
+
+    // Node field scalar string
+    else if (lwjson_stack_seq_6(jsp, 0, ARRAY, OBJECT, KEY, ARRAY, OBJECT, KEY)
+         && jsp->stack_pos == 6)
+    {
+        // type field
+        if (type == LWJSON_STREAM_TYPE_STRING && strcmp(jsp->stack[5].meta.name, "type") == 0)
+        {
+            parser.m_typeFound = true;
+
+            // check if type is valid
+            if (strlen(jsp->data.str.buff) != 10)
+            {
+                parser.m_parseError = true;
+                std::cerr << "Invalid type" << std::endl;
+                return;
+            }
+
+            std::copy(jsp->data.str.buff, jsp->data.str.buff + 10, parser.m_currentNodeIdentifier.type.data());
+            std::cout << "  " << jsp->data.str.buff << std::endl;
+        }
+
+        // ID field
+        else if (type == LWJSON_STREAM_TYPE_STRING)
+        {
+            if (strcmp(jsp->stack[5].meta.name, "ID") == 0)
+            {
+                parser.m_configIdFound = true;
+                // check if ID is valid
+                if (strlen(jsp->data.str.buff) != 10)
+                {
+                    parser.m_parseError = true;
+                    std::cerr << "Invalid ID" << std::endl;
+                    return;
+                }
+                
+                // copy ID
+                std::copy(jsp->data.str.buff, jsp->data.str.buff + 10, parser.m_currentNodeIdentifier.id.data());
+                std::cout << "   " << jsp->stack[5].meta.name << ": \"" << jsp->data.str.buff << "\"" << std::endl;
+            }
+        }
+    }
+
+    // Node is finished
+    else if (lwjson_stack_seq_4(jsp, 0, ARRAY, OBJECT, KEY, ARRAY)
+         && type == LWJSON_STREAM_TYPE_OBJECT_END
+         && jsp->stack_pos == 4)
+    {
+        if (parser.m_currentConfigSection == ConfigSection::DeviceNodes)
+        {
+            if (parser.m_configurations.empty())
+            {
+                parser.m_parseError = true;
+                std::cerr << "No configuration to add device to" << std::endl;
+                return;
+            }
+            if (!parser.m_configIdFound)
+            {
+                parser.m_parseError = true;
+                std::cerr << "No ID found for device" << std::endl;
+                return;
+            }
+            if (!parser.m_typeFound)
+            {
+                parser.m_parseError = true;
+                std::cerr << "No type found for device" << std::endl;
+                return;
+            }
+            
+            parser.m_configurations.back().deviceNodes.push_back(parser.m_currentNodeIdentifier);
+        }
+    }
+}
+
+void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_type_t type)
 {
     ConfigParser& parser = ConfigParser::getInstance();
 
@@ -312,19 +505,19 @@ std::unique_ptr<DeviceNode> ConfigParser::createDeviceNode(const NodeData& nodeD
     {
         return nullptr;
     }
-    if (nodeData.type == "InputNode")
+    if (nodeData.type == "1Chn Input")
     {
         return std::make_unique<InputNode>(ID);
     }
-    else if (nodeData.type == "OutputNode")
+    else if (nodeData.type == "1ChnOutput")
     {
         return std::make_unique<OutputNode>(ID);
     }
-    else if (nodeData.type == "FloatInputNode")
+    else if (nodeData.type == "FloatInput")
     {
         return std::make_unique<FloatInputNode>(ID);
     }
-    else if (nodeData.type == "ArrayInputNode")
+    else if (nodeData.type == "10ChnInput")
     {
         return std::make_unique<ArrayInputNode>(ID);
     }

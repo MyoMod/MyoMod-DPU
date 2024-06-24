@@ -3,23 +3,23 @@
         "name": "Config 1",
         "deviceNodes": [
             {
-                "type": "InputNode",
+                "type": "1Chn Input",
                 "ID" : "SENSOR0001"
             },
             {
-                "type": "InputNode",
+                "type": "1Chn Input",
                 "ID" : "SENSOR0002"
             },
             {
-                "type": "FloatInputNode",
+                "type": "FloatInput",
                 "ID" : "SENSOR0003"
             },
             {
-                "type": "ArrayInputNode",
+                "type": "10ChnInput",
                 "ID" : "SENSOR0004"
             },
             {
-                "type": "OutputNode",
+                "type": "1ChnOutput",
                 "ID" : "AKTOR____1"
             }],
         "algorithmicNodes": [
@@ -57,19 +57,19 @@
         "name": "Config 2",
         "deviceNodes": [
             {
-                "type": "InputNode",
+                "type": "1Chn Input",
                 "ID" : "SENSOR0001"
             },
             {
-                "type": "FloatInputNode",
+                "type": "FloatInput",
                 "ID" : "SENSOR0003"
             },
             {
-                "type": "ArrayInputNode",
+                "type": "10ChnInput",
                 "ID" : "SENSOR0004"
             },
             {
-                "type": "OutputNode",
+                "type": "1ChnOutput",
                 "ID" : "AKTOR____1"
             }],
         "algorithmicNodes": [
