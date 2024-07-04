@@ -1,6 +1,5 @@
 cmake_minimum_required (VERSION 3.14)
 cmake_policy(SET CMP0077 NEW)
-project(CMSISDSP)
 
 # DSP Sources
 SET(DSP ${CMAKE_CURRENT_SOURCE_DIR}/..)
@@ -62,6 +61,7 @@ include(WindowFunctions/Config.cmake)
 
 ### Includes
 target_include_directories(CMSISDSP PUBLIC "${DSP}/Include")
+target_include_directories(CMSISDSP PUBLIC "${DSP}/../")
 if (DEFINED CMSISCORE)
 target_include_directories(CMSISDSP PUBLIC "${CMSISCORE}/Include")
 endif()
