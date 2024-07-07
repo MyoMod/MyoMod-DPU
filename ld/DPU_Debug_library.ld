@@ -13,7 +13,8 @@ GROUP (
   "libc_nano.a"
   "libstdc++_nano.a"
   "libm.a"
-  "libcr_newlib_nohost.a"
+/*"libcr_newlib_nohost.a"*/
+  "libnosys.a"
   "crti.o"
   "crtn.o"
   "crtbegin.o"

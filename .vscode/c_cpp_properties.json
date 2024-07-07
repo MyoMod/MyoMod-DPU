@@ -1,19 +1,6 @@
 {
     "configurations": [
         {
-            "name": "Linux",
-            "includePath": [
-                "${workspaceFolder}/**"
-            ],
-            "defines": [
-                "VSCODE"
-            ],
-            "compilerPath": "/usr/bin/gcc",
-            "cStandard": "c11",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "gcc-x64"
-        },
-        {
             "name": "cortex-m7",
             "includePath": [
                 "${workspaceFolder}/**"
@@ -32,8 +19,8 @@
                 "DEBUG",
                 "__NEWLIB__"
             ],
-            "compilerPath": "/usr/bin/arm-none-eabi-g++",
-            "cStandard": "c23",
+            "compilerPath": "/opt/arm-none-eabi-gcc/bin/arm-none-eabi-g++",
+            "cStandard": "c17",
             "intelliSenseMode": "linux-gcc-arm",
             "cppStandard": "c++23"
         }

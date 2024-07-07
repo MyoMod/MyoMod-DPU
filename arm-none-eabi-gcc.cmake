@@ -13,7 +13,8 @@ set(CMAKE_SYSTEM_PROCESSOR ARM)
 
 #set (TOOLCHAIN_PREFIX "C:/Program Files (x86)/GNU Arm Embedded Toolchain/10 2020-q4-major")
 #set (TOOLCHAIN_PREFIX "C:/Raspy/arm-none-eabi-gcc-13.2.1-1.1")
-set (TOOLCHAIN_PREFIX "/usr/local/mcuxpressoide-11.8.1_1197/ide/plugins/com.nxp.mcuxpresso.tools.linux_11.8.1.202308071233/tools")
+#set (TOOLCHAIN_PREFIX "/usr/local/mcuxpressoide-11.9.0_2144/ide/plugins/com.nxp.mcuxpresso.tools.linux_11.9.0.202307121226/tools")
+set (TOOLCHAIN_PREFIX "/opt/arm-none-eabi-gcc")
 #set (TOOLCHAIN_PREFIX $ENV{TOOLCHAIN_PREFIX})  # set in system environment
 #---------------------------------------------------------------------------------------
 # Set toolchain paths
@@ -74,7 +75,7 @@ set(CMAKE_SIZE_UTIL ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-size${TOOLCHAIN_EXT} CACHE
 set(OBJECT_GEN_FLAGS "-O0 -fno-common -g3 -ggdb -Wall -ffunction-sections -fdata-sections -ffreestanding -fno-builtin -fmerge-constants -fno-common -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb")
 
 set(CMAKE_C_FLAGS   "${OBJECT_GEN_FLAGS} -std=c17 " CACHE INTERNAL "C Compiler options")
-set(CMAKE_CXX_FLAGS "${OBJECT_GEN_FLAGS} -std=c++23 " CACHE INTERNAL "C++ Compiler options")
+set(CMAKE_CXX_FLAGS "${OBJECT_GEN_FLAGS} -std=c++20 " CACHE INTERNAL "C++ Compiler options")
 set(CMAKE_ASM_FLAGS "${OBJECT_GEN_FLAGS} -x assembler-with-cpp " CACHE INTERNAL "ASM Compiler options")
 
 # -Wl,--gc-sections     Perform the dead code elimination.
