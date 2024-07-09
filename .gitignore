@@ -7,6 +7,4 @@ mcu-boot/
 
 .settings/language.settings.xml
 
-debugProject.jdebug.user
-
 build/
