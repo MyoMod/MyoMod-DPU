@@ -11,7 +11,8 @@
 		"vscode": {
 			"extensions": [
 				"ms-vscode.vscode-embedded-tools",
-				"ms-vscode.cmake-tools"
+				"ms-vscode.cmake-tools",
+				"marus25.cortex-debug"
 			]
 		}
 	},

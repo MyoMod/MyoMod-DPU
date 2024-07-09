@@ -60,7 +60,7 @@ void init_debug();
 /*******************************************************************************
  * Functions
  * ****************************************************************************/
-void main()
+int main()
 {
 	freesthetics::Status status;
 
@@ -231,6 +231,7 @@ void main()
 			}
 		}
 	}
+	return 0;
 }
 
 
@@ -375,6 +376,8 @@ void gpio_init()
     /* Init output LED GPIO. */
     GPIO_PinInit(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, &led_config);
     GPIO_PinInit(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, &led_config);
+
+	GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, 1);
 }
 
 void init_debug()

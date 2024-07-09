@@ -1,10 +1,17 @@
 version: '3.8'
 services:
   devcontainer:
+    
     build: 
       context: .
       dockerfile: Dockerfile
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY}
     volumes:
-      - ..:/workspace:cached      
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ~/.Xauthority:/root/.Xauthority
+      - ..:/workspace:cached   
+      - /dev/bus/usb/:/dev/bus/usb   
     network_mode: host
     command: sleep infinity

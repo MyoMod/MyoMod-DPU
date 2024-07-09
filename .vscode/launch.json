@@ -5,15 +5,24 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Cortex Debug",
+            "name": "Cortex Debug RT1062",
             "cwd": "${workspaceFolder}",
-            "executable": "./bin/executable.elf",
+            "executable": "${workspaceFolder}/build/debug/DPU_CMake.elf",
             "request": "launch",
             "type": "cortex-debug",
             "runToEntryPoint": "main",
-            "servertype": "jlink"
+            "servertype": "jlink",
+            "serverpath": "/usr/bin/JLinkGDBServerCLExe",
+            "serverArgs": [],
+            "device": "MIMXRT1062XXX6B",
+            "interface": "jtag",
+            "serialNumber": "",
+            "svdPath": "${workspaceFolder}/.vscode/MIMXRT1062.svd",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            }
         }
-        ,
 
     ]
     
