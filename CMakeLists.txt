@@ -65,8 +65,10 @@ add_compile_options(
   -ffunction-sections 
   -fdata-sections
 
-  -ffreestanding
-  -fno-builtin
+  #remove ffreestanding and fno-building for gcc 13, as newlib acts like a hosted environment; 
+  #see https://www.reddit.com/r/embedded/comments/17rx6ud/psa_gcc_13_with_ffreestanding_breaks_c_builds/
+  #-ffreestanding
+  #-fno-builtin
   -fno-exceptions
 
   #-fmerge-constants check if this is needed

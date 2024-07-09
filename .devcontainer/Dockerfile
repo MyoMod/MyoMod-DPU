@@ -1,12 +1,12 @@
-FROM mcr.microsoft.com/devcontainers/base:jammy
+FROM mcr.microsoft.com/devcontainers/base:ubuntu
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 # Find new gcc versions here: 
 # https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
-#ENV GCC_VERSION=13.3.rel1
-ENV GCC_VERSION=12.3.rel1
+ENV GCC_VERSION=13.3.rel1
+#ENV GCC_VERSION=12.3.rel1
 
 
 #COPY version_vcpkg.env install_vcpkg.sh /opt/
