@@ -27,6 +27,8 @@ message(STATUS "CMAKE_TOOLCHAIN_FILE is: ${CMAKE_TOOLCHAIN_FILE}")
 
 # List of source files
 set(SRC_FILES
+  xip/evkcmimxrt1060_flexspi_nor_config.c
+  xip/fsl_flexspi_nor_boot.c
   source/RuntimeHandler.cpp
   startup/startup_mimxrt1062.cpp
   device/system_MIMXRT1062.c
@@ -99,7 +101,7 @@ add_subdirectory(./drivers          drivers)
 add_subdirectory(./utilities        utilities)
 add_subdirectory(./component        component)
 add_subdirectory(./source           source)
-add_subdirectory(./xip              xip)
+#add_subdirectory(./xip              xip)
 add_subdirectory(./SEGGER_RTT       segger_rtt)
 
 target_link_libraries(
@@ -109,7 +111,7 @@ target_link_libraries(
     PUBLIC utilities
     PUBLIC component
     PUBLIC source
-    PUBLIC xip
+#   PUBLIC xip
     PUBLIC segger_rtt
     PUBLIC CMSISDSP
 )

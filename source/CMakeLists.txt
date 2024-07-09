@@ -28,7 +28,6 @@ target_link_libraries(
   CMSISDSP
   component
   utilities
-  xip
 )
  
 # target_include_directories: Libraries need to publish their header files 
