@@ -8,7 +8,6 @@
             "defines": [
                 "CPU_MIMXRT1062DVL6B",
                 "CPU_MIMXRT1062DVL6B_cm7",
-                "SDK_OS_FREE_RTOS",
                 "DISABLEFLOAT16",
                 "SERIAL_PORT_TYPE_UART=1",
                 "XIP_EXTERNAL_FLASH=1",
@@ -23,6 +22,10 @@
             "cStandard": "c17",
             "intelliSenseMode": "linux-gcc-arm",
             "cppStandard": "c++23"
+        },
+        {
+            "name": "CMake",
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4
