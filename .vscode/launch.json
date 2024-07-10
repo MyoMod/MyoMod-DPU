@@ -18,9 +18,16 @@
             "interface": "jtag",
             "serialNumber": "",
             "svdPath": "${workspaceFolder}/.vscode/MIMXRT1062.svd",
-            "liveWatch": {
+            "rttConfig": {
                 "enabled": true,
-                "samplesPerSecond": 4
+                "address": "auto",
+                "decoders": [
+                    {
+                        "label": "RTT stream",
+                        "port": 0,
+                        "type": "console"
+                    }
+                ]
             }
         }
 
