@@ -10,15 +10,14 @@
 #include "stdint.h"
 #include <vector>
 
+#include "Status.h"
 #include "Configuration.h"
-#include "ComInterface.h"
-
-
+#include "configParser.h"
 
 struct ConfigurationHandle
 {
 	Configuration config;
-	bool isValid;
+	bool isValid = false;
 };
 
 /*
@@ -26,27 +25,29 @@ struct ConfigurationHandle
  */
 class ConfigurationManager {
 public:
-	ConfigurationManager(ComInterface* comInterface);
-	virtual ~ConfigurationManager();
+	ConfigurationManager();
 
-	Status addConfiguration(const Configuration& config);
-	Status removeConfiguration(uint32_t index);
-	Status removeConfiguration(std::string_view name);
+	Status readConfigurations();
 
-	Status renumrateDevices();
-	Status updateValidConfigurations(const std::vector<DeviceDescriptor>& foundDevices);
-	
-	Configuration getActiveConfiguration();
+	Status updateValidConfigurations(const std::vector<DeviceIdentifier>& foundDevices);
+
 	Status setActiveConfiguration(uint32_t index);
-	uint32_t getActiveConfigurationIndex();
-	uint32_t getNumberOfValidConfigurations();
 	Status incrementActiveConfiguration();
 	Status decrementActiveConfiguration();
+
+	NodesTuple createActiveConfiguration();
+
+	std::vector<DeviceIdentifier> getNeededDevices();
+	std::string getActiveConfigurationName();
+	uint32_t getActiveConfigurationIndex();
+
+	uint32_t getNumberOfValidConfigurations();
+	
 private:
+	Status removeAllConfigurations();
+
 	uint32_t activeConfigIndex = 0;
 	std::vector<ConfigurationHandle> configurationHandles;
-	ComInterface* comInterface;
 };
-} /* namespace freesthetics */
 
 #endif /* CONFIGURATIONMANAGER_H_ */

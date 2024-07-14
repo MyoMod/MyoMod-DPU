@@ -31,14 +31,14 @@ std::array<PeripheralHandler*, I2C_UNITS> PeripheralHandler::handlers;
  * @param highSpeed 				True if the i2c should be configured for high speed mode (1MBit/s), false for normal speed (400kBit/s)
  */
 PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::function<void(void)> processDataCallback, bool highSpeed):
-	dmaBase{ dma }, 
-	commState{CommState:: Stopped }, 
-	dmaChannel{ DMA_LOWEST_CHANNEL + (i2cIndex - 1) }, // i2cIndex is 1 based, but the array is 0 based
-	tcdIndex{ 0 },
-	pingPongIndex{ 0 },
-	devicesChanged{ true }, // Set to true to trigger the first listNewDevices call
-	noActiveDevices{ true },
-	processDataCallback{ processDataCallback }
+	m_dmaBase{ dma }, 
+	m_commState{CommState:: Stopped }, 
+	m_dmaChannel{ DMA_LOWEST_CHANNEL + (i2cIndex - 1) }, // i2cIndex is 1 based, but the array is 0 based
+	m_tcdIndex{ 0 },
+	m_pingPongIndex{ 0 },
+	m_connectedDevicesChanged{ true }, // Set to true to trigger the first listNewDevices call
+	m_noInstalledDevices{ true },
+	m_processDataCallback{ processDataCallback }
 {
 	i2cIndex--; // i2cIndex is 1 based, but the array is 0 based
 	/* Init dma hardware */
@@ -49,7 +49,7 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::func
     DMAMUX_Init(DMAMUX_BASE);
     // Procedure from manual 5.5.1
     // 2. Clear the CHCFG[ENBL] and CHCFG[TRIG] fields of the DMA channel.
-    DMAMUX_DisableChannel(DMAMUX_BASE, dmaChannel);
+    DMAMUX_DisableChannel(DMAMUX_BASE, m_dmaChannel);
 
     // 3. Ensure that the DMA channel is properly configured in the DMA. The DMA channel
     //  may be enabled at this point.
@@ -65,11 +65,11 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::func
     EDMA_GetDefaultConfig(&dmaConfig);
     dmaConfig.enableRoundRobinArbitration = true;
 
-    EDMA_Init(dmaBase, &dmaConfig);
+    EDMA_Init(m_dmaBase, &dmaConfig);
 
 	// Enable interrupts
     // individual interrupts are enabled in the corresponding tcd
-	IRQn interrupt{ static_cast<IRQn>((static_cast<uint32_t>(DMA0_DMA16_IRQn) + (dmaChannel%16)))};
+	IRQn interrupt{ static_cast<IRQn>((static_cast<uint32_t>(DMA0_DMA16_IRQn) + (m_dmaChannel%16)))};
     EnableIRQ(interrupt);
 
     // 4. Configure the corresponding timer.
@@ -80,12 +80,12 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::func
 		kDmaRequestMuxLPI2C1, kDmaRequestMuxLPI2C2, 
 		kDmaRequestMuxLPI2C3, kDmaRequestMuxLPI2C4 };
 	assert(i2cIndex < 4);
-    DMAMUX_SetSource(DMAMUX_BASE, dmaChannel, dmaSources[i2cIndex]);
-    DMAMUX_EnableChannel(DMAMUX_BASE, dmaChannel);
+    DMAMUX_SetSource(DMAMUX_BASE, m_dmaChannel, dmaSources[i2cIndex]);
+    DMAMUX_EnableChannel(DMAMUX_BASE, m_dmaChannel);
 
 	/* Init LPI2C Hardware */
 	std::array<LPI2C_Type*,4> i2cBases{ LPI2C1, LPI2C2, LPI2C3, LPI2C4 };
-	i2cBase = i2cBases[i2cIndex];
+	m_i2cBase = i2cBases[i2cIndex];
 
 	lpi2c_master_config_t i2cConfig = {0};
 
@@ -111,19 +111,23 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::func
 	i2cConfig.baudRate_Hz = highSpeed ? 1'000'000U : 400'000U;
 
 	// Init i2c hardware
-	LPI2C_MasterInit(i2cBase, &i2cConfig, LPI2C_CLOCK_FREQUENCY);
+	LPI2C_MasterInit(m_i2cBase, &i2cConfig, LPI2C_CLOCK_FREQUENCY);
 
 	// Activate IRQ
-	LPI2C_MasterEnableInterrupts(i2cBase, kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag
+	LPI2C_MasterEnableInterrupts(m_i2cBase, kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag
 										 | kLPI2C_MasterStopDetectFlag);
 	interrupt = static_cast<IRQn>((static_cast<uint32_t>(LPI2C1_IRQn) + i2cIndex));
     EnableIRQ(interrupt);
 
 	// Set tx and rx fifo watermark
-	LPI2C_MasterSetWatermarks(i2cBase, 0, 0);
+	LPI2C_MasterSetWatermarks(m_i2cBase, 0, 0);
 
 	// register handler
 	PeripheralHandler::handlers[i2cIndex] = this;
+
+#if SIMULATE_DEVICE_SCAN == 1
+	m_i2cIndex = i2cIndex;
+#endif
 }
 
 /**
@@ -132,17 +136,17 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::func
  * 
  */
 PeripheralHandler::~PeripheralHandler() {
-	LPI2C_MasterDeinit(i2cBase);
-	IRQn interrupt{ static_cast<IRQn>((static_cast<uint32_t>(LPI2C1_IRQn) + (i2cBase - LPI2C1)))};
+	LPI2C_MasterDeinit(m_i2cBase);
+	IRQn interrupt{ static_cast<IRQn>((static_cast<uint32_t>(LPI2C1_IRQn) + (m_i2cBase - LPI2C1)))};
 	DisableIRQ(interrupt);
 
-	interrupt = static_cast<IRQn>((static_cast<uint32_t>(DMA0_DMA16_IRQn) + (dmaChannel%16)));
+	interrupt = static_cast<IRQn>((static_cast<uint32_t>(DMA0_DMA16_IRQn) + (m_dmaChannel%16)));
     DisableIRQ(interrupt);
 
-	DMAMUX_DisableChannel(DMAMUX_BASE, dmaChannel);
-	EDMA_ResetChannel(dmaBase, dmaChannel);
+	DMAMUX_DisableChannel(DMAMUX_BASE, m_dmaChannel);
+	EDMA_ResetChannel(m_dmaBase, m_dmaChannel);
 
-	uint32_t i2cIndex = dmaChannel - DMA_LOWEST_CHANNEL;
+	uint32_t i2cIndex = m_dmaChannel - DMA_LOWEST_CHANNEL;
 
 	handlers[i2cIndex] = nullptr;
 }
@@ -156,61 +160,63 @@ PeripheralHandler::~PeripheralHandler() {
  * 		   Status::Error if the function was called while the handler was not in stopped state
  * 		   Status::Warning if the function was called, but there were no new devices
  */
-Status PeripheralHandler::listDevices(std::vector<DeviceDescriptor>* devices) {
-	if(commState != CommState::Stopped)
+std::vector<DeviceIdentifier> PeripheralHandler::listDevices(Status& status) {
+	if(m_commState != CommState::Stopped)
 	{
 		// It is not allowed to list devices while in realTime mode
-		return Status::Error;
+		status = Status::Error;
+		return std::vector<DeviceIdentifier>();
 	}
 
-	if(devicesChanged)
+	if(m_connectedDevicesChanged)
 	{
-		// TODO: scan for new devices and get their descriptors
-		devices->push_back(DeviceDescriptor{
-			.deviceType = "Elctr6Ch",
-			.deviceIdentifier = "SDSource0",
-			.peripheralIndex = -1,
-			.deviceAddress = 0x28,
-			.name = ""
-		});
-		devices->push_back(DeviceDescriptor{
-			.deviceType = "Elctr6Ch",
-			.deviceIdentifier = "Elctrode1",
-			.peripheralIndex = -1,
-			.deviceAddress = 0x08,
-			.name = ""
-		});
-		devices->push_back(DeviceDescriptor{
-			.deviceType = "BarDis7Ch",
-			.deviceIdentifier = "BDisplay1",
-			.peripheralIndex = -1,
-			.deviceAddress = 0x18,
-			.name = ""
-		});
-		devices->push_back(DeviceDescriptor{
-			.deviceType = "BtSink6Ch",
-			.deviceIdentifier = "Blt_Sink1",
-			.peripheralIndex = -1,
-			.deviceAddress = 0x38,
-			.name = ""
-		});
-
-		static uint32_t i = 0;
-		i++;
-		for (auto& device : *devices) {
-			device.deviceIdentifier[device.deviceIdentifier.size() - 2] = '0' + i;
+		// TODO: scan for new devices and get their identifiers
+		m_connectedDevices.clear();
+#if SIMULATE_DEVICE_SCAN == 1
+		switch (m_i2cIndex)
+		{
+		case 0:
+			// Add devices that are connected to the Port 1
+			m_connectedDevices[0x08] = DeviceIdentifier{ "Elctr6Ch", "Elctrode1" };
+			//m_connectedDevices[0x18] = DeviceIdentifier{ "BarDis7Ch", "BDisplay1" };
+			m_connectedDevices[0x28] = DeviceIdentifier{ "Elctr6Ch", "SDSource1" };
+			//m_connectedDevices[0x38] = DeviceIdentifier{ "BtSink6Ch", "Blt_Sink1" };
+			break;
+		case 1:
+			// Add devices that are connected to the Port 2
+			//m_connectedDevices[0x08] = DeviceIdentifier{ "Elctr6Ch", "Elctrode2" };
+			m_connectedDevices[0x18] = DeviceIdentifier{ "BarDis7Ch", "BDisplay2" };
+			//m_connectedDevices[0x28] = DeviceIdentifier{ "Elctr6Ch", "SDSource2" };
+			m_connectedDevices[0x38] = DeviceIdentifier{ "BtSink6Ch", "Blt_Sink2" };
+			break;
+		case 3:
+			// Add devices that are connected to the LowSpeed Port 
+			//m_connectedDevices[0x08] = DeviceIdentifier{ "Elctr6Ch", "Elctrode3" };
+			//m_connectedDevices[0x18] = DeviceIdentifier{ "BarDis7Ch", "BDisplay3" };
+			//m_connectedDevices[0x28] = DeviceIdentifier{ "Elctr6Ch", "SDSource3" };
+			//m_connectedDevices[0x38] = DeviceIdentifier{ "BtSink6Ch", "Blt_Sink3" };
+			break;
+		
+		default:
+			break;
 		}
-
-
-		devicesChanged = false;
+#endif
+		m_connectedDevicesChanged = false;
+		status = Status::Ok;
 	}
 	else
 	{
-		// Function was called, but there were no new devices, return the empty vector
-		// and return a warning
-		return Status::Warning;
+		// Function was called, but there were no new devices return a warning
+		status = Status::Warning;
 	}
-	return Status::Ok;
+	
+	std::vector<DeviceIdentifier> devices(m_connectedDevices.size());
+	int i = 0;
+	for(auto& device : m_connectedDevices)
+	{
+		devices[i++] = device.second;
+	}
+	return devices;
 }
 
 /**
@@ -220,7 +226,7 @@ Status PeripheralHandler::listDevices(std::vector<DeviceDescriptor>* devices) {
  * @return false if no new devices were detected
  */
 bool PeripheralHandler::detectedNewDevices() {
-	return devicesChanged;
+	return m_connectedDevicesChanged;
 }
 
 /**
@@ -232,99 +238,90 @@ bool PeripheralHandler::detectedNewDevices() {
  * @return Status::Ok if the function was successful
  * 		   Status::Error if the function was called, but the device was already added
  */
-Status PeripheralHandler::addDevice(uint32_t address, MemoryRegion dataInBuffer, std::array<MemoryRegion,2> dataOutBuffer) {
+Status PeripheralHandler::addDevice(DeviceNode* device) {
 	
-	assert(commState == CommState::Stopped);
+	assert(m_commState == CommState::Stopped);
+
+	// Get address
+	int32_t address = getDeviceAdress(device->identifier);
+	assert(address != -1);
+
+	// Get pointer to storage in deviceNode
+	auto nodeStoarge = device->getNodeStorage();
 
 	// Install tcds+commands for data in and out
-	if(dataInBuffer.size > 0)
+	if(nodeStoarge.inSize > 0)
 	{
 		// Check if address is already in use
-		for(auto& handle : hInTcdhandles)
+		if(m_installedHostInStorages.find(address) != m_installedHostInStorages.end())
 		{
-			if(handle.deviceAddress == address)
-			{
-				return Status::Error;
-			}
+			return Status::Error;
 		}
+		m_installedHostInStorages[address] = nodeStoarge.inStorage;
+
+		// Create memory region for data in
+		MemoryRegion dataInStorage{ nodeStoarge.inStorage.get(), nodeStoarge.inSize };
 
 		//Install 
-		appendTcdIn(dataInBuffer, address);
-
+		appendTcdIn(dataInStorage, address);
 	}
-	if(dataOutBuffer[0].size > 0)
+	if(nodeStoarge.outSize > 0)
 	{
 		// Check if address is already in use
-		for(auto& handle : hOutTcdhandles)
+		if(m_installedHostOutStorages.find(address) != m_installedHostOutStorages.end())
 		{
-			if(handle.deviceAddress == address)
-			{
-				return Status::Error;
-			}
+			return Status::Error;
 		}
+		m_installedHostOutStorages[address] = nodeStoarge.outStorage;
+
+		// Create memory region for data in
+		std::array<MemoryRegion,2> dataOutBuffer{ 
+			MemoryRegion{ nodeStoarge.outStorage[0].get(), nodeStoarge.outSize },
+			MemoryRegion{ nodeStoarge.outStorage[1].get(), nodeStoarge.outSize }
+		};
 
 		//Install tcds for data out
 		appendTcdOut(dataOutBuffer, address);
 	}
 
 	// Update all links
-	// Note: This will always be done for all devices, as the addition of a device 
-	//        may trigger the vector to reallocate, which will invalidate all pointers
-	//        to the tcds
 	linkTcds();
 
 	return Status::Ok;
 }
 
 /**
- * @brief Removes a device from the handler
+ * @brief Return the address of a device if it is connected, otherwise -1
  * 
- * @param address 	Address of the device
- * @return Status::Ok if the function was successful
- * 		   Status::Error if the function was called, but the device was not added
+ * @param device 	DeviceIdentifier of the device
+ * @return int32_t 	Address of the device if it is connected, otherwise -1
  */
-Status PeripheralHandler::removeDevice(uint32_t address) {
-	bool foundDevice = false;
-
-	assert(commState == CommState::Stopped);
-
-	// Remove tcds for data in
-	for(auto it = hInTcdhandles.begin(); it != hInTcdhandles.end(); it++)
+int32_t PeripheralHandler::getDeviceAdress(DeviceIdentifier& device) {
+	for(auto& connectedDevice : m_connectedDevices)
 	{
-		if(it->deviceAddress == address)
+		if(connectedDevice.second == device)
 		{
-			hInTcdhandles.erase(it);
-			foundDevice = true;
-			break;
+			return connectedDevice.first;
 		}
 	}
+	return -1;
+}
 
-	// Remove tcds for data out
-	for(auto it = hOutTcdhandles.begin(); it != hOutTcdhandles.end(); it++)
-	{
-		if(it->deviceAddress == address)
-		{
-			hOutTcdhandles.erase(it);
-			foundDevice = true;
-			break;
-		}
-	}
+/**
+ * @brief Removes all devices from the handler
+ * 
+ */
+void PeripheralHandler::removeAllDevices() {
+	assert(m_commState == CommState::Stopped);
 
-	if(foundDevice)
-	{
-		// Update all links
-		// Note: This will always be done for all devices, as the addition of a device 
-		//        may trigger the vector to reallocate, which will invalidate all pointers
-		//        to the tcds
-		linkTcds();
-	}
-	else
-	{
-		// Device was not found
-		return Status::Error;
-	}
+	m_hInTcdhandles.clear();
+	m_hOutTcdhandles.clear();
+	m_installedHostInStorages.clear();
+	m_installedHostOutStorages.clear();
 
-	return Status::Ok;
+	m_noInstalledDevices = true;
+	m_tcdIndex = 0;
+	m_pingPongIndex = 0;
 }
 
 /**
@@ -333,7 +330,7 @@ Status PeripheralHandler::removeDevice(uint32_t address) {
  * @return uint32_t 	Index of the ping pong buffer to which new data should be written
  */
 uint32_t PeripheralHandler::getPingPongIndex() {
-	return pingPongIndex;
+	return m_pingPongIndex;
 }
 
 /**
@@ -354,12 +351,12 @@ Status PeripheralHandler::sendSync() {
 	*/
 
 	// If there are no active devices, we expect a nack, otherwise an ack
-	uint16_t startCmd = noActiveDevices ? LPI2C_MTDR_CMD(4) : LPI2C_MTDR_CMD(4);
+	uint16_t startCmd = m_noInstalledDevices ? LPI2C_MTDR_CMD(4) : LPI2C_MTDR_CMD(4);
 	static std::array<uint16_t, 2> syncCommand = {
 		startCmd | 0x00 | kLPI2C_Write, //General Call 
 		LPI2C_MTDR_CMD(2)};//Stop
 
-	commState = CommState::Sync;
+	m_commState = CommState::Sync;
 
 	// Send the command to all devices
 	return sendCommand(std::span{ syncCommand });
@@ -373,7 +370,7 @@ Status PeripheralHandler::sendSync() {
  * 				  Returns Status::Timeout when a timeout occured
  */
 Status PeripheralHandler::startCycle() {
-	if(commState != CommState::Sync)
+	if(m_commState != CommState::Sync)
 	{
 		// It is not allowed to start a cycle when not in idle state
 		return Status::Error;
@@ -381,21 +378,21 @@ Status PeripheralHandler::startCycle() {
 
 	// Don't do anything if there are no devices
 	// Note each device has at least one inTcd
-	if(hInTcdhandles.size() == 0)
+	if(m_hInTcdhandles.size() == 0)
 	{
 		return Status::Ok;
 	}
 
-	tcdIndex = 0;
+	m_tcdIndex = 0;
 
 	// Enable rx dma
-	LPI2C_MasterEnableDMA(i2cBase, false, true);
-	EDMA_EnableChannelRequest(dmaBase, dmaChannel);
+	LPI2C_MasterEnableDMA(m_i2cBase, false, true);
+	EDMA_EnableChannelRequest(m_dmaBase, m_dmaChannel);
 
 	// TODO: Maybe send command at i2c callback (So we don't have to wait for the completion of the sync transfer)
 	// Write the first receive command to the fifo
 	// Note: This will trigger the dma to start
-	return sendCommand(std::span{ hInTcdhandles[0].command });
+	return sendCommand(std::span{ m_hInTcdhandles[0].command });
 }
 
 /**
@@ -405,12 +402,12 @@ Status PeripheralHandler::startCycle() {
  * 				  Returns Status::Error if the function was called while the handler was not in stopped state
  */
 Status PeripheralHandler::enterRealTimeMode() {
-	if(commState != CommState::Stopped)
+	if(m_commState != CommState::Stopped)
 	{
 		// It is not allowed to enter realTime mode when not in stopped state
 		return Status::Error;
 	}
-	commState = CommState::Idle;
+	m_commState = CommState::Idle;
 	return Status::Ok;
 }
 
@@ -421,12 +418,12 @@ Status PeripheralHandler::enterRealTimeMode() {
  * 				  Returns Status::Error if the function was called while the handler was not in idle state
  */
 Status PeripheralHandler::exitRealTimeMode() {
-	if(commState > CommState::Idle)
+	if(m_commState > CommState::Idle)
 	{
 		// It is not allowed to exit realTime mode when not in idle state
 		return Status::Error;
 	}
-	commState = CommState::Stopped;
+	m_commState = CommState::Stopped;
 	return Status::Ok;
 }
 
@@ -435,50 +432,49 @@ Status PeripheralHandler::exitRealTimeMode() {
  * 
  */
 void PeripheralHandler::dmaInterruptHandler() {
-	uint32_t status = EDMA_GetChannelStatusFlags(dmaBase, dmaChannel);
-    EDMA_ClearChannelStatusFlags(dmaBase, dmaChannel, status);
+	uint32_t status = EDMA_GetChannelStatusFlags(m_dmaBase, m_dmaChannel);
+    EDMA_ClearChannelStatusFlags(m_dmaBase, m_dmaChannel, status);
 
 	// TODO: Check which interrupt occured and handle it
 	
-	tcdIndex++;
+	m_tcdIndex++;
 
 	//Start next rx tcd if there is one
-	if(tcdIndex < hInTcdhandles.size())
+	if(m_tcdIndex < m_hInTcdhandles.size())
 	{
-		// TODO: Handle tcdIns with length > 256
-		Status cmdStatus = sendCommand(std::span{ hInTcdhandles[tcdIndex].command });
+		Status cmdStatus = sendCommand(std::span{ m_hInTcdhandles[m_tcdIndex].command });
 		if (cmdStatus != Status::Ok)
 		{
-			SEGGER_RTT_printf(0, "I2C%d had a timeout while sending a command\n", (uint32_t(i2cBase) - LPI2C1_BASE)/0x4000 + 1);
+			SEGGER_RTT_printf(0, "I2C%d had a timeout while sending a command\n", (uint32_t(m_i2cBase) - LPI2C1_BASE)/0x4000 + 1);
 			return;
 		}
 	}
-	else if(tcdIndex == hInTcdhandles.size())
+	else if(m_tcdIndex == m_hInTcdhandles.size())
 	{
-		if(hOutTcdhandles.size() > 0)
+		if(m_hOutTcdhandles.size() > 0)
 		{
 			// Change direction to tx
-			commState = CommState::Transmitting;
-			LPI2C_MasterEnableDMA(i2cBase, true, false);
-			EDMA_EnableChannelRequest(dmaBase, dmaChannel);
+			m_commState = CommState::Transmitting;
+			LPI2C_MasterEnableDMA(m_i2cBase, true, false);
+			EDMA_EnableChannelRequest(m_dmaBase, m_dmaChannel);
 		}
 		else
 		{
 			// All tcds are done
-			commState = CommState::Idle;
+			m_commState = CommState::Idle;
 		}
 		
 
 		//swap ping pong buffer
-		pingPongIndex ^= 1;
+		m_pingPongIndex ^= 1;
 		
 		// Call functions for handling the data
-		processDataCallback();
+		m_processDataCallback();
 	}
 	else
 	{
 		// All tx-tcds are done
-		commState = CommState::Idle;
+		m_commState = CommState::Idle;
 	}
 	
 }
@@ -488,80 +484,80 @@ void PeripheralHandler::dmaInterruptHandler() {
  * 
  */
 void PeripheralHandler::i2cInterruptHandler() {
-	uint32_t i2cIndex = (uint32_t(i2cBase) - LPI2C1_BASE)/0x4000 + 1;
+	uint32_t i2cIndex = (uint32_t(m_i2cBase) - LPI2C1_BASE)/0x4000 + 1;
 	// If we receive a nack, no device are present anymore -> stop transmission
-	if(LPI2C_MasterGetStatusFlags(i2cBase) & kLPI2C_MasterNackDetectFlag)
+	if(LPI2C_MasterGetStatusFlags(m_i2cBase) & kLPI2C_MasterNackDetectFlag)
 	{
 		// Clear flag
-		LPI2C_MasterClearStatusFlags(i2cBase, kLPI2C_MasterNackDetectFlag);
+		LPI2C_MasterClearStatusFlags(m_i2cBase, kLPI2C_MasterNackDetectFlag);
 
-		if(commState == CommState::Sync && !noActiveDevices)
+		if(m_commState == CommState::Sync && !m_noInstalledDevices)
 		{
 			// Sync command was not acknowledged -> no devices are present
 			// and it is the first time we detected this
 
-			noActiveDevices = true;
+			m_noInstalledDevices = true;
 			/* Reset fifos. */
-			i2cBase->MCR |= LPI2C_MCR_RRF_MASK | LPI2C_MCR_RTF_MASK;
+			m_i2cBase->MCR |= LPI2C_MCR_RRF_MASK | LPI2C_MCR_RTF_MASK;
 
 			/* If master is still busy and has not send out stop signal yet. */
-			if (LPI2C_MasterGetStatusFlags(i2cBase) & ((uint32_t)kLPI2C_MasterStopDetectFlag))
+			if (LPI2C_MasterGetStatusFlags(m_i2cBase) & ((uint32_t)kLPI2C_MasterStopDetectFlag))
 			{
 				/* Send a stop command to finalize the transfer. */
-				i2cBase->MTDR = LPI2C_MTDR_CMD(2);//Stop
+				m_i2cBase->MTDR = LPI2C_MTDR_CMD(2);//Stop
 			}
 
 			SEGGER_RTT_printf(0, "I2C%d detected a NAck during sync call\n", i2cIndex);
 		}
 	}
 
-	if(LPI2C_MasterGetStatusFlags(i2cBase) & kLPI2C_MasterStopDetectFlag)
+	if(LPI2C_MasterGetStatusFlags(m_i2cBase) & kLPI2C_MasterStopDetectFlag)
 	{
 		// Clear flag
-		LPI2C_MasterClearStatusFlags(i2cBase, kLPI2C_MasterStopDetectFlag);
+		LPI2C_MasterClearStatusFlags(m_i2cBase, kLPI2C_MasterStopDetectFlag);
 
 		// Stop condition was detected -> if we where in sync mode, 
 		//  we are done -> change to receiving
-		if(commState == CommState::Sync)
+		if(m_commState == CommState::Sync)
 		{
-			commState = CommState::Receiving;
+			m_commState = CommState::Receiving;
 		}
 	}
 
-	if(LPI2C_MasterGetStatusFlags(i2cBase) & kLPI2C_MasterTxReadyFlag)
+	if(LPI2C_MasterGetStatusFlags(m_i2cBase) & kLPI2C_MasterTxReadyFlag)
 	{
 		// Clear flag
-		LPI2C_MasterClearStatusFlags(i2cBase, kLPI2C_MasterTxReadyFlag);
+		LPI2C_MasterClearStatusFlags(m_i2cBase, kLPI2C_MasterTxReadyFlag);
 
 		uint32_t fifoAvailable = I2C_FIFO_DEPTH - 
-					((i2cBase->MSR & LPI2C_MSR_TDF_MASK) >> LPI2C_MSR_TDF_SHIFT);
+					((m_i2cBase->MSR & LPI2C_MSR_TDF_MASK) >> LPI2C_MSR_TDF_SHIFT);
 
 		// The tx fifo is ready for new commands from the queue
-		while(!commandQueue.empty() && fifoAvailable > 0)
+		while(!m_commandQueue.empty() && fifoAvailable > 0)
 		{
-			uint16_t command = commandQueue.front();
-			commandQueue.pop();
-			i2cBase->MTDR = command;
+			uint16_t command = m_commandQueue.front();
+			m_commandQueue.pop();
+			m_i2cBase->MTDR = command;
 			fifoAvailable--;
 		}
 
 		// If there are no more commands, disable the tx interrupt
-		if(commandQueue.empty())
+		if(m_commandQueue.empty())
 		{
-			LPI2C_MasterDisableInterrupts(i2cBase, kLPI2C_MasterTxReadyFlag);
+			LPI2C_MasterDisableInterrupts(m_i2cBase, kLPI2C_MasterTxReadyFlag);
 		}
 	}
 
-	if(LPI2C_MasterGetStatusFlags(i2cBase) & kLPI2C_MasterFifoErrFlag)
+	if(LPI2C_MasterGetStatusFlags(m_i2cBase) & kLPI2C_MasterFifoErrFlag)
 	{
 		/* Reset fifos. */
-        i2cBase->MCR |= LPI2C_MCR_RRF_MASK | LPI2C_MCR_RTF_MASK;
+        m_i2cBase->MCR |= LPI2C_MCR_RRF_MASK | LPI2C_MCR_RTF_MASK;
 
 
 		SEGGER_RTT_printf(0, "I2C%d had a fifo error\n", i2cIndex);
 
 		// clear flag
-		LPI2C_MasterClearStatusFlags(i2cBase, kLPI2C_MasterFifoErrFlag);
+		LPI2C_MasterClearStatusFlags(m_i2cBase, kLPI2C_MasterFifoErrFlag);
 	}
 }
 
@@ -590,7 +586,7 @@ Status PeripheralHandler::appendTcdIn(MemoryRegion data, uint32_t deviceAddress)
 		EDMA_TcdReset(&tcd);
 		tcd.ATTR = DMA_ATTR_SSIZE(0) | DMA_ATTR_DSIZE(0);
 
-		tcd.SADDR = (uint32_t)&i2cBase->MRDR;
+		tcd.SADDR = (uint32_t)&m_i2cBase->MRDR;
 		tcd.SOFF = 0;
 
 		tcd.DADDR = (uint32_t)data.address;
@@ -610,7 +606,7 @@ Status PeripheralHandler::appendTcdIn(MemoryRegion data, uint32_t deviceAddress)
 	}
 
 	tcdHandle.deviceAddress = deviceAddress;
-	hInTcdhandles.push_back(tcdHandle);
+	m_hInTcdhandles.push_back(tcdHandle);
 	return Status::Ok;
 }
 
@@ -634,7 +630,7 @@ void PeripheralHandler::fillOutTcds(edma_tcd_t* tcd, uint8_t* data, uint32_t len
     tcd->SADDR = (uint32_t)data;
     tcd->SOFF = sizeInBytes;
 
-    tcd->DADDR = (uint32_t)&i2cBase->MTDR;
+    tcd->DADDR = (uint32_t)&m_i2cBase->MTDR;
     tcd->DOFF = 0;
 
     tcd->NBYTES = sizeInBytes;
@@ -658,8 +654,8 @@ void PeripheralHandler::fillOutTcds(edma_tcd_t* tcd, uint8_t* data, uint32_t len
  * @param deviceAddress Address of the device
  */
 Status PeripheralHandler::appendTcdOut(std::array<MemoryRegion,2> data, uint32_t deviceAddress)  {
-	hOutTcdhandles.push_back({});
-	TcdOutHandle& tcdHandle = hOutTcdhandles[hOutTcdhandles.size() - 1];
+	m_hOutTcdhandles.push_back({});
+	TcdOutHandle& tcdHandle = m_hOutTcdhandles[m_hOutTcdhandles.size() - 1];
 	// build command
 	uint8_t controlWord = 0x81; //Command for HOut PDS transfer
 	tcdHandle.command[0] = LPI2C_MTDR_CMD(4) | (deviceAddress & 0x7F) << 1 | kLPI2C_Write; //start
@@ -690,9 +686,6 @@ Status PeripheralHandler::appendTcdOut(std::array<MemoryRegion,2> data, uint32_t
  */
 Status PeripheralHandler::linkTcds() {
 	// Link all tcds together
-	// Note: This will always be done for all devices, as the addition of a device
-	//        may trigger the vector to reallocate, which will invalidate all pointers
-	//        to the tcds
 	// Note2: Due to pipelining the tcdOut of the prior cycle (pong) will be send directly after
 	//        the tcdIn of the current cycle(ping). Therefore the (ping) tcdIn links to the tcdOut of
 	// 		  the opposed ping-pong buffer (pong). The (pong)tcdOut links to the tcdIn of the (pong) buffer 
@@ -702,32 +695,32 @@ Status PeripheralHandler::linkTcds() {
 	{
 		// Link tcds for data in
 		uint32_t nextTcd = 0;
-		uint32_t i = hInTcdhandles.size();
+		uint32_t i = m_hInTcdhandles.size();
 		while(i--)
 		{
-			EDMA_TcdEnableAutoStopRequest(&hInTcdhandles[i].tcd[pingPong], false);
-			hInTcdhandles[i].tcd[pingPong].DLAST_SGA = nextTcd;
-			nextTcd = (uint32_t)&hInTcdhandles[i].tcd[pingPong];
+			EDMA_TcdEnableAutoStopRequest(&m_hInTcdhandles[i].tcd[pingPong], false);
+			m_hInTcdhandles[i].tcd[pingPong].DLAST_SGA = nextTcd;
+			nextTcd = (uint32_t)&m_hInTcdhandles[i].tcd[pingPong];
 		}
 
 		// Link tcds for data out
 		nextTcd = 0;
-		uint32_t handleIndex = hOutTcdhandles.size();
+		uint32_t handleIndex = m_hOutTcdhandles.size();
 		while(handleIndex--)
 		{
 			// Link the tcds for the 3 phases
 			for(int32_t phaseIndex = 2; phaseIndex >= 0; phaseIndex--)
 			{
-				hOutTcdhandles[handleIndex].tcds[pingPong][phaseIndex].DLAST_SGA = nextTcd;
-				nextTcd = (uint32_t)&hOutTcdhandles[handleIndex].tcds[pingPong][phaseIndex];
-				EDMA_TcdEnableAutoStopRequest(&hOutTcdhandles[handleIndex].tcds[pingPong][phaseIndex], false);
+				m_hOutTcdhandles[handleIndex].tcds[pingPong][phaseIndex].DLAST_SGA = nextTcd;
+				nextTcd = (uint32_t)&m_hOutTcdhandles[handleIndex].tcds[pingPong][phaseIndex];
+				EDMA_TcdEnableAutoStopRequest(&m_hOutTcdhandles[handleIndex].tcds[pingPong][phaseIndex], false);
 			}
 			// Update the command addresses to the commands
-			hOutTcdhandles[handleIndex].tcds[pingPong][0].SADDR = (uint32_t)&hOutTcdhandles[handleIndex].command[0];
-			hOutTcdhandles[handleIndex].tcds[pingPong][2].SADDR = (uint32_t)&hOutTcdhandles[handleIndex].command[2];
+			m_hOutTcdhandles[handleIndex].tcds[pingPong][0].SADDR = (uint32_t)&m_hOutTcdhandles[handleIndex].command[0];
+			m_hOutTcdhandles[handleIndex].tcds[pingPong][2].SADDR = (uint32_t)&m_hOutTcdhandles[handleIndex].command[2];
 
 			// Disable interrupts that may have been enabled for a prior last tcd
-			hOutTcdhandles[handleIndex].tcds[pingPong][2].CSR &= ~DMA_CSR_INTMAJOR_MASK;
+			m_hOutTcdhandles[handleIndex].tcds[pingPong][2].CSR &= ~DMA_CSR_INTMAJOR_MASK;
 		}
 	}
 
@@ -736,14 +729,14 @@ Status PeripheralHandler::linkTcds() {
 	for(uint32_t pingPong = 0; pingPong < 2; pingPong++)
 	{
 		// Link last tcd in to opposing tcdOut
-		edma_tcd_t* lastTcdIn = &hInTcdhandles[hInTcdhandles.size() - 1].tcd[pingPong];
-		edma_tcd_t* lastTcdInOpposed = &hInTcdhandles[hInTcdhandles.size() - 1].tcd[pingPong ^ 1];
-		edma_tcd_t* lastTcdOutOpposed = &hOutTcdhandles[hOutTcdhandles.size() - 1].tcds[pingPong ^ 1][2];
-		edma_tcd_t* firstTcdIn = &hInTcdhandles[0].tcd[pingPong];
-		edma_tcd_t* firstTcdOutOpposed = &hOutTcdhandles[0].tcds[pingPong ^ 1][0];
+		edma_tcd_t* lastTcdIn = &m_hInTcdhandles[m_hInTcdhandles.size() - 1].tcd[pingPong];
+		edma_tcd_t* lastTcdInOpposed = &m_hInTcdhandles[m_hInTcdhandles.size() - 1].tcd[pingPong ^ 1];
+		edma_tcd_t* lastTcdOutOpposed = &m_hOutTcdhandles[m_hOutTcdhandles.size() - 1].tcds[pingPong ^ 1][2];
+		edma_tcd_t* firstTcdIn = &m_hInTcdhandles[0].tcd[pingPong];
+		edma_tcd_t* firstTcdOutOpposed = &m_hOutTcdhandles[0].tcds[pingPong ^ 1][0];
 
 		// When there is no putput data, the last tcd in points to the first tcd in
-		if(hOutTcdhandles.size() == 0)
+		if(m_hOutTcdhandles.size() == 0)
 		{
 			lastTcdInOpposed->DLAST_SGA = (uint32_t)firstTcdIn;
 			EDMA_TcdEnableAutoStopRequest(lastTcdIn, true);
@@ -760,7 +753,7 @@ Status PeripheralHandler::linkTcds() {
 	}
 
 	// Install the first tcd in the dma channel
-	EDMA_InstallTCD(dmaBase, dmaChannel, &hInTcdhandles[0].tcd[0]);
+	EDMA_InstallTCD(m_dmaBase, m_dmaChannel, &m_hInTcdhandles[0].tcd[0]);
 
 	return Status::Ok;
 } 
@@ -777,7 +770,7 @@ Status PeripheralHandler::linkTcds() {
  */
 Status PeripheralHandler::sendCommand(std::span<const uint16_t> command, uint32_t timeout) {
 	// Check if the command fits into the fifo
-	uint32_t fifoCount = ((i2cBase->MFSR & LPI2C_MFSR_TXCOUNT_MASK) >> LPI2C_MFSR_TXCOUNT_SHIFT);
+	uint32_t fifoCount = ((m_i2cBase->MFSR & LPI2C_MFSR_TXCOUNT_MASK) >> LPI2C_MFSR_TXCOUNT_SHIFT);
 	uint32_t fifoAvailable = I2C_FIFO_DEPTH - fifoCount;
 	if(fifoAvailable > command.size())
 	{
@@ -785,9 +778,9 @@ Status PeripheralHandler::sendCommand(std::span<const uint16_t> command, uint32_
 		for(size_t i = 0; i < command.size(); i++)
 		{
 			// Recheck if the fifo is still available
-			if(((i2cBase->MFSR & LPI2C_MFSR_TXCOUNT_MASK) >> LPI2C_MFSR_TXCOUNT_SHIFT) < I2C_FIFO_DEPTH)
+			if(((m_i2cBase->MFSR & LPI2C_MFSR_TXCOUNT_MASK) >> LPI2C_MFSR_TXCOUNT_SHIFT) < I2C_FIFO_DEPTH)
 			{
-				i2cBase->MTDR = command[i];
+				m_i2cBase->MTDR = command[i];
 			}
 			else
 			{
@@ -801,30 +794,19 @@ Status PeripheralHandler::sendCommand(std::span<const uint16_t> command, uint32_
 		// Write as much as possible into the fifo
 		for(size_t i = 0; i < fifoAvailable; i++)
 		{
-			i2cBase->MTDR = command[i];
+			m_i2cBase->MTDR = command[i];
 		}
 
 		// The rest of the command will be added to a 
 		//  buffer and send when the fifo has space again
 		for (size_t i = fifoAvailable; i < command.size(); i++)
 		{
-			commandQueue.push(command[i]);
+			m_commandQueue.push(command[i]);
 		}
 		
 		// Activate the interrupt for the fifo empty flag
-		LPI2C_MasterEnableInterrupts(i2cBase, kLPI2C_MasterTxReadyFlag);
+		LPI2C_MasterEnableInterrupts(m_i2cBase, kLPI2C_MasterTxReadyFlag);
 	}
-	return Status::Ok;
-}
-
-/**
- * @brief Checks if the address is available
- * 
- * @param address 	Address that should be checked
- * @return Status::Ok if the address is available
- * 		   Status::Error if the address is not available
- */
-Status PeripheralHandler::addrAvailable(uint32_t address) {
 	return Status::Ok;
 }
 
