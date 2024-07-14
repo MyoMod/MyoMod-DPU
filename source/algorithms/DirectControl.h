@@ -9,7 +9,7 @@
 
 #include <GestureEstimator.h>
 
-namespace freesthetics {
+
 
 ////////////////////////////////////////////////////////////////////////
 // Typedefs
@@ -86,4 +86,4 @@ private:
 	bool debounceState = false;
 };
 
-} /* namespace freesthetics */
+

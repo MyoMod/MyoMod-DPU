@@ -8,7 +8,7 @@
 #include <LinearRegression.h>
 #include <config.h>
 
-namespace freesthetics {
+
 
 LinearRegression::LinearRegression():
 		axes{0.5, 0.5, 0,1,0,1}
@@ -69,4 +69,4 @@ Status LinearRegression::getAxes(HandAxes& axes) const{
 }
 
 
-} /* namespace freesthetics */
+

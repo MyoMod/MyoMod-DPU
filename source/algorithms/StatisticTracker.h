@@ -4,7 +4,7 @@
 #include <cassert>
 #include "arm_math.h"
 
-namespace freesthetics {
+
 
 class StatisticTracker {
 public:
@@ -79,4 +79,4 @@ public:
 
 
 
-} // namespace freesthetics
+

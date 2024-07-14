@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "SEGGER_RTT.h"
 
-namespace freesthetics {
+
 
 Device::Device(std::string_view name)
 	: name(name),
@@ -251,4 +251,4 @@ Status Device::proccessOutData(bool bufferIndex) {
 	return Status::Ok;
 }
 
-} /* namespace freesthetics */
+

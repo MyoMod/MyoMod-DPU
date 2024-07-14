@@ -8,7 +8,7 @@
 #include "AnalysisAlgorithm.h"
 #include "ComInterface.h"
 
-namespace freesthetics {
+
 
 AnalysisAlgorithm::AnalysisAlgorithm(std::string_view name) :
 		name(name),
@@ -70,4 +70,4 @@ Status AnalysisAlgorithm::stop()
 	return Status::Ok;
 }
 
-} /* namespace freesthetics */
+

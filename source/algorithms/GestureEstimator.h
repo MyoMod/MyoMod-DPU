@@ -5,7 +5,7 @@
 #include "arm_math.h"
 #include "Status.h"
 
-namespace freesthetics {
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -26,5 +26,5 @@ public:
 	virtual Status getAxes(HandAxes& axes) const = 0;
 };
 
-} /* namespace freesthetics */
+
 

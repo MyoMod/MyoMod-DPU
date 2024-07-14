@@ -7,7 +7,7 @@
 #include "StatisticTracker.h"
 #include "GestureEstimator.h"
 
-namespace freesthetics {
+
 
 using DspType = float32_t;
 
@@ -70,4 +70,4 @@ public:
     Status run() override;
 };
 
-} // namespace freesthetics
+

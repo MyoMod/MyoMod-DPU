@@ -2,7 +2,7 @@
 
 #include "Device.h"
 
-namespace freesthetics {
+
 
 class BtSink : public Device {
 public:
@@ -16,4 +16,4 @@ public:
     // Other member functions and variables
 };
 
-} // namespace freesthetics
+

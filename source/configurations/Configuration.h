@@ -17,7 +17,7 @@
 #include "AnalysisAlgorithm.h"
 #include "PassAlgorithm.h"
 
-namespace freesthetics {
+struct PortDescriptor
 
 class DeviceDescriptor
 {
@@ -76,7 +76,5 @@ public:
 	std::vector<PDSDescriptor> PDSs;
 	AnalysisAlgorithm* algorithm;
 };
-
-} /* namespace freesthetics */
 
 #endif /* CONFIGURATION_H_ */

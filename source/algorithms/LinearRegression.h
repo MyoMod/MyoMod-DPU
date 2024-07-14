@@ -9,7 +9,7 @@
 
 #include <GestureEstimator.h>
 
-namespace freesthetics {
+
 
 ////////////////////////////////////////////////////////////////////////
 // Typedefs
@@ -38,4 +38,4 @@ private:
 	}
 };
 
-} /* namespace freesthetics */
+

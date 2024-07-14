@@ -14,7 +14,6 @@
 #include "ComInterface.h"
 
 
-namespace freesthetics {
 
 struct ConfigurationHandle
 {
@@ -48,7 +47,6 @@ private:
 	std::vector<ConfigurationHandle> configurationHandles;
 	ComInterface* comInterface;
 };
-
 } /* namespace freesthetics */
 
 #endif /* CONFIGURATIONMANAGER_H_ */

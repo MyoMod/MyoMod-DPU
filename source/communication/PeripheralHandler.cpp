@@ -7,7 +7,7 @@
 
 #include "PeripheralHandler.h"
 
-namespace freesthetics {
+
 
 /* Select USB1 PLL (480 MHz) as master lpi2c clock source */
 #define LPI2C_CLOCK_SOURCE_SELECT (0U)
@@ -156,7 +156,7 @@ PeripheralHandler::~PeripheralHandler() {
  * 		   Status::Error if the function was called while the handler was not in stopped state
  * 		   Status::Warning if the function was called, but there were no new devices
  */
-Status PeripheralHandler::listNewDevices(std::vector<DeviceDescriptor>* devices) {
+Status PeripheralHandler::listDevices(std::vector<DeviceDescriptor>* devices) {
 	if(commState != CommState::Stopped)
 	{
 		// It is not allowed to list devices while in realTime mode
@@ -920,4 +920,4 @@ void PeripheralHandler::LPI2C4_IRQHandler() {
 }
 
 
-} /* namespace freesthetics */
+

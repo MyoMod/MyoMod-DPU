@@ -2,7 +2,7 @@
 #include <vector>
 #include <span>
 
-namespace freesthetics {
+
 
 StatisticTracker::StatisticTracker(float timeResolution, float memoryLength, float32_t resetValue, float32_t startValue, float fs, uint32_t samplesPerCycle, uint32_t outlierCounter)
     :   resetValue(resetValue), 
@@ -50,4 +50,4 @@ float32_t StatisticTracker::update(std::span<const float32_t> data)
 
 // Implement the derived classes here
 
-} // namespace freesthetics
+

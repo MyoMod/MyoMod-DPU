@@ -3,7 +3,7 @@
 
 #include "Device.h"
 
-namespace freesthetics {
+
 
 class EmgElectrode6Chn : public Device {
 public:
@@ -17,5 +17,5 @@ public:
     // Other member functions and variables
 };
 
-} // namespace freesthetics
+
 #endif // EMG_ELECTRODE_6_CHN_H

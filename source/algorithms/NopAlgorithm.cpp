@@ -3,7 +3,7 @@
 #include <span>
 #include <cassert>
 
-namespace freesthetics {
+
 
 NopAlgorithm::NopAlgorithm(std::string_view name) :
     AnalysisAlgorithm(name)
@@ -17,4 +17,4 @@ Status NopAlgorithm::run() {
     return Status::Ok;
 }
 
-} // namespace freesthetics
+

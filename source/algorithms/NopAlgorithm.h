@@ -1,7 +1,7 @@
 #pragma once
 #include "AnalysisAlgorithm.h"
 
-namespace freesthetics {
+
 
 class NopAlgorithm : public AnalysisAlgorithm {
 public:
@@ -10,4 +10,3 @@ public:
     Status run() override;
 };
 
-} // namespace freesthetics

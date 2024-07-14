@@ -30,7 +30,6 @@
 #include "MemoryRegion.h"
 #include "Configuration.h"
 
-namespace freesthetics {
 #define DMA_CHANNELS 32
 #define I2C_UNITS 4
 
@@ -125,8 +124,5 @@ private:
 
 };
 
-
-
-} /* namespace freesthetics */
 
 #endif /* PERIPHERALHANDLER_H_ */

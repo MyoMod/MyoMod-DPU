@@ -1,7 +1,7 @@
 #include "EmgElectrode6Chn.h"
 #include <cstdint>
 
-namespace freesthetics {
+
 
 EmgElectrode6Chn::EmgElectrode6Chn(std::string_view name) : 
     Device(name) 

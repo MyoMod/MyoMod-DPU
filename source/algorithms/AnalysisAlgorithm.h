@@ -11,10 +11,9 @@
 
 //#include "ComInterface.h"
 #include "Status.h"
-#include "ProcessDataStream.h"
 
 
-namespace freesthetics {
+
 class ComInterface;
 /*
  *
@@ -35,10 +34,7 @@ public:
 protected:
 	std::string name;
 	ComInterface* comInterface;
-
-	std::vector<ProcessDataStream*>* pdsIn;
-	std::vector<ProcessDataStream*>* pdsOut;
 };
 
-} /* namespace freesthetics */
+
 

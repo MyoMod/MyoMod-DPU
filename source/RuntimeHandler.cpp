@@ -14,7 +14,6 @@
 #include <string>
 #include <span>
 
-#include "ComInterface.h"
 #include "ConfigurationManager.h"
 #include "Configuration.h"
 #include "AnalysisAlgorithm.h"
@@ -38,9 +37,9 @@
 /*******************************************************************************
  * Private Variables
  * ****************************************************************************/
-freesthetics::ComInterface* comInterface = nullptr;
-freesthetics::ConfigurationManager* configManager = nullptr;
-freesthetics::AnalysisAlgorithm* activeAnalysisAlgorithm = nullptr;
+
+ConfigurationManager* configManager = nullptr;
+AnalysisAlgorithm* activeAnalysisAlgorithm = nullptr;
 
 volatile bool isRunning = false;
 
@@ -62,46 +61,45 @@ void init_debug();
  * ****************************************************************************/
 int main()
 {
-	freesthetics::Status status;
+	Status status;
 
 	/** Initialization **/
 	initHardware();
 	init_debug();
 
 	/** fill globals **/
-	comInterface = new freesthetics::ComInterface(inputHandlingDone);
-	configManager = new freesthetics::ConfigurationManager(comInterface);
+	configManager = new ConfigurationManager(comInterface);
 	activeAnalysisAlgorithm = configManager->getActiveConfiguration().algorithm;
 
 	// Add a configuration
-	freesthetics::AnalysisAlgorithm* fftAlgorithm = new freesthetics::FFTAlgorithm("FFT Algorithm");
-	freesthetics::Configuration fftConfiguration {
+	AnalysisAlgorithm* fftAlgorithm = new FFTAlgorithm("FFT Algorithm");
+	Configuration fftConfiguration {
 		"FFT Filter Configuration",
 		fftAlgorithm
 	};
 	// Devices
-	freesthetics::DeviceDescriptor electrode {
+	DeviceDescriptor electrode {
 		.deviceType = "Elctr6Ch",
 		.deviceIdentifier = "Elctrode1",
 		.peripheralIndex = -1,
 		.deviceAddress = -1,
 		.name = "Electrode"
 	};
-	freesthetics::DeviceDescriptor sdCard {
+	DeviceDescriptor sdCard {
 		.deviceType = "Elctr6Ch",
 		.deviceIdentifier = "SDSource1",
 		.peripheralIndex = -1,
 		.deviceAddress = -1,
 		.name = "SD Card"
 	};
-	freesthetics::DeviceDescriptor display {
+	DeviceDescriptor display {
 		.deviceType = "BarDis7Ch",
 		.deviceIdentifier = "BDisplay2",
 		.peripheralIndex = -1,
 		.deviceAddress = -1,
 		.name = "Display"
 	};
-	freesthetics::DeviceDescriptor btSink {
+	DeviceDescriptor btSink {
 		.deviceType = "BtSink6Ch",
 		.deviceIdentifier = "Blt_Sink2",
 		.peripheralIndex = -1,
@@ -153,7 +151,7 @@ int main()
 	for(uint32_t i = 0; i < 6; i++)
 	{
 		#if USE_ELECTRODE
-		freesthetics::ChannelDescriptor electrodeChannel {
+		ChannelDescriptor electrodeChannel {
 			.device = &electrode,
 			.channelIndex = i,
 			.name = "Channel " + std::to_string(i + 1)
@@ -161,7 +159,7 @@ int main()
 		fftConfiguration.PDSs[electrodePdsIndex].channels.push_back(electrodeChannel);
 		#endif
 		#if USE_SDCARD
-		freesthetics::ChannelDescriptor sdChannel {
+		ChannelDescriptor sdChannel {
 			.device = &sdCard,
 			.channelIndex = i,
 			.name = "Channel " + std::to_string(i + 1)
@@ -169,7 +167,7 @@ int main()
 		fftConfiguration.PDSs[sdCardPdsIndex].channels.push_back(sdChannel);
 		#endif
 		#if USE_DISPLAY
-		freesthetics::ChannelDescriptor displayChannel {
+		ChannelDescriptor displayChannel {
 			.device = &display,
 			.channelIndex = i,
 			.name = "Channel " + std::to_string(i + 1)
@@ -177,7 +175,7 @@ int main()
 		fftConfiguration.PDSs[displayPdsIndex].channels.push_back(displayChannel);
 		#endif
 		#if USE_BTSINK
-		freesthetics::ChannelDescriptor btChannel {
+		ChannelDescriptor btChannel {
 			.device = &btSink,
 			.channelIndex = i,
 			.name = "Channel " + std::to_string(i + 1)
@@ -187,7 +185,7 @@ int main()
 	}
 	#if USE_DISPLAY
 	// add 7nth Channel
-	freesthetics::ChannelDescriptor displayChannel {
+	ChannelDescriptor displayChannel {
 		.device = &display,
 		.channelIndex = 6,
 		.name = "Channel 7"
@@ -198,7 +196,7 @@ int main()
 	std::string buttonNames[4] = {"A", "B", "X", "Y"};
 	for (size_t i = 0; i < 4; i++)
 	{
-		freesthetics::ChannelDescriptor buttonChannel {
+		ChannelDescriptor buttonChannel {
 			.device = &display,
 			.channelIndex = i,
 			.name = buttonNames[i]
@@ -219,7 +217,7 @@ int main()
 		{
 			// Check if the configuration is valid
 			status = comInterface->configurationValid();
-			if(status != freesthetics::Status::Ok)
+			if(status != Status::Ok)
 			{
 				// Configuration is not valid, stop the cycle and setup new configuration
 				renumrateDevices();
@@ -241,14 +239,14 @@ void renumrateDevices()
 	stop();
 
 	// Renumerate the devices
-	freesthetics::Status status = configManager->renumrateDevices();
-	assert(status == freesthetics::Status::Ok);
+	Status status = configManager->renumrateDevices();
+	assert(status == Status::Ok);
 
 	status = configManager->incrementActiveConfiguration();
-	assert(status == freesthetics::Status::Ok);
+	assert(status == Status::Ok);
 
 	// Update the active configuration
-	static freesthetics::Configuration activeConfiguration = configManager->getActiveConfiguration();
+	static Configuration activeConfiguration = configManager->getActiveConfiguration();
 
 	// Update the analysis algorithm
 	activeAnalysisAlgorithm = activeConfiguration.algorithm;
@@ -267,8 +265,8 @@ void start()
 	SEGGER_RTT_printf(0, "Start realtime processing\n");
 
 	// Start the ComInterface
-	freesthetics::Status status = comInterface->enterRealTimeMode();
-	assert(status == freesthetics::Status::Ok);
+	Status status = comInterface->enterRealTimeMode();
+	assert(status == Status::Ok);
 
 	// Start the analysis algorithm
 	activeAnalysisAlgorithm->start();
@@ -289,8 +287,8 @@ void stop()
 	activeAnalysisAlgorithm->stop();
 
 	// Stop the ComInterface
-	freesthetics::Status status = comInterface->exitRealTimeMode();
-	assert(status == freesthetics::Status::Ok);
+	Status status = comInterface->exitRealTimeMode();
+	assert(status == Status::Ok);
 
 	// Clear the running flag
 	isRunning = false;
@@ -304,8 +302,8 @@ void stop()
 void inputHandlingDone()
 {
 	//Check if the configuration is valid
-	freesthetics::Status status = comInterface->configurationValid();
-	if(status != freesthetics::Status::Ok)
+	Status status = comInterface->configurationValid();
+	if(status != Status::Ok)
 	{
 		// Stop realtime processing
 		stop();
@@ -319,7 +317,7 @@ void inputHandlingDone()
 	activeAnalysisAlgorithm->run();
 
 	status = comInterface->processOutgoingData();
-	assert(status == freesthetics::Status::Ok);
+	assert(status == Status::Ok);
 }
 
 /*******************************************************************************

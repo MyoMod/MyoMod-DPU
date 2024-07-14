@@ -8,7 +8,6 @@
 #ifndef USERINTERFACE_H_
 #define USERINTERFACE_H_
 
-namespace freesthetics {
 
 /*
  *
@@ -19,6 +18,5 @@ public:
 	virtual ~UserInterface();
 };
 
-} /* namespace freesthetics */
 
 #endif /* USERINTERFACE_H_ */

@@ -8,7 +8,6 @@
 #include "Configuration.h"
 #include <algorithm>
 
-namespace freesthetics {
 
 Configuration::Configuration(std::string_view name, AnalysisAlgorithm* algorithm):
 	name{ name },
@@ -101,4 +100,3 @@ void Configuration::resetAddresses()
 		}
 	}
 }
-} /* namespace freesthetics */

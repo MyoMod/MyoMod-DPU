@@ -3,7 +3,7 @@
 #include <span>
 #include <cassert>
 
-namespace freesthetics {
+
 
 PassAlgorithm::PassAlgorithm(std::string_view name) :
     AnalysisAlgorithm(name)
@@ -52,4 +52,4 @@ Status PassAlgorithm::run() {
     return Status::Ok;
 }
 
-} // namespace freesthetics
+

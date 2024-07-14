@@ -1,7 +1,7 @@
 #include "ConfigurationManager.h"
 #include "NopAlgorithm.h"
 
-namespace freesthetics {
+
 
 ConfigurationManager::ConfigurationManager(ComInterface* comInterface):
 	comInterface{ comInterface }
@@ -312,4 +312,4 @@ Status ConfigurationManager::decrementActiveConfiguration() {
 	nextIndex++; // But skip the NOP configuration
 	return setActiveConfiguration(nextIndex);
 }
-} /* namespace freesthetics */
+

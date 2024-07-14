@@ -12,7 +12,7 @@
 #include "DirectControl.h"
 #include "LinearRegression.h"
 
-namespace freesthetics {
+
 
 #define DEBUG_PIN_1(x) GPIO_PinWrite(BOARD_INITPINS_DEBUG1_GPIO, BOARD_INITPINS_DEBUG1_PIN, x)
 #define DEBUG_PIN_2(x) GPIO_PinWrite(BOARD_INITPINS_DEBUG2_GPIO, BOARD_INITPINS_DEBUG2_PIN, x)
@@ -262,4 +262,4 @@ Status FFTAlgorithm::run() {
     return Status::Ok;
 }
 
-} // namespace freesthetics
+

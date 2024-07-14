@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "SEGGER_RTT.h"
 
-namespace freesthetics {
+
 
 BtSink::BtSink(std::string_view name) : 
     Device(name) 

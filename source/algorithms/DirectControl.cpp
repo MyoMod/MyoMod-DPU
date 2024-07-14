@@ -7,7 +7,7 @@
 
 #include <DirectControl.h>
 
-namespace freesthetics {
+
 
 DirectControl::DirectControl():
 		axes{0.5, 0.5, 0,1,0,1},
@@ -90,4 +90,4 @@ Status DirectControl::getAxes(HandAxes& axes) const{
 }
 
 
-} /* namespace freesthetics */
+

@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "SEGGER_RTT.h"
 
-namespace freesthetics {
+
 
 BarDisplay::BarDisplay(std::string_view name) : 
     Device(name) 

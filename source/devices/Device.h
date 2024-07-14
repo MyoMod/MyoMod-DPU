@@ -20,7 +20,7 @@
 #include "ProcessDataStream.h"
 #include "commonRegisterDef.h"
 
-namespace freesthetics {
+
 
 struct ChannelDataHandle
 {
@@ -89,6 +89,6 @@ protected:
 	static const uint32_t STATUS_LENGTH = 1;
 };
 
-} /* namespace freesthetics */
+
 
 #endif /* DEVICE_H_ */
