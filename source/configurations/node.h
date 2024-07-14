@@ -16,10 +16,28 @@
 #include <vector>
 #include <span>
 #include <memory>
+#include <array>
+#include <tuple>
 #include <cstdint>
 #include <iostream>
 
 #include "port.h"
+#include "Configuration.h"
+
+enum class NodeCategory
+{
+    None,
+    DeviceNodes,
+    AlgorithmNodes
+};
+
+struct DeviceNodeStorage
+{
+    std::shared_ptr<uint8_t> inStorage;
+    size_t inSize;
+    std::array<std::shared_ptr<uint8_t>, 2> outStorage;
+    size_t outSize;
+};
 
 
 class BaseNode
@@ -51,6 +69,8 @@ public:
 
     virtual void processInData() = 0;
     virtual void processOutData() = 0;
+    virtual DeviceNodeStorage getNodeStorage() = 0;
+    virtual DeviceIdentifier getDeviceIdentifier() = 0;
 protected:
     std::array<char, 10> m_id;
 };

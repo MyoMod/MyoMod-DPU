@@ -22,6 +22,7 @@
 
 #include "lwjson/lwjson.h"
 
+#include "Configuration.h"
 #include "node.h"
 
 // Tuple that consists of input devices, algorithms and output devices
@@ -37,13 +38,6 @@ struct NodeData
     std::map<std::string, std::vector<std::string>> arrayParams;
 };
 
-enum class NodeCategory
-{
-    None,
-    DeviceNodes,
-    AlgorithmNodes
-};
-
 enum class ConfigSection
 {
     None,
@@ -53,24 +47,6 @@ enum class ConfigSection
 };
 
 
-struct PortDescriptor
-{
-    NodeCategory category;
-    uint32_t nodeIndex;
-    uint32_t nodePort;
-};
-
-struct NodeIdentifier
-{
-    std::array<char, 10> type;
-    std::array<char, 10> id;
-};
-
-struct Configuration
-{
-    std::string name;
-    std::vector<NodeIdentifier> deviceNodes;
-};
 
 class ConfigParser
 {
@@ -97,7 +73,7 @@ private:
 
     lwjson_stream_parser_t m_parser;
     NodeData m_currentNodeData;
-    NodeIdentifier m_currentNodeIdentifier;
+    DeviceIdentifier m_currentNodeIdentifier;
     uint32_t m_configId;
     uint32_t m_currentConfigId;
     ConfigSection m_currentConfigSection;

@@ -35,13 +35,19 @@
                 "subtract": true
             },
             {
+                "type": "LoggerNode",
+                "dataType": "float",
+                "N": 10
+            },
+            {
                 "type": "AdditonNode",
                 "subtract": false
             },
             {
                 "type": "AdvancedTestNode",
                 "numericalParameters": [1, 2, 3],
-                "booleanParameters": [true, false, true]
+                "booleanParameters": [true, false, true],
+                "fileParam": "test.bin"
             }],
         "links": {
             "a0:0": "d2:0",

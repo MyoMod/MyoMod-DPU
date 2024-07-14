@@ -20,6 +20,9 @@ devices/*.cpp
 # the second argument are the files that will be compiled to create your library.
 add_library(source ${FILES})
  
+
+add_subdirectory(./configurations/lwjson        lwjson)
+
 # target_link_libraries: If you link with other libraries, list them here
 target_link_libraries(
   source 
@@ -28,6 +31,7 @@ target_link_libraries(
   CMSISDSP
   component
   utilities
+  lwjson
 )
  
 # target_include_directories: Libraries need to publish their header files 
@@ -45,4 +49,16 @@ target_include_directories(
   ./structure
   ../CMSIS
   ../CMSIS/DSP/Include
+  ../generated
 )
+
+# This function envelops the content of a file in a C++ raw string literal.
+function(make_includable input_file output_file)
+    file(READ ${input_file} content)
+    set(delim "for_c++_include")
+    set(content "R\"${delim}(\n${content})${delim}\"")
+    file(WRITE ${output_file} "${content}")
+endfunction(make_includable)
+
+# Use like
+make_includable(configurations/config.json generated/config.enveloped_json)
