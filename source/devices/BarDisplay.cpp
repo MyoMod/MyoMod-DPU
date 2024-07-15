@@ -4,63 +4,43 @@
 
 
 
-BarDisplay::BarDisplay(std::string_view name) : 
-    Device(name) 
+BarDisplay::BarDisplay(std::array<char, 10> id) : 
+    DeviceNode(id, 
+        std::array<char, 10>({'B','a','r','D','i','s','p','7','C','h'})),
+    m_outputPort(std::make_shared<OutputPort<std::array<uint8_t, 4>>>()),
+    m_hostInStorage(std::make_shared<std::array<uint8_t, 4>>()),
+    m_inputPort(std::make_shared<InputPort<std::array<uint8_t, 7>>>(std::array<uint8_t, 7>({0,0,0,0,0,0,0}))),
+    m_hostOutStorage({
+        std::make_shared<std::array<uint8_t, 7>>()
+    })
 {
-    // Add display channels
-    for (uint32_t i = 0; i < 7; i++) {
-        PDSChannel channel {
-            .name = "Bar " + std::to_string(i + 1),
-            .type = PDSChannelTypes::GENERIC_8Bit,
-            .unit = "%",
-            .length = 1, //just temporary
-            .sampleSize = 1,
-            .isInput = false
-        };
-        const uint32_t channelSize = channel.length * channel.sampleSize;
-        ChannelDataHandle channelHandle {
-            .channel = channel,
-            .pdsDataRegion = MemoryRegion(),
-            .ioDataOffset = channelSize * i,
-            .isLinked = false
-        };
-        channels[0].push_back(channelHandle);
+    m_outputPorts.push_back(m_outputPort);
+    m_inputPorts.push_back(m_inputPort);
+}
+
+void BarDisplay::processInData()
+{
+    // TODO: Do some validation here
+    m_outputPort->setValue(*m_hostInStorage);
+}
+
+void BarDisplay::processOutData()
+{
+    if (m_inputPort->isValid())
+    {
+        *(m_hostOutStorage[m_activeBuffer]) = m_inputPort->getValue();
     }
-
-    // Add button channels
-    for (uint32_t i = 0; i < 4; i++) {
-        PDSChannel channel {
-            .name = "Button " + std::to_string(i + 1),
-            .type = PDSChannelTypes::GENERIC_8Bit,
-            .unit = "bool",
-            .length = 1, //just temporary
-            .sampleSize = 1,
-            .isInput = true
-        };
-        const uint32_t channelSize = channel.length * channel.sampleSize;
-        ChannelDataHandle channelHandle {
-            .channel = channel,
-            .pdsDataRegion = MemoryRegion(),
-            .ioDataOffset = channelSize * i,
-            .isLinked = false
-        };
-        channels[1].push_back(channelHandle);
-    }
-
-    // Allocate memory for the PDS
-    const uint32_t pdsInSize = 1 * 4 + STATUS_LENGTH;
-    const uint32_t pdsOutSize = 1 * 7;
-    inBuffer.resize(pdsInSize);
-    outBuffer[0].resize(pdsOutSize);
-    outBuffer[1].resize(pdsOutSize);
-
-    std::fill(inBuffer.begin(), inBuffer.end(), 0xDF);
-    std::fill(outBuffer[0].begin(), outBuffer[0].end(), 0xDF);
-    std::fill(outBuffer[1].begin(), outBuffer[1].end(), 0xDF);
 }
 
-BarDisplay::~BarDisplay() {
-    // TODO Auto-generated destructor stub
+DeviceNodeStorage BarDisplay::getNodeStorage()
+{
+    DeviceNodeStorage storage;
+    storage.inStorage = reinterpret_pointer_cast<std::byte>(m_hostInStorage);
+    storage.inSize = sizeof(*m_hostInStorage);
+    storage.outStorage[0] = reinterpret_pointer_cast<std::byte>(m_hostOutStorage[0]);
+    storage.outStorage[1] = reinterpret_pointer_cast<std::byte>(m_hostOutStorage[1]);
+    storage.outSize = sizeof(*(m_hostOutStorage[0]));
+
+    return storage;
 }
 
-}

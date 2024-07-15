@@ -243,7 +243,8 @@ Status PeripheralHandler::addDevice(DeviceNode* device) {
 	assert(m_commState == CommState::Stopped);
 
 	// Get address
-	int32_t address = getDeviceAdress(device->identifier);
+	DeviceIdentifier identifier = device->getDeviceIdentifier();
+	int32_t address = getDeviceAdress(identifier);
 	assert(address != -1);
 
 	// Get pointer to storage in deviceNode

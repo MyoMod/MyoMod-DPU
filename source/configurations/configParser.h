@@ -24,6 +24,7 @@
 
 #include "Configuration.h"
 #include "node.h"
+#include "deviceNode.h"
 
 // Tuple that consists of input devices, algorithms and output devices
 using NodesTuple = std::tuple<

@@ -48,20 +48,6 @@ AdditonNode::AdditonNode(bool substract):
     m_inputPorts.push_back(m_inputPortB);
 }
 
-InputNode::InputNode(std::array<char, 10> id):
-    DeviceNode(id),
-    m_outputPort(std::make_shared<OutputPort<int>>())
-{
-    m_outputPorts.push_back(m_outputPort);
-}
-
-OutputNode::OutputNode(std::array<char, 10> id):
-    DeviceNode(id),
-    m_inputPort(std::make_shared<InputPort<int>>(-42))
-{
-    m_inputPorts.push_back(m_inputPort);
-}
-
 void AdditonNode::process()
 {
     if (m_inputPortA->isValid() && m_inputPortB->isValid())

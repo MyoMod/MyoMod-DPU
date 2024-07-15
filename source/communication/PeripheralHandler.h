@@ -29,7 +29,7 @@
 #include "Status.h"
 #include "MemoryRegion.h"
 #include "Configuration.h"
-#include "node.h"
+#include "deviceNode.h"
 
 #define DMA_CHANNELS 32
 #define I2C_UNITS 4
@@ -122,8 +122,8 @@ private:
 	uint32_t m_pingPongIndex;
 
 	std::map<uint8_t, DeviceIdentifier> m_connectedDevices;
-	std::map<uint8_t, std::shared_ptr<uint8_t>> m_installedHostInStorages;
-	std::map<uint8_t, std::array<std::shared_ptr<uint8_t>,2>> m_installedHostOutStorages;
+	std::map<uint8_t, std::shared_ptr<std::byte>> m_installedHostInStorages;
+	std::map<uint8_t, std::array<std::shared_ptr<std::byte>,2>> m_installedHostOutStorages;
 	bool m_connectedDevicesChanged;
 	bool m_noInstalledDevices;
 

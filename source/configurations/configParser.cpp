@@ -14,6 +14,7 @@
 
 #include "configParser.h"
 #include "node.h"
+#include "BarDisplay.h"
 // Data structures
 
 // private functions
@@ -488,22 +489,18 @@ std::unique_ptr<DeviceNode> ConfigParser::createDeviceNode(const NodeData& nodeD
     {
         return nullptr;
     }
-    if (nodeData.type == "1Chn Input")
+    if (nodeData.type == "BarDisp7Ch")
     {
-        return std::make_unique<InputNode>(ID);
+        return std::make_unique<BarDisplay>(ID);
     }
-    else if (nodeData.type == "1ChnOutput")
+    /*else if (nodeData.type == "BltSink6Ch")
     {
         return std::make_unique<OutputNode>(ID);
     }
-    else if (nodeData.type == "FloatInput")
+    else if (nodeData.type == "EmgSens6Ch")
     {
         return std::make_unique<FloatInputNode>(ID);
-    }
-    else if (nodeData.type == "10ChnInput")
-    {
-        return std::make_unique<ArrayInputNode>(ID);
-    }
+    }*/
     else
     {
         return nullptr;

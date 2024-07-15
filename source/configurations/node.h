@@ -22,7 +22,6 @@
 #include <iostream>
 
 #include "port.h"
-#include "Configuration.h"
 
 enum class NodeCategory
 {
@@ -33,10 +32,22 @@ enum class NodeCategory
 
 struct DeviceNodeStorage
 {
-    std::shared_ptr<uint8_t> inStorage;
+    std::shared_ptr<std::byte> inStorage;
     size_t inSize;
-    std::array<std::shared_ptr<uint8_t>, 2> outStorage;
+    std::array<std::shared_ptr<std::byte>, 2> outStorage;
     size_t outSize;
+};
+
+struct DeviceIdentifier
+{
+    std::array<char, 10> type;
+    std::array<char, 10> id;
+
+	friend bool operator== (const DeviceIdentifier& lhs, const DeviceIdentifier& rhs)
+	{
+		return lhs.type == rhs.type &&
+			   lhs.id == rhs.id;
+	}
 };
 
 
@@ -58,21 +69,6 @@ class AlgorithmicNode : public BaseNode
 {
 public:
     virtual void process() = 0;
-};
-
-class DeviceNode : public BaseNode
-{
-public:
-    DeviceNode(std::array<char, 10> id):
-        m_id{id}
-    {}
-
-    virtual void processInData() = 0;
-    virtual void processOutData() = 0;
-    virtual DeviceNodeStorage getNodeStorage() = 0;
-    virtual DeviceIdentifier getDeviceIdentifier() = 0;
-protected:
-    std::array<char, 10> m_id;
 };
 
 class AdditonNode : public AlgorithmicNode
@@ -170,7 +166,7 @@ protected:
     std::array<int, 3> m_numericalParameters;
     std::array<bool, 3> m_booleanParameters;
 };
-
+/*
 class ArrayInputNode : public DeviceNode
 {
 public:
@@ -256,3 +252,4 @@ public:
 protected:
     std::shared_ptr<InputPort<int>> m_inputPort;
 };
+*/
