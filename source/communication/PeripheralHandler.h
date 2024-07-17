@@ -65,14 +65,14 @@ struct TcdOutHandle
  */
 class PeripheralHandler {
 public:
-	PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::function<void(void)> processDataCallback, bool highSpeed);
+	PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, void (*processDataCallback)(void), bool highSpeed);
 	virtual ~PeripheralHandler();
 
 	std::vector<DeviceIdentifier> listConnectedDevices(Status& status);
 	bool detectedNewDevices();
 
 	Status installDevice(DeviceNode* device);
-	int32_t getDeviceAdress(DeviceIdentifier& device);
+	int32_t getDeviceAdress(const DeviceIdentifier& device) const;
 	void uninstallAllDevices();
 	uint32_t getPingPongIndex();
 
@@ -127,7 +127,7 @@ private:
 	bool m_connectedDevicesChanged;
 	bool m_noInstalledDevices;
 
-	std::function<void(void)> m_processDataCallback;
+	void (*m_processDataCallback)(void);
 	//void (*processDataCallback)(uint8_t callbackParam, bool pingPongIndex);
 
 #if SIMULATE_DEVICE_SCAN == 1

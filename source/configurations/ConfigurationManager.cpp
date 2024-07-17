@@ -25,105 +25,17 @@ R"for_c++_include(
         "name": "Config 1",
         "deviceNodes": [
             {
-                "type": "1Chn Input",
-                "ID" : "SENSOR0001"
-            },
-            {
-                "type": "1Chn Input",
-                "ID" : "SENSOR0002"
-            },
-            {
-                "type": "FloatInput",
-                "ID" : "SENSOR0003"
-            },
-            {
-                "type": "10ChnInput",
-                "ID" : "SENSOR0004"
-            },
-            {
-                "type": "1ChnOutput",
-                "ID" : "AKTOR____1"
-            }],
-        "algorithmicNodes": [
-            {
-                "type": "Float2IntNode"
-            },
-            {
-                "type": "ArraySelectorNode",
-                "index": 5
-            },
-            {
-                "type": "AdditonNode",
-                "subtract": true
-            },
-            {
-                "type": "LoggerNode",
-                "dataType": "float",
-                "N": 10
-            },
-            {
-                "type": "AdditonNode",
-                "subtract": false
-            },
-            {
-                "type": "AdvancedTestNode",
-                "numericalParameters": [1, 2, 3],
-                "booleanParameters": [true, false, true],
-                "fileParam": "test.bin"
-            }],
-        "links": {
-            "a0:0": "d2:0",
-            "a1:0": "d3:0",
-            "a2:0": "d0:0",
-            "a2:1": "d1:0",
-            "a3:0": "a0:0",
-            "a3:1": "a2:0",
-            "d4:0": "a3:0"
+                "type": "BarDisp7Ch",
+                "ID" : "BarDisplay"
             }
-    },
-    {
-        "name": "Config 2",
-        "deviceNodes": [
-            {
-                "type": "1Chn Input",
-                "ID" : "SENSOR0001"
-            },
-            {
-                "type": "FloatInput",
-                "ID" : "SENSOR0003"
-            },
-            {
-                "type": "10ChnInput",
-                "ID" : "SENSOR0004"
-            },
-            {
-                "type": "1ChnOutput",
-                "ID" : "AKTOR____1"
-            }],
+            ],
         "algorithmicNodes": [
             {
-                "type": "Float2IntNode"
-            },
-            {
-                "type": "ArraySelectorNode",
-                "index": 5
-            },
-            {
-                "type": "AdditonNode",
-                "subtract": false
-            },
-            {
-                "type": "AdvancedTestNode",
-                "numericalParameters": [1, 2, 3],
-                "booleanParameters": [true, false, true]
+                "type": "TestAlgorithm"
             }],
         "links": {
-            "a0:0": "d1:0",
-            "a1:0": "d2:0",
-            "a2:0": "a0:0",
-            "a2:1": "a1:0",
-            "a3:0": "a2:0",
-            "d3:0": "a3:0"
+            "a0:0": "d0:0",
+            "d0:0": "a0:0",
             }
     }
 ])for_c++_include");
@@ -137,15 +49,16 @@ ConfigurationManager::ConfigurationManager()
 {
 
 	// Add a default NOP configuration
-	configurationHandles.push_back(ConfigurationHandle{
-		.config = {
-			"NOP",
-			std::vector<DeviceIdentifier>()},
-		.isValid = true // The NOP configuration is always valid
-	});
+	configurationHandles.emplace_back(Configuration{"NOP",std::vector<DeviceIdentifier>()}, true);
 	setActiveConfiguration(0);
 }
 
+/**
+ * @brief Parses the configuration and and stores the needed devices in the configurationHandles
+ *
+ * @return Status 			Ok if the configurations were read successfully
+ * 							Error if the configurations could not be read
+ */
 Status ConfigurationManager::readConfigurations()
 {
 	// Remove all configurations except the NOP configuration
@@ -153,6 +66,12 @@ Status ConfigurationManager::readConfigurations()
 
 	ConfigParser &configParser = ConfigParser::getInstance();
 	auto configutaions = configParser.scanConfigurations(configurationString);
+
+    for (auto &config : configutaions)
+    {
+        configurationHandles.emplace_back(config);
+    }
+    return Status::Ok;
 }
 
 /**
@@ -197,16 +116,12 @@ Status ConfigurationManager::setActiveConfiguration(uint32_t index)
 	{
 		return Status::Error;
 	}
-	Status status;
+	Status status = Status::Ok;
 
 	if (activeConfigIndex >= 0)
 	{
 		// TODO: Maybe implement stop event
 	}
-
-	// Build new configuration
-	ConfigParser &configParser = ConfigParser::getInstance();
-	auto [deviceNodes, algorithmicNodes] = configParser.loadConfig(configurationString, index);
 
 	activeConfigIndex = index;
 	return status;
@@ -269,6 +184,11 @@ Status ConfigurationManager::decrementActiveConfiguration()
  */
 NodesTuple ConfigurationManager::createActiveConfiguration()
 {
+    if (activeConfigIndex == 0)
+    {
+        return NodesTuple();
+    }
+
 	ConfigParser &configParser = ConfigParser::getInstance();
 	return configParser.loadConfig(configurationString, activeConfigIndex);	
 }

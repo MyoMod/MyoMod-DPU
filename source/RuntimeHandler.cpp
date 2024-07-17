@@ -13,22 +13,26 @@
 #include <vector>
 #include <string>
 #include <span>
+#include <array>
+#include <memory>
+
+#include "board.h"
+#include "pin_mux.h"
+#include "fsl_pit.h"
+#include "fsl_gpio.h"
+#include "fsl_common.h"
+#include "fsl_clock.h"
+#include "SEGGER_RTT.h"
 
 #include "ConfigurationManager.h"
 #include "Configuration.h"
-#include "AnalysisAlgorithm.h"
-#include "PassAlgorithm.h"
-#include "FftAlgorithm.h"
+#include "PeripheralHandler.h"
 #include "Status.h"
 
 
 /*******************************************************************************
  * Defines
  ******************************************************************************/
-#define USE_ELECTRODE 1
-#define USE_SDCARD 0
-#define USE_DISPLAY 1
-#define USE_BTSINK 1
 
 /*******************************************************************************
  * Data Types
@@ -38,10 +42,12 @@
  * Private Variables
  * ****************************************************************************/
 
-ConfigurationManager* configManager = nullptr;
-AnalysisAlgorithm* activeAnalysisAlgorithm = nullptr;
+ConfigurationManager* g_configManager = nullptr;
+std::array<PeripheralHandler*, 3> g_peripheralHandlers;
+std::vector<std::unique_ptr<DeviceNode>> g_deviceNodes;
+std::vector<std::unique_ptr<AlgorithmicNode>> g_algorithmicNodes;
 
-volatile bool isRunning = false;
+volatile bool g_isRunning = false;
 
 uint8_t g_debugBuffer[32];
 /*******************************************************************************
@@ -51,9 +57,11 @@ void renumrateDevices();
 void start();
 void stop();
 void inputHandlingDone();
+void startCycle();
 
 // init
 void initHardware();
+void initPerpheralHandler();
 void gpio_init();
 void init_debug();
 /*******************************************************************************
@@ -65,147 +73,12 @@ int main()
 
 	/** Initialization **/
 	initHardware();
+	initPerpheralHandler();
 	init_debug();
 
 	/** fill globals **/
-	configManager = new ConfigurationManager(comInterface);
-	activeAnalysisAlgorithm = configManager->getActiveConfiguration().algorithm;
-
-	// Add a configuration
-	AnalysisAlgorithm* fftAlgorithm = new FFTAlgorithm("FFT Algorithm");
-	Configuration fftConfiguration {
-		"FFT Filter Configuration",
-		fftAlgorithm
-	};
-	// Devices
-	DeviceDescriptor electrode {
-		.deviceType = "Elctr6Ch",
-		.deviceIdentifier = "Elctrode1",
-		.peripheralIndex = -1,
-		.deviceAddress = -1,
-		.name = "Electrode"
-	};
-	DeviceDescriptor sdCard {
-		.deviceType = "Elctr6Ch",
-		.deviceIdentifier = "SDSource1",
-		.peripheralIndex = -1,
-		.deviceAddress = -1,
-		.name = "SD Card"
-	};
-	DeviceDescriptor display {
-		.deviceType = "BarDis7Ch",
-		.deviceIdentifier = "BDisplay2",
-		.peripheralIndex = -1,
-		.deviceAddress = -1,
-		.name = "Display"
-	};
-	DeviceDescriptor btSink {
-		.deviceType = "BtSink6Ch",
-		.deviceIdentifier = "Blt_Sink2",
-		.peripheralIndex = -1,
-		.deviceAddress = -1,
-		.name = "Bt Sink"
-	};	
-
-	uint32_t pdsIndex = 0;
-#if USE_ELECTRODE
-	fftConfiguration.PDSs.push_back({
-		.name = "Electrode",
-		.channels = {},
-		.isInput = true
-	});
-	const uint32_t electrodePdsIndex = pdsIndex++;
-#endif
-#if USE_SDCARD
-	fftConfiguration.PDSs.push_back({
-		.name = "SDCard",
-		.channels = {},
-		.isInput = true
-	});
-	const uint32_t sdCardPdsIndex = pdsIndex++;
-#endif
-#if USE_DISPLAY
-	fftConfiguration.PDSs.push_back({
-		.name = "Display",
-		.channels = {},
-		.isInput = false
-	});
-	const uint32_t displayPdsIndex = pdsIndex++;
-	fftConfiguration.PDSs.push_back({
-		.name = "DisplayButtons",
-		.channels = {},
-		.isInput = true
-	});
-	const uint32_t displayButtonsPdsIndex = pdsIndex++;
-#endif
-#if USE_BTSINK
-	fftConfiguration.PDSs.push_back({
-		.name = "BtSink",
-		.channels = {},
-		.isInput = false
-	});
-	const uint32_t btSinkPdsIndex = pdsIndex++;
-#endif
-
-	// Add channels
-	for(uint32_t i = 0; i < 6; i++)
-	{
-		#if USE_ELECTRODE
-		ChannelDescriptor electrodeChannel {
-			.device = &electrode,
-			.channelIndex = i,
-			.name = "Channel " + std::to_string(i + 1)
-		};
-		fftConfiguration.PDSs[electrodePdsIndex].channels.push_back(electrodeChannel);
-		#endif
-		#if USE_SDCARD
-		ChannelDescriptor sdChannel {
-			.device = &sdCard,
-			.channelIndex = i,
-			.name = "Channel " + std::to_string(i + 1)
-		};
-		fftConfiguration.PDSs[sdCardPdsIndex].channels.push_back(sdChannel);
-		#endif
-		#if USE_DISPLAY
-		ChannelDescriptor displayChannel {
-			.device = &display,
-			.channelIndex = i,
-			.name = "Channel " + std::to_string(i + 1)
-		};
-		fftConfiguration.PDSs[displayPdsIndex].channels.push_back(displayChannel);
-		#endif
-		#if USE_BTSINK
-		ChannelDescriptor btChannel {
-			.device = &btSink,
-			.channelIndex = i,
-			.name = "Channel " + std::to_string(i + 1)
-		};
-		fftConfiguration.PDSs[btSinkPdsIndex].channels.push_back(btChannel);
-		#endif
-	}
-	#if USE_DISPLAY
-	// add 7nth Channel
-	ChannelDescriptor displayChannel {
-		.device = &display,
-		.channelIndex = 6,
-		.name = "Channel 7"
-	};
-	fftConfiguration.PDSs[displayPdsIndex].channels.push_back(displayChannel);
-
-	// add buttons
-	std::string buttonNames[4] = {"A", "B", "X", "Y"};
-	for (size_t i = 0; i < 4; i++)
-	{
-		ChannelDescriptor buttonChannel {
-			.device = &display,
-			.channelIndex = i,
-			.name = buttonNames[i]
-		};
-		fftConfiguration.PDSs[displayButtonsPdsIndex].channels.push_back(buttonChannel);
-	}
-	#endif
-	
-	configManager->addConfiguration(fftConfiguration);
+	g_configManager = new ConfigurationManager();
+	g_configManager->readConfigurations();
 
 	/** Initialzation done -> Enumerate the devices **/
 	renumrateDevices();
@@ -213,20 +86,9 @@ int main()
 	//Main Loop
 	while(1)
 	{
-		if(!isRunning)
+		if(!g_isRunning)
 		{
-			// Check if the configuration is valid
-			status = comInterface->configurationValid();
-			if(status != Status::Ok)
-			{
-				// Configuration is not valid, stop the cycle and setup new configuration
-				renumrateDevices();
-			}
-			else
-			{
-				// Start the cycle
-				start();
-			}
+			SEGGER_RTT_printf(0, "runtime is not running, this shouödn't happen\n");
 		}
 	}
 	return 0;
@@ -238,19 +100,54 @@ void renumrateDevices()
 	//Stop the cycle
 	stop();
 
-	// Renumerate the devices
-	Status status = configManager->renumrateDevices();
-	assert(status == Status::Ok);
+	// Update devices
+	std::vector<DeviceIdentifier> foundDevices;
+	for (auto& peripheralHandler : g_peripheralHandlers)
+	{
+		Status status;
+		auto devices = peripheralHandler->listConnectedDevices(status);
+		foundDevices.insert(foundDevices.end(), devices.begin(), devices.end());
+		assert(status != Status::Error);
+	}
 
-	status = configManager->incrementActiveConfiguration();
-	assert(status == Status::Ok);
+	// Update the configuration manager
+	Status status = g_configManager->updateValidConfigurations(foundDevices);
+	if(status == Status::Warning)
+	{
+		// Active configuration is not valid anymore
+		status = g_configManager->incrementActiveConfiguration();
+		assert(status != Status::Error);
+		
+		// Get the active configuration
+		auto nodes = g_configManager->createActiveConfiguration();
+		g_deviceNodes = std::move(std::get<0>(nodes));
+		g_algorithmicNodes = std::move(std::get<1>(nodes));
 
-	// Update the active configuration
-	static Configuration activeConfiguration = configManager->getActiveConfiguration();
+		// remove all old devices from the peripheral handlers
+		for (auto& peripheralHandler : g_peripheralHandlers)
+		{
+			peripheralHandler->uninstallAllDevices();
+		}
 
-	// Update the analysis algorithm
-	activeAnalysisAlgorithm = activeConfiguration.algorithm;
-	activeAnalysisAlgorithm->setComInterface(comInterface);
+		// Add the new devices to the peripheral handlers
+		for (auto& deviceNode : g_deviceNodes)
+		{
+			for (auto& peripheralHandler : g_peripheralHandlers)
+			{
+				if(peripheralHandler->getDeviceAdress(deviceNode->getDeviceIdentifier()) != -1)
+				{
+					// Device is connected to this peripheral handler
+					// -> Install the device and don't try to install it in another peripheral handler
+
+					status = peripheralHandler->installDevice(deviceNode.get());
+					assert(status != Status::Error);
+
+					break;
+				}
+				
+			}
+		}
+	}
 
 	// Start the cycle
 	start();	
@@ -264,15 +161,16 @@ void start()
 {
 	SEGGER_RTT_printf(0, "Start realtime processing\n");
 
-	// Start the ComInterface
-	Status status = comInterface->enterRealTimeMode();
-	assert(status == Status::Ok);
-
-	// Start the analysis algorithm
-	activeAnalysisAlgorithm->start();
+	// Start peripheral handlers
+	Status status;
+	for (auto& peripheralHandler : g_peripheralHandlers)
+	{
+		status = peripheralHandler->enterRealTimeMode();
+		assert(status == Status::Ok);
+	}
 
 	// Set the running flag
-	isRunning = true;
+	g_isRunning = true;
 }
 
 /**
@@ -283,15 +181,44 @@ void stop()
 {
 	SEGGER_RTT_printf(0, "Stop realtime processing\n");
 
-	// Stop the analysis algorithm
-	activeAnalysisAlgorithm->stop();
-
-	// Stop the ComInterface
-	Status status = comInterface->exitRealTimeMode();
-	assert(status == Status::Ok);
+	// Stop the peripheral handlers
+	Status status;
+	for (auto& peripheralHandler : g_peripheralHandlers)
+	{
+		status = peripheralHandler->exitRealTimeMode();
+		assert(status == Status::Ok);
+	}
 
 	// Clear the running flag
-	isRunning = false;
+	g_isRunning = false;
+}
+
+void peripheralHandlerCallback(uint32_t index)
+{
+	static std::array<bool, 3> dataAvailable = {false, false, false};
+
+	dataAvailable[index] = true;
+
+	// Check if all peripherals have data available
+	bool allDataAvailable = true;
+	for (size_t i = 0; i < dataAvailable.size(); i++)
+	{
+		allDataAvailable &= (dataAvailable[i] || !g_peripheralHandlers[i]->hasDevices());
+	}
+
+	if (allDataAvailable)
+	{
+		if(g_isRunning)
+		{
+			// All peripherals have data available and the system is running
+			// -> Start the input handling
+			inputHandlingDone();
+		}
+		for (auto& dataAvailable : dataAvailable)
+		{
+			dataAvailable = false;
+		}
+	}
 }
 
 /**
@@ -301,23 +228,21 @@ void stop()
  */
 void inputHandlingDone()
 {
-	//Check if the configuration is valid
-	Status status = comInterface->configurationValid();
-	if(status != Status::Ok)
+	for (auto&& deviceNode : g_deviceNodes)
 	{
-		// Stop realtime processing
-		stop();
-
-		// Configuration is not valid, stop the cycle and setup new configuration
-		renumrateDevices();
-
-		return;
+		deviceNode->processInData();
 	}
 
-	activeAnalysisAlgorithm->run();
+	for (auto&& algorithmicNode : g_algorithmicNodes)
+	{
+		algorithmicNode->process();
+	}
 
-	status = comInterface->processOutgoingData();
-	assert(status == Status::Ok);
+	for (auto&& deviceNode : g_deviceNodes)
+	{
+		deviceNode->processOutData();
+	}
+
 }
 
 /*******************************************************************************
@@ -336,11 +261,47 @@ void PIT_IRQHandler(void)
 
 
     // start i2c transfer after 100 cycles
-    if (i & 1 && i > 100 && isRunning)
+    if (i & 1 && i > 100 && g_isRunning)
 	{
-		comInterface->CyclicHandler();
+		startCycle();
 	}
 }
+}
+
+/**
+ * @brief Starts a new cycle
+ * 
+ */
+void startCycle()
+{
+	// Send the sync signal
+	Status status;
+	for (auto& peripheralHandler : g_peripheralHandlers)
+	{
+		status = peripheralHandler->sendSync();
+		if (status != Status::Ok)
+		{
+			// Error sending the sync signal
+			// -> Stop the cycle
+			stop();
+			SEGGER_RTT_printf(0, "Error sending sync signal\n");
+			return;
+		}
+	}
+
+	// Start the cycles
+	for (auto& peripheralHandler : g_peripheralHandlers)
+	{
+		status = peripheralHandler->startCycle();
+		if (status != Status::Ok)
+		{
+			// Error starting the cycle
+			// -> Stop the cycle
+			stop();
+			SEGGER_RTT_printf(0, "Error starting cycle\n");
+			return;
+		}
+	}
 }
 
 /*******************************************************************************
@@ -361,6 +322,12 @@ void initHardware()
     gpio_init();
 }
 
+void initPerpheralHandler()
+{
+	g_peripheralHandlers[0] = new PeripheralHandler(DMA0, 1, [](){peripheralHandlerCallback(0);}, true);
+	g_peripheralHandlers[1] = new PeripheralHandler(DMA0, 3, [](){peripheralHandlerCallback(1);}, true);
+	g_peripheralHandlers[2] = new PeripheralHandler(DMA0, 4, [](){peripheralHandlerCallback(2);}, false);
+}
 
 
 void gpio_init()
