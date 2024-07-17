@@ -9,7 +9,6 @@
 #include <string>
 #include <string_view>
 
-//#include "ComInterface.h"
 #include "Status.h"
 
 
@@ -22,8 +21,6 @@ class AnalysisAlgorithm {
 public:
 	AnalysisAlgorithm(std::string_view name);
 	virtual ~AnalysisAlgorithm();
-
-	void setComInterface(ComInterface* comInterface);
 
 	virtual Status run() = 0;
 	

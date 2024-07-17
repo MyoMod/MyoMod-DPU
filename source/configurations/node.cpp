@@ -37,6 +37,7 @@ std::shared_ptr<BaseOutputPort> BaseNode::getOutputPort(uint32_t index) const
     return std::shared_ptr<BaseOutputPort>{m_outputPorts[index]};
 }
 
+/*
 AdditonNode::AdditonNode(bool substract):
     m_outputPort(std::make_shared<OutputPort<int>>()),
     m_inputPortA(std::make_shared<InputPort<int>>(-42)),
@@ -60,3 +61,4 @@ void AdditonNode::process()
         m_outputPort->setValid(false);
     }
 }
+*/

@@ -65,12 +65,8 @@ protected:
     std::vector<std::shared_ptr<BaseInputPort>> m_inputPorts;
 };
 
-class AlgorithmicNode : public BaseNode
-{
-public:
-    virtual void process() = 0;
-};
 
+/*
 class AdditonNode : public AlgorithmicNode
 {
 public:
@@ -166,6 +162,7 @@ protected:
     std::array<int, 3> m_numericalParameters;
     std::array<bool, 3> m_booleanParameters;
 };
+*/
 /*
 class ArrayInputNode : public DeviceNode
 {

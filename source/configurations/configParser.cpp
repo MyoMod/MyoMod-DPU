@@ -13,8 +13,8 @@
 #include "SEGGER_RTT.h"
 
 #include "configParser.h"
-#include "node.h"
 #include "BarDisplay.h"
+#include "testAlgorithm.h"
 // Data structures
 
 // private functions
@@ -158,7 +158,7 @@ void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream
          && jsp->stack_pos == 3)
     {
         parser.m_configurations.back().name = jsp->data.str.buff;
-        std::cout << jsp->data.str.buff << std::endl;
+        // std::cout << jsp->data.str.buff << std::endl;
     }
 
     // Handle ConfigSection
@@ -321,7 +321,7 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
         }
 
         // print section
-        std::cout << std::endl << " Load " << jsp->stack[2].meta.name << std::endl;
+        //  std::cout << std::endl << " Load " << jsp->stack[2].meta.name << std::endl;
     }
     else if (lwjson_stack_seq_4(jsp, 0, ARRAY, OBJECT, KEY, OBJECT)
          && type == LWJSON_STREAM_TYPE_OBJECT
@@ -509,7 +509,11 @@ std::unique_ptr<DeviceNode> ConfigParser::createDeviceNode(const NodeData& nodeD
 
 std::unique_ptr<AlgorithmicNode> ConfigParser::createAlgorithmicNode(const NodeData& nodeData)
 {
-    if (nodeData.type == "AdditonNode")
+    if (nodeData.type == "TestAlgorithm")
+    {
+        return std::make_unique<TestAlgorithm>();
+    }
+    /*else if (nodeData.type == "AdditionNode")
     {
         bool subtract;
         if (!parseParameter("subtract", nodeData, subtract))
@@ -541,7 +545,7 @@ std::unique_ptr<AlgorithmicNode> ConfigParser::createAlgorithmicNode(const NodeD
             return nullptr;
         }
         return std::make_unique<AdvancedTestNode>(numericalParameters, booleanParameters);
-    }
+    }*/
     else
     {
         return nullptr;
@@ -774,7 +778,7 @@ static uint32_t stringToUint(std::string_view str, bool& success)
         return 0;
     }
 
-    // Check if hexadeciaml
+    // Check if hexadecimal
     bool hex = str.size() > 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X');
     if (hex)
     {

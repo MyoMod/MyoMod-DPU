@@ -6,30 +6,16 @@
  */
 
 #include "AnalysisAlgorithm.h"
-#include "ComInterface.h"
 
 
 
 AnalysisAlgorithm::AnalysisAlgorithm(std::string_view name) :
-		name(name),
-		pdsIn(nullptr),
-		pdsOut(nullptr)
+		name(name)
  {
 }
 
 AnalysisAlgorithm::~AnalysisAlgorithm() {
 	// TODO Auto-generated destructor stub
-}
-
-/**
- * @brief Sets the ComInterface that is used to communicate with the devices.
- * 
- * @param comInterface 	Pointer to the ComInterface that is used to communicate with the devices.
- */
-void AnalysisAlgorithm::setComInterface(ComInterface* comInterface)
-{
-	this->comInterface = comInterface;
-	comInterface->getAllPds(&pdsIn, &pdsOut);
 }
 
 /**
