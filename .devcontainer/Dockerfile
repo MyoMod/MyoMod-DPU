@@ -51,3 +51,14 @@ RUN mv /opt/arm-gnu-toolchain-${GCC_VERSION}-x86_64-arm-none-eabi /opt/arm-none-
 ENV PATH "$PATH:/opt/arm-none-eabi-gcc/bin"
 # install missing dependencies
 RUN apt-get update && apt-get install -y libncurses5 libncurses5-dev libncursesw5 libncursesw5-dev
+
+# Enable pretty printing for gdb
+RUN     apt install -y software-properties-common \
+        && add-apt-repository ppa:deadsnakes/ppa -y \
+        && apt update \
+        && apt install -y python3.8 python3.8-distutils \
+        #Install libstdc++6 for gdb pretty printing python scripts
+        && apt install libstdc++6
+
+# Tell gdb where to find the python scripts
+COPY gdbinit /home/$USERNAME/.gdbinit
