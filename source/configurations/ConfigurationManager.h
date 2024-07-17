@@ -43,6 +43,7 @@ public:
 	std::vector<DeviceIdentifier> getNeededDevices();
 	std::string getActiveConfigurationName();
 	uint32_t getActiveConfigurationIndex();
+	bool isValid();
 
 	uint32_t getNumberOfValidConfigurations();
 	

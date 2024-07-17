@@ -54,6 +54,7 @@ uint8_t g_debugBuffer[32];
  * Function Prototypes
  * ****************************************************************************/
 void renumrateDevices();
+void updateConfiguration();
 void start();
 void stop();
 void inputHandlingDone();
@@ -83,6 +84,8 @@ int main()
 	/** Initialzation done -> Enumerate the devices **/
 	renumrateDevices();
 
+	updateConfiguration();
+
 	//Main Loop
 	while(1)
 	{
@@ -110,12 +113,28 @@ void renumrateDevices()
 		assert(status != Status::Error);
 	}
 
-	// Update the configuration manager
+	// Update the valid configurations
 	Status status = g_configManager->updateValidConfigurations(foundDevices);
-	if(status == Status::Warning)
+
+	// Start the cycle
+	start();	
+}
+
+/**
+ * @brief Updates the configuration if needed
+ * 
+ */
+void updateConfiguration()
+{
+	// Stop the cycle
+	stop();
+
+	if ((!g_configManager->isValid()) || 
+		(g_configManager->getActiveConfigurationIndex() == 0 && g_configManager->getNumberOfValidConfigurations() > 0))
 	{
-		// Active configuration is not valid anymore
-		status = g_configManager->incrementActiveConfiguration();
+		// Active configuration is not valid anymore or the NOP configuration is active and there are valid configurations
+		// -> Select a valid, non-trivial configuration
+		Status status = g_configManager->incrementActiveConfiguration();
 		assert(status != Status::Error);
 		
 		// Get the active configuration
@@ -150,7 +169,7 @@ void renumrateDevices()
 	}
 
 	// Start the cycle
-	start();	
+	start();
 }
 
 /**
@@ -159,6 +178,13 @@ void renumrateDevices()
  */
 void start()
 {
+	if (g_isRunning)
+	{
+		// System is already running
+		// -> Nothing to do
+		return;
+	}
+
 	SEGGER_RTT_printf(0, "Start realtime processing\n");
 
 	// Start peripheral handlers
@@ -179,6 +205,13 @@ void start()
  */
 void stop()
 {
+	if (!g_isRunning)
+	{
+		// System is not running
+		// -> Nothing to do
+		return;
+	}
+
 	SEGGER_RTT_printf(0, "Stop realtime processing\n");
 
 	// Stop the peripheral handlers

@@ -83,7 +83,6 @@ Status ConfigurationManager::readConfigurations()
  * @param foundDevices 		The devices found by the ComInterface
  * @return Status 			Ok if the active configuration is valid
  *							Warning if the active configuration is not valid anymore
- * 							 and has been updated to the first valid one
  */
 Status ConfigurationManager::updateValidConfigurations(const std::vector<DeviceIdentifier> &foundDevices)
 {
@@ -190,7 +189,7 @@ NodesTuple ConfigurationManager::createActiveConfiguration()
     }
 
 	ConfigParser &configParser = ConfigParser::getInstance();
-	return configParser.loadConfig(configurationString, activeConfigIndex);	
+	return configParser.loadConfig(configurationString, activeConfigIndex - 1);	
 }
 
 /**
@@ -219,6 +218,17 @@ std::string ConfigurationManager::getActiveConfigurationName()
 uint32_t ConfigurationManager::getActiveConfigurationIndex()
 {
 	return activeConfigIndex;
+}
+
+/**
+ * @brief Checks if the active configuration is valid
+ *
+ * @return true 			The active configuration is valid
+ * @return false 			The active configuration is not valid
+ */
+bool ConfigurationManager::isValid()
+{
+	return configurationHandles[activeConfigIndex].isValid;
 }
 
 /**

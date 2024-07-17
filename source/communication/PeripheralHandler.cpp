@@ -30,7 +30,7 @@ std::array<PeripheralHandler*, I2C_UNITS> PeripheralHandler::handlers;
  * @param processDataCallback 		Callback function that is called when new input data is available
  * @param highSpeed 				True if the i2c should be configured for high speed mode (1MBit/s), false for normal speed (400kBit/s)
  */
-PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::function<void(void)> processDataCallback, bool highSpeed):
+PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, void (*processDataCallback)(void), bool highSpeed):
 	m_dmaBase{ dma }, 
 	m_commState{CommState:: Stopped }, 
 	m_dmaChannel{ DMA_LOWEST_CHANNEL + (i2cIndex - 1) }, // i2cIndex is 1 based, but the array is 0 based
@@ -181,7 +181,7 @@ std::vector<DeviceIdentifier> PeripheralHandler::listConnectedDevices(Status& st
 			m_connectedDevices[0x28] = DeviceIdentifier{ "Elctr6Ch", "SDSource1" };
 			//m_connectedDevices[0x38] = DeviceIdentifier{ "BtSink6Ch", "Blt_Sink1" };
 			break;
-		case 1:
+		case 2:
 			// Add devices that are connected to the Port 2
 			//m_connectedDevices[0x08] = DeviceIdentifier{ "Elctr6Ch", "Elctrode2" };
 			m_connectedDevices[0x18] = DeviceIdentifier{ {'B','a','r','D','i','s','p','7','C','h'}, {'B','a','r','D','i','s','p','l','a','y'} };
@@ -295,7 +295,7 @@ Status PeripheralHandler::installDevice(DeviceNode* device) {
  * @param device 	DeviceIdentifier of the device
  * @return int32_t 	Address of the device if it is connected, otherwise -1
  */
-int32_t PeripheralHandler::getDeviceAdress(DeviceIdentifier& device) {
+int32_t PeripheralHandler::getDeviceAdress(const DeviceIdentifier& device) const {
 	for(auto& connectedDevice : m_connectedDevices)
 	{
 		if(connectedDevice.second == device)
