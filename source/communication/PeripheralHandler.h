@@ -68,12 +68,12 @@ public:
 	PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::function<void(void)> processDataCallback, bool highSpeed);
 	virtual ~PeripheralHandler();
 
-	std::vector<DeviceIdentifier> listDevices(Status& status);
+	std::vector<DeviceIdentifier> listConnectedDevices(Status& status);
 	bool detectedNewDevices();
 
-	Status addDevice(DeviceNode* device);
+	Status installDevice(DeviceNode* device);
 	int32_t getDeviceAdress(DeviceIdentifier& device);
-	void removeAllDevices();
+	void uninstallAllDevices();
 	uint32_t getPingPongIndex();
 
 	Status sendSync();

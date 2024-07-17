@@ -131,7 +131,7 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, std::func
 }
 
 /**
- * @brief Destroy the PeripheralHandler object and deinitializes the hardware and
+ * @brief Destroy the PeripheralHandler object, deinitializes the hardware and
  * 			 removes the interrupt handlers
  * 
  */
@@ -152,15 +152,14 @@ PeripheralHandler::~PeripheralHandler() {
 }
 
 /**
- * @brief Returns a list of DeviceDescriptors for all devices that are found
- * 			but are not added to the handler yet
+ * @brief Returns a list of DeviceDescriptors for all connected devices
  * 
- * @param devices 	Pointer to a vector where the devices should be stored
- * @return Status::Ok if the function was successful
- * 		   Status::Error if the function was called while the handler was not in stopped state
- * 		   Status::Warning if the function was called, but there were no new devices
+ * @param status 	Status::Ok if the function was successful
+ * 		   			Status::Error if the function was called while the handler was not in stopped state
+ * 		   			Status::Warning if the function was called, but there were no new devices
+ * @return 			List of DeviceDescriptors for all connected devices
  */
-std::vector<DeviceIdentifier> PeripheralHandler::listDevices(Status& status) {
+std::vector<DeviceIdentifier> PeripheralHandler::listConnectedDevices(Status& status) {
 	if(m_commState != CommState::Stopped)
 	{
 		// It is not allowed to list devices while in realTime mode
@@ -185,7 +184,7 @@ std::vector<DeviceIdentifier> PeripheralHandler::listDevices(Status& status) {
 		case 1:
 			// Add devices that are connected to the Port 2
 			//m_connectedDevices[0x08] = DeviceIdentifier{ "Elctr6Ch", "Elctrode2" };
-			m_connectedDevices[0x18] = DeviceIdentifier{ "BarDis7Ch", "BDisplay2" };
+			m_connectedDevices[0x18] = DeviceIdentifier{ {'B','a','r','D','i','s','p','7','C','h'}, {'B','a','r','D','i','s','p','l','a','y'} };
 			//m_connectedDevices[0x28] = DeviceIdentifier{ "Elctr6Ch", "SDSource2" };
 			m_connectedDevices[0x38] = DeviceIdentifier{ "BtSink6Ch", "Blt_Sink2" };
 			break;
@@ -220,7 +219,7 @@ std::vector<DeviceIdentifier> PeripheralHandler::listDevices(Status& status) {
 }
 
 /**
- * @brief Returns true if new devices were detected since the last call to listNewDevices
+ * @brief Returns true if new devices were detected since the last call to listConnectedDevices
  * 
  * @return true if new devices were detected
  * @return false if no new devices were detected
@@ -230,15 +229,14 @@ bool PeripheralHandler::detectedNewDevices() {
 }
 
 /**
- * @brief Adds a device to the handler. 
+ * @brief Installs a device. This means that the handler will setup the 
+ * 			dma to communicate with the device 
  * 
- * @param address 		Address of the device
- * @param dataInBuffer 	MemoryRegion where the data from the device should be stored
- * @param dataOutBuffer MemoryRegion where the data for the device should be read from
+ * @param device 	Pointer to the device that should be added
  * @return Status::Ok if the function was successful
  * 		   Status::Error if the function was called, but the device was already added
  */
-Status PeripheralHandler::addDevice(DeviceNode* device) {
+Status PeripheralHandler::installDevice(DeviceNode* device) {
 	
 	assert(m_commState == CommState::Stopped);
 
@@ -309,10 +307,10 @@ int32_t PeripheralHandler::getDeviceAdress(DeviceIdentifier& device) {
 }
 
 /**
- * @brief Removes all devices from the handler
+ * @brief Uninstalls all devices from the handler
  * 
  */
-void PeripheralHandler::removeAllDevices() {
+void PeripheralHandler::uninstallAllDevices() {
 	assert(m_commState == CommState::Stopped);
 
 	m_hInTcdhandles.clear();
@@ -335,7 +333,7 @@ uint32_t PeripheralHandler::getPingPongIndex() {
 }
 
 /**
- * @brief Sends a sync command to all devices
+ * @brief Sends a sync command to all connected devices
  * 
  * @return Status Returns Status::Ok if the function was successful
  * 				  Returns Status::Timeout if the a timeout occured
