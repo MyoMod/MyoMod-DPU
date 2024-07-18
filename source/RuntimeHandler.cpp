@@ -89,7 +89,7 @@ int main()
 	{
 		if(!g_isRunning)
 		{
-			SEGGER_RTT_printf(0, "runtime is not running, this shouödn't happen\n");
+			SEGGER_RTT_printf(0, "runtime is not running, this shouldn't happen\n");
 		}
 	}
 	return 0;
@@ -378,7 +378,7 @@ void init_debug()
 
     SEGGER_RTT_Init();
     SEGGER_RTT_ConfigUpBuffer(1, "DataOut", &g_debugBuffer[0], sizeof(g_debugBuffer),
-                              SEGGER_RTT_MODE_NO_BLOCK_SKIP);
+                              SEGGER_RTT_MODE_BLOCK_IF_FIFO_FULL);
 
     SEGGER_RTT_WriteString(0, "MyoMod DPU\r\n\r\n");
     SEGGER_RTT_WriteString(0, BOARD_NAME);

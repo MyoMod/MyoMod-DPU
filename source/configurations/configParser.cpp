@@ -15,9 +15,9 @@
 #include "configParser.h"
 #include "BarDisplay.h"
 #include "testAlgorithm.h"
+#include "logNode.h"
+
 // Data structures
-
-
 #ifdef CONFIG_PARSER_DEBUG
     #define PARSE_DEBUG(...) SEGGER_RTT_printf(0, __VA_ARGS__)
 #else
@@ -520,6 +520,51 @@ std::unique_ptr<AlgorithmicNode> ConfigParser::createAlgorithmicNode(const NodeD
     if (nodeData.type == "TestAlgorithm")
     {
         return std::make_unique<TestAlgorithm>();
+    }
+    else if (nodeData.type == "LogNode")
+    {
+        std::string longId;
+        std::string shortId;
+        uint32_t nPorts;
+        std::string dataType;
+
+        bool success = true;
+        success &= nodeData.scalarParams.find("longId") != nodeData.scalarParams.end();
+        success &= nodeData.scalarParams.find("shortId") != nodeData.scalarParams.end();
+        success &= nodeData.scalarParams.find("dataType") != nodeData.scalarParams.end();
+        if (!parseParameter("nPorts", nodeData, nPorts) || !success)
+        {
+            return nullptr;
+        }
+
+        longId = nodeData.scalarParams.at("longId");
+        shortId = nodeData.scalarParams.at("shortId");
+        dataType = nodeData.scalarParams.at("dataType");
+
+        if (dataType == "uint8_t" or dataType == "bool")
+        {
+            return std::make_unique<LogNode<uint8_t>>(nPorts, longId, shortId);
+        }
+        else if (dataType == "int8_t")
+        {
+            return std::make_unique<LogNode<int8_t>>(nPorts, longId, shortId);
+        }
+        else if (dataType == "uint32_t")
+        {
+            return std::make_unique<LogNode<uint32_t>>(nPorts, longId, shortId);
+        }
+        else if (dataType == "int32_t")
+        {
+            return std::make_unique<LogNode<int32_t>>(nPorts, longId, shortId);
+        }
+        else if (dataType == "float")
+        {
+            return std::make_unique<LogNode<float>>(nPorts, longId, shortId);
+        }
+        else
+        {
+            return nullptr;
+        }
     }
     /*else if (nodeData.type == "AdditionNode")
     {
