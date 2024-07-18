@@ -13,41 +13,10 @@
 #include "configParser.h"
 #include "SEGGER_RTT.h"
 
-//Default json configuration file
-// const char *configurationString1 = (
-// #include "config.json"
-// );
-const char *configurationString = 
-(
-R"for_c++_include(
-[
-    {
-        "name": "Config 1",
-        "deviceNodes": [
-            {
-                "type": "BarDisp7Ch",
-                "ID" : "BarDisplay"
-            }
-            ],
-        "algorithmicNodes": [
-            {
-                "type": "TestAlgorithm"
-            }],
-        "links": {
-            "a0:0": "d0:0",
-			"a0:1": "d0:1",
-			"a0:2": "d0:2",
-			"a0:3": "d0:3",
-            "d0:0": "a0:0",
-			"d0:1": "a0:1",
-			"d0:2": "a0:2",
-			"d0:3": "a0:3",
-			"d0:4": "a0:4",
-			"d0:5": "a0:5",
-			"d0:6": "a0:6"
-            }
-    }
-])for_c++_include");
+//Default json configuration file - ignore intellisense error
+const char *configurationString =
+#include "generated/config.enveloped_json"
+;
 
 /**
  * @brief Construct a new Configuration Manager:: Configuration Manager object
