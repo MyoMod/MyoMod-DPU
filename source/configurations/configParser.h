@@ -27,6 +27,8 @@
 #include "algorithmicNode.h"
 #include "deviceNode.h"
 
+#define CONFIG_PARSER_DEBUG
+
 // Tuple that consists of input devices, algorithms and output devices
 using NodesTuple = std::tuple<
         std::vector<std::unique_ptr<DeviceNode>>,       // devices

@@ -17,6 +17,13 @@
 #include "testAlgorithm.h"
 // Data structures
 
+
+#ifdef CONFIG_PARSER_DEBUG
+    #define PARSE_DEBUG(...) SEGGER_RTT_printf(0, __VA_ARGS__)
+#else
+    #define PARSE_DEBUG(...)
+#endif
+
 // private functions
 static bool getID(const NodeData& nodeData, std::array<char, 10>& ID);
 static bool createPortDescriptor(std::string_view stringDescriptor, PortDescriptor& PortDescriptor);
@@ -61,14 +68,14 @@ NodesTuple ConfigParser::loadConfig(std::string_view configString, uint32_t conf
         parseRes = lwjson_stream_parse(&m_parser, c);
         if (parseRes == lwjsonSTREAMINPROG) {} 
         else if (parseRes == lwjsonSTREAMWAITFIRSTCHAR) {
-            SEGGER_RTT_printf(0,"Parser: Waiting for first character\n");
+            PARSE_DEBUG("Parser: Waiting for first character\n");
         } 
         else if (parseRes == lwjsonSTREAMDONE) {
-            SEGGER_RTT_printf(0,"Parser: Done\r\n");
+            PARSE_DEBUG("Parser: Done\r\n");
             break;
         } 
         else {
-            SEGGER_RTT_printf(0,"Parser: Error\r\n");
+            PARSE_DEBUG("Parser: Error\r\n");
             m_parseError = true;
             break;
         }
@@ -108,14 +115,14 @@ std::vector<Configuration> ConfigParser::scanConfigurations(std::string_view con
         parseRes = lwjson_stream_parse(&m_parser, c);
         if (parseRes == lwjsonSTREAMINPROG) {} 
         else if (parseRes == lwjsonSTREAMWAITFIRSTCHAR) {
-            SEGGER_RTT_printf(0,"Parser: Waiting first character\r\n");
+            PARSE_DEBUG("Parser: Waiting first character\r\n");
         } 
         else if (parseRes == lwjsonSTREAMDONE) {
-            SEGGER_RTT_printf(0,"Parser: Done\r\n");
+            PARSE_DEBUG("Parser: Done\r\n");
             break;
         } 
         else {
-            SEGGER_RTT_printf(0,"Parser: Error\r\n");
+            PARSE_DEBUG("Parser: Error\r\n");
             m_parseError = true;
             break;
         }
@@ -143,7 +150,7 @@ void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream
     // config object start
     if (jsp->stack_pos == 2 && type == LWJSON_STREAM_TYPE_OBJECT)
     {
-        // std::cout << "\nConfig[" << parser.m_currentConfigId << "]: " ;
+        PARSE_DEBUG("\r\nConfig[%d]: ", parser.m_currentConfigId);
         parser.m_configurations.push_back(Configuration{});
     }
     if (jsp->stack_pos == 1 && type == LWJSON_STREAM_TYPE_OBJECT_END)
@@ -158,7 +165,7 @@ void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream
          && jsp->stack_pos == 3)
     {
         parser.m_configurations.back().name = jsp->data.str.buff;
-        // std::cout << jsp->data.str.buff << std::endl;
+        PARSE_DEBUG("%s\r\n", jsp->data.str.buff);
     }
 
     // Handle ConfigSection
@@ -171,7 +178,7 @@ void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream
         if (strcmp(jsp->stack[2].meta.name, "deviceNodes") == 0)
         {
             parser.m_currentConfigSection = ConfigSection::DeviceNodes;// print section
-            // std::cout << std::endl << " Scan " << jsp->stack[2].meta.name << std::endl;
+            PARSE_DEBUG("\r\n Scan %s\r\n", jsp->stack[2].meta.name);
         }
         else if (strcmp(jsp->stack[2].meta.name, "algorithmicNodes") == 0)
         {
@@ -214,12 +221,12 @@ void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream
             if (strlen(jsp->data.str.buff) != 10)
             {
                 parser.m_parseError = true;
-                // std::cerr << "Invalid type" << std::endl;
+                PARSE_DEBUG("Invalid type\r\n");
                 return;
             }
 
             std::copy(jsp->data.str.buff, jsp->data.str.buff + 10, parser.m_currentNodeIdentifier.type.data());
-            // std::cout << "  " << jsp->data.str.buff << std::endl;
+            PARSE_DEBUG("  %s\r\n", jsp->data.str.buff);
         }
 
         // ID field
@@ -232,13 +239,13 @@ void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream
                 if (strlen(jsp->data.str.buff) != 10)
                 {
                     parser.m_parseError = true;
-                    // std::cerr << "Invalid ID" << std::endl;
+                    PARSE_DEBUG("Invalid ID\r\n");
                     return;
                 }
                 
                 // copy ID
                 std::copy(jsp->data.str.buff, jsp->data.str.buff + 10, parser.m_currentNodeIdentifier.id.data());
-                // std::cout << "   " << jsp->stack[5].meta.name << ": \"" << jsp->data.str.buff << "\"" << std::endl;
+                PARSE_DEBUG("   %s: \"%s\"\r\n", jsp->stack[5].meta.name, jsp->data.str.buff);
             }
         }
     }
@@ -253,19 +260,19 @@ void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream
             if (parser.m_configurations.empty())
             {
                 parser.m_parseError = true;
-                // std::cerr << "No configuration to add device to" << std::endl;
+                PARSE_DEBUG("No configuration to add device to\r\n");
                 return;
             }
             if (!parser.m_configIdFound)
             {
                 parser.m_parseError = true;
-                // std::cerr << "No ID found for device" << std::endl;
+                PARSE_DEBUG("No ID found for device\r\n");
                 return;
             }
             if (!parser.m_typeFound)
             {
                 parser.m_parseError = true;
-                // std::cerr << "No type found for device" << std::endl;
+                PARSE_DEBUG("No type found for device\r\n");
                 return;
             }
             
@@ -282,10 +289,10 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
     // config object start
     if (jsp->stack_pos == 2 && type == LWJSON_STREAM_TYPE_OBJECT)
     {
-        // std::cout << "Config[" << parser.m_currentConfigId << "]:" << std::endl;
+        PARSE_DEBUG("Config[%d]:\r\n", parser.m_currentConfigId);
         if (parser.m_currentConfigId != parser.m_configId)
         {
-            // std::cout << " - ignore" << std::endl;
+            PARSE_DEBUG(" - ignore\r\n");
         }
     }
     if (jsp->stack_pos == 1 && type == LWJSON_STREAM_TYPE_OBJECT_END)
@@ -321,7 +328,7 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
         }
 
         // print section
-        //  std::cout << std::endl << " Load " << jsp->stack[2].meta.name << std::endl;
+        PARSE_DEBUG("\r\n Load %s\r\n", jsp->stack[2].meta.name);
     }
     else if (lwjson_stack_seq_4(jsp, 0, ARRAY, OBJECT, KEY, OBJECT)
          && type == LWJSON_STREAM_TYPE_OBJECT
@@ -337,7 +344,7 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
         }
 
         // print section
-        // std::cout << std::endl << " Load Links" << std::endl;
+        PARSE_DEBUG("\r\n Load Link\r\n");
     }
 
     // Handle NodeData
@@ -359,28 +366,28 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
         if (type == LWJSON_STREAM_TYPE_STRING && strcmp(jsp->stack[5].meta.name, "type") == 0)
         {
             parser.m_currentNodeData.type = std::string{jsp->data.str.buff};
-            // std::cout << "  " << parser.m_currentNodeData.type << std::endl;
+            PARSE_DEBUG( "  %s\r\n", parser.m_currentNodeData.type.c_str());
         }
 
         // scalar string field
         else if (type == LWJSON_STREAM_TYPE_STRING)
         {
             parser.m_currentNodeData.scalarParams[jsp->stack[5].meta.name] = jsp->data.str.buff;
-            // std::cout << "   " << jsp->stack[5].meta.name << ": \"" << jsp->data.str.buff << "\"" << std::endl;
+            PARSE_DEBUG( "   %s: \"%s\"\r\n", jsp->stack[5].meta.name, jsp->data.str.buff);
         }
 
         // scalar number field
         else if (type == LWJSON_STREAM_TYPE_NUMBER)
         {
             parser.m_currentNodeData.scalarParams[jsp->stack[5].meta.name] = jsp->data.str.buff;
-            // std::cout << "   " << jsp->stack[5].meta.name << ": " << jsp->data.str.buff << std::endl;
+            PARSE_DEBUG( "   %s: %s\r\n", jsp->stack[5].meta.name, jsp->data.str.buff);
         }
 
         // scalar boolean field
         else if (type == LWJSON_STREAM_TYPE_TRUE || type == LWJSON_STREAM_TYPE_FALSE)
         {
             parser.m_currentNodeData.scalarParams[jsp->stack[5].meta.name] = type == LWJSON_STREAM_TYPE_TRUE?"1":"0";
-            // std::cout << "   " << jsp->stack[5].meta.name << ": " << (LWJSON_STREAM_TYPE_TRUE?"true":"false") << std::endl;
+            PARSE_DEBUG( "   %s: %s\r\n", jsp->stack[5].meta.name, type == LWJSON_STREAM_TYPE_TRUE?"true":"false");
         }
     }
 
@@ -394,28 +401,28 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
         {
             lastArrayName = jsp->data.str.buff;
             parser.m_currentNodeData.arrayParams[lastArrayName] = std::vector<std::string>{};
-            //std::cout << "   " << lastArrayName << ": [";
+            PARSE_DEBUG( "   %s: [", lastArrayName.c_str());
         }
 
         // array string field
         if (type == LWJSON_STREAM_TYPE_STRING)
         {
             parser.m_currentNodeData.arrayParams[lastArrayName].push_back(jsp->data.str.buff);
-            //std::cout << "\"" << jsp->data.str.buff << "\", ";
+            PARSE_DEBUG( "\"%s\", ", jsp->data.str.buff);
         }
 
         // array number field
         else if (type == LWJSON_STREAM_TYPE_NUMBER)
         {
             parser.m_currentNodeData.arrayParams[lastArrayName].push_back(jsp->data.str.buff);
-            // std::cout << jsp->data.str.buff << ", ";
+            PARSE_DEBUG( "%s, ", jsp->data.str.buff);
         }
 
         // array boolean field
         else if (type == LWJSON_STREAM_TYPE_TRUE || type == LWJSON_STREAM_TYPE_FALSE)
         {
             parser.m_currentNodeData.arrayParams[lastArrayName].push_back(type == LWJSON_STREAM_TYPE_TRUE?"1":"0");
-            // std::cout << jsp->data.str.buff << ", ";
+            PARSE_DEBUG( "%s, ", jsp->data.str.buff);
         }
     }
     else if (lwjson_stack_seq_5(jsp, 0, ARRAY, OBJECT, KEY, ARRAY, OBJECT)
@@ -423,7 +430,7 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
          && type == LWJSON_STREAM_TYPE_ARRAY_END)
     {
         // close array
-        // std::cout << "]" << std::endl;
+        PARSE_DEBUG( "]\r\n");
     }
 
     // Node is finished
@@ -440,7 +447,7 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
             if (parser.m_devices.back() == nullptr)
             {
                 parser.m_parseError = true;
-                // std::cerr << "Could not create device node" << std::endl;
+                PARSE_DEBUG( "Could not create device node\r\n");
             }
             break;
         case ConfigSection::AlgorithmicNodes:
@@ -450,7 +457,7 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
             if (parser.m_algorithms.back() == nullptr)
             {
                 parser.m_parseError = true;
-                // std::cerr << "Could not create algorithmic node" << std::endl;
+                PARSE_DEBUG( "Could not create algorithmic node\r\n");
             }
             break;
         default:
@@ -464,7 +471,8 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
          && jsp->stack_pos == 5
          && parser.m_currentConfigSection == ConfigSection::Links)
     {
-        // std::cout << "  " << jsp->data.str.buff << "->" << jsp->stack[4].meta.name;
+        PARSE_DEBUG( "  %s->%s", jsp->data.str.buff, jsp->stack[4].meta.name);
+       
         PortDescriptor inputPort;
         PortDescriptor outputPort;
         if (createPortDescriptor(jsp->stack[4].meta.name, inputPort) && createPortDescriptor(jsp->data.str.buff, outputPort))
@@ -472,11 +480,11 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
             if (!parser.linkNodes(inputPort, outputPort))
             {
                 parser.m_parseError = true;
-                // std::cout << " - error" << std::endl;
+                PARSE_DEBUG( " - error\r\n");
             }
             else
             {
-                // std::cout << " - linked" << std::endl;
+                PARSE_DEBUG( " - linked\r\n");
             }
         }
     }
