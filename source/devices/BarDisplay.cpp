@@ -11,7 +11,8 @@ BarDisplay::BarDisplay(std::array<char, 10> id) :
     m_hostInStorage(std::make_shared<InputStorage<std::array<uint8_t, 4>>>()),
     m_inputPort(std::make_shared<InputPort<std::array<uint8_t, 7>>>(std::array<uint8_t, 7>({0,0,0,0,0,0,0}))),
     m_hostOutStorage({
-        std::make_shared<std::array<uint8_t, 7>>()
+        std::make_shared<std::array<uint8_t, 7>>(std::array<uint8_t, 7>({0,0,0,0,0,0,0})),
+        std::make_shared<std::array<uint8_t, 7>>(std::array<uint8_t, 7>({0,0,0,0,0,0,0}))
     })
 {
     m_outputPorts.push_back(m_outputPort);
