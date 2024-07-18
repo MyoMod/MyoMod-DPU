@@ -34,6 +34,7 @@ public:
 	DeviceNode(std::array<char, 10> id, const std::array<char, 10> type) :
         m_id{id},
 		m_type{type},
+		m_activeBuffer{false},
 		m_initialized{false}
     {}
 

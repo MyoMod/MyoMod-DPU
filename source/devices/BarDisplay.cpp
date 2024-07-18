@@ -29,6 +29,7 @@ void BarDisplay::processOutData()
     if (m_inputPort->isValid())
     {
         *(m_hostOutStorage[m_activeBuffer]) = m_inputPort->getValue();
+        m_activeBuffer = !m_activeBuffer;
     }
 }
 
