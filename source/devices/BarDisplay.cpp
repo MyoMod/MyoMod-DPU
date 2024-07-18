@@ -8,7 +8,7 @@ BarDisplay::BarDisplay(std::array<char, 10> id) :
     DeviceNode(id, 
         std::array<char, 10>({'B','a','r','D','i','s','p','7','C','h'})),
     m_outputPort(std::make_shared<OutputPort<std::array<uint8_t, 4>>>()),
-    m_hostInStorage(std::make_shared<std::array<uint8_t, 4>>()),
+    m_hostInStorage(std::make_shared<InputStorage<std::array<uint8_t, 4>>>()),
     m_inputPort(std::make_shared<InputPort<std::array<uint8_t, 7>>>(std::array<uint8_t, 7>({0,0,0,0,0,0,0}))),
     m_hostOutStorage({
         std::make_shared<std::array<uint8_t, 7>>()
@@ -21,7 +21,7 @@ BarDisplay::BarDisplay(std::array<char, 10> id) :
 void BarDisplay::processInData()
 {
     // TODO: Do some validation here
-    m_outputPort->setValue(*m_hostInStorage);
+    m_outputPort->setValue((*m_hostInStorage).data);
 }
 
 void BarDisplay::processOutData()

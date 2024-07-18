@@ -17,7 +17,7 @@ public:
     DeviceNodeStorage getNodeStorage() override;
 private:
     std::shared_ptr<OutputPort<std::array<uint8_t, 4>>> m_outputPort;
-    std::shared_ptr<std::array<uint8_t, 4>> m_hostInStorage;
+    std::shared_ptr<InputStorage<std::array<uint8_t, 4>>> m_hostInStorage;
 
     std::shared_ptr<InputPort<std::array<uint8_t, 7>>> m_inputPort;
     std::array<std::shared_ptr<std::array<uint8_t, 7>>,2> m_hostOutStorage;

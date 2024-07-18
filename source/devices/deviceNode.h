@@ -19,6 +19,15 @@
 #include "commonRegisterDef.h"
 #include "node.h"
 
+// Packed Storage for DeviceNodes that contains
+//  the data itself and the status byte
+template <typename T>
+struct __attribute__((__packed__)) InputStorage
+{
+	T data;
+	StatusByte_t statusByte;
+};
+
 class DeviceNode : public BaseNode
 {
 public:
