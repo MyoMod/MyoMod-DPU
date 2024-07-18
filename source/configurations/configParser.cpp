@@ -16,6 +16,7 @@
 #include "BarDisplay.h"
 #include "testAlgorithm.h"
 #include "logNode.h"
+#include "linearFuncNode.h"
 
 // Data structures
 #ifdef CONFIG_PARSER_DEBUG
@@ -515,6 +516,18 @@ std::unique_ptr<DeviceNode> ConfigParser::createDeviceNode(const NodeData& nodeD
     }
 }
 
+template <typename T>
+std::unique_ptr<LinearFunctionNode<T>> createLinearFunctionNode(const NodeData& nodeData)
+{
+    T slope;
+    T offset;
+    if (!parseParameter("slope", nodeData, slope) || !parseParameter("offset", nodeData, offset))
+    {
+        return nullptr;
+    }
+    return std::make_unique<LinearFunctionNode<T>>(slope, offset);
+}
+
 std::unique_ptr<AlgorithmicNode> ConfigParser::createAlgorithmicNode(const NodeData& nodeData)
 {
     if (nodeData.type == "TestAlgorithm")
@@ -538,6 +551,41 @@ std::unique_ptr<AlgorithmicNode> ConfigParser::createAlgorithmicNode(const NodeD
         shortId = nodeData.scalarParams.at("shortId");
 
         return std::make_unique<LogNode>(longId, shortId);
+    }
+    else if (nodeData.type == "LinearFuncNode")
+    {
+        // First get type
+        std::string type;
+        if (nodeData.scalarParams.find("dataType") == nodeData.scalarParams.end())
+        {
+            return nullptr;
+        }
+        type = nodeData.scalarParams.at("dataType");
+        
+        if (type == "float")
+        {
+            return createLinearFunctionNode<float>(nodeData);
+        }
+        else if (type == "int32")
+        {
+            return createLinearFunctionNode<int32_t>(nodeData);
+        }
+        else if (type == "uint32")
+        {
+            return createLinearFunctionNode<uint32_t>(nodeData);
+        }
+        else if (type == "int8")
+        {
+            return createLinearFunctionNode<int8_t>(nodeData);
+        }
+        else if (type == "uint8")
+        {
+            return createLinearFunctionNode<uint8_t>(nodeData);
+        }
+        else
+        {
+            return nullptr;
+        }
     }
     /*else if (nodeData.type == "AdditionNode")
     {
