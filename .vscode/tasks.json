@@ -33,6 +33,49 @@
             "group": "build",
             "problemMatcher": [],
             "detail": "CMake template build task"
+        },
+        {
+            "type": "shell",
+            "label": "Start RTT Logger",
+            "command": "JLinkRTTLoggerExe",
+            "args": [
+                {
+                    "value": "-If",
+                    "quoting": "escape"
+                 },
+                 {
+                     "value": "jtag",
+                     "quoting": "escape"
+                 },
+                    {
+                        "value": "-Device",
+                        "quoting": "escape"
+                    },
+                    {
+                        "value": "MIMXRT1062XXX6B",
+                        "quoting": "escape"
+                    },
+                    {
+                        "value": "-Speed",
+                        "quoting": "escape"
+                    },
+                    {
+                        "value": "4000",
+                        "quoting": "escape"
+                    },
+                    {
+                        "value": "-RTTChannel",
+                        "quoting": "escape"
+                    },
+                    {
+                        "value": "1",
+                        "quoting": "escape"
+                    },
+                    {
+                        "value": "testTask.log",
+                        "quoting": "escape"
+                    }
+            ]
         }
     ],
     "version": "2.0.0"
