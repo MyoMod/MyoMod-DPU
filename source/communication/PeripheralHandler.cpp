@@ -732,9 +732,10 @@ Status PeripheralHandler::linkTcds() {
 		edma_tcd_t* lastTcdInOpposed = &m_hInTcdhandles[m_hInTcdhandles.size() - 1].tcd[pingPong ^ 1];
 		edma_tcd_t* lastTcdOutOpposed = &m_hOutTcdhandles[m_hOutTcdhandles.size() - 1].tcds[pingPong ^ 1][2];
 		edma_tcd_t* firstTcdIn = &m_hInTcdhandles[0].tcd[pingPong];
+		edma_tcd_t* firstTcdInOpposed = &m_hInTcdhandles[0].tcd[pingPong ^ 1];
 		edma_tcd_t* firstTcdOutOpposed = &m_hOutTcdhandles[0].tcds[pingPong ^ 1][0];
 
-		// When there is no putput data, the last tcd in points to the first tcd in
+		// When there is no output data, the last tcd in points to the first tcd in
 		if(m_hOutTcdhandles.size() == 0)
 		{
 			lastTcdInOpposed->DLAST_SGA = (uint32_t)firstTcdIn;
@@ -743,7 +744,7 @@ Status PeripheralHandler::linkTcds() {
 		}
 
 		lastTcdIn->DLAST_SGA = (uint32_t)firstTcdOutOpposed;
-		lastTcdOutOpposed->DLAST_SGA = (uint32_t)firstTcdIn;
+		lastTcdOutOpposed->DLAST_SGA = (uint32_t)firstTcdInOpposed;
 		lastTcdOutOpposed->CSR |= DMA_CSR_INTMAJOR(1);
 
 		// Enable auto stop request for direction changes
