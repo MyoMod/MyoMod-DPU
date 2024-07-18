@@ -669,27 +669,29 @@ static bool parseParameter(const std::string& parameterName, const NodeData& nod
         parameter = value;
         return true;
     }
-    uint32_t maxValue = std::numeric_limits<T>::max();
-    uint32_t minValue = std::numeric_limits<T>::min();
-    if (std::is_signed<T>::value)
-    {
-        int32_t value = stringToInt(nodeData.scalarParams.at(parameterName), success);
-        if (!success || value > maxValue || value < minValue)
+    else{
+        int64_t maxValue = std::numeric_limits<T>::max();
+        int64_t minValue = std::numeric_limits<T>::min();
+        if (std::is_signed<T>::value)
         {
-            return false;
+            int32_t value = stringToInt(nodeData.scalarParams.at(parameterName), success);
+            if (!success || value > maxValue || value < minValue)
+            {
+                return false;
+            }
+            parameter = value;
         }
-        parameter = value;
-    }
-    else
-    {
-        uint32_t value = stringToUint(nodeData.scalarParams.at(parameterName), success);
-        if (!success || value > maxValue)
+        else
         {
-            return false;
+            uint32_t value = stringToUint(nodeData.scalarParams.at(parameterName), success);
+            if (!success || value > maxValue)
+            {
+                return false;
+            }
+            parameter = value;
         }
-        parameter = value;
+        return true;
     }
-    return true;
 }
 
 template <typename T, size_t N>
