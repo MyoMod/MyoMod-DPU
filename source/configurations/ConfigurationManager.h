@@ -19,8 +19,8 @@ struct ConfigurationHandle
 	Configuration config;
 	bool isValid = false;
 
-	ConfigurationHandle(Configuration config, bool isValid) : config(config), isValid(isValid) {}
-	ConfigurationHandle(Configuration config) : config(config), isValid{false} {}
+	ConfigurationHandle(Configuration conf, bool valid) : config(conf), isValid(valid) {}
+	ConfigurationHandle(Configuration conf) : config(conf), isValid{false} {}
 };
 
 /*

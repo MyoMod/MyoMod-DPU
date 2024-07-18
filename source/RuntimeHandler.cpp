@@ -49,7 +49,7 @@ std::vector<std::unique_ptr<AlgorithmicNode>> g_algorithmicNodes;
 
 volatile bool g_isRunning = false;
 
-uint8_t g_debugBuffer[32];
+uint8_t g_debugBuffer[1024];
 /*******************************************************************************
  * Function Prototypes
  * ****************************************************************************/
@@ -70,8 +70,6 @@ void init_debug();
  * ****************************************************************************/
 int main()
 {
-	Status status;
-
 	/** Initialization **/
 	initHardware();
 	initPerpheralHandler();
@@ -79,7 +77,7 @@ int main()
 
 	/** fill globals **/
 	g_configManager = new ConfigurationManager();
-	g_configManager->readConfigurations();
+	assert(g_configManager->readConfigurations() == Status::Ok);
 
 	/** Initialzation done -> Enumerate the devices **/
 	renumrateDevices();
@@ -114,7 +112,7 @@ void renumrateDevices()
 	}
 
 	// Update the valid configurations
-	Status status = g_configManager->updateValidConfigurations(foundDevices);
+	g_configManager->updateValidConfigurations(foundDevices);
 
 	// Start the cycle
 	start();	
@@ -247,10 +245,7 @@ void peripheralHandlerCallback(uint32_t index)
 			// -> Start the input handling
 			inputHandlingDone();
 		}
-		for (auto& dataAvailable : dataAvailable)
-		{
-			dataAvailable = false;
-		}
+		dataAvailable = {false, false, false};
 	}
 }
 
@@ -383,9 +378,9 @@ void init_debug()
 
     SEGGER_RTT_Init();
     SEGGER_RTT_ConfigUpBuffer(1, "DataOut", &g_debugBuffer[0], sizeof(g_debugBuffer),
-                              SEGGER_RTT_MODE_BLOCK_IF_FIFO_FULL);
+                              SEGGER_RTT_MODE_NO_BLOCK_SKIP);
 
-    SEGGER_RTT_WriteString(0, "SEGGER Real-Time-Terminal Sample\r\n\r\n");
+    SEGGER_RTT_WriteString(0, "MyoMod DPU\r\n\r\n");
     SEGGER_RTT_WriteString(0, BOARD_NAME);
 	SEGGER_RTT_WriteString(0, "\r\n\r\n");
 

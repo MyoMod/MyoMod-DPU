@@ -72,7 +72,7 @@ set(CMAKE_SIZE_UTIL ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-size${TOOLCHAIN_EXT} CACHE
 #set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 #set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-set(OBJECT_GEN_FLAGS "-O0 -fno-common -g3 -ggdb -Wall -ffunction-sections -fdata-sections -fno-exceptions -fstack-usage -fmerge-constants -fno-common -mcpu=cortex-m7 -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb")
+set(OBJECT_GEN_FLAGS "-O0 -fno-common -g3 -ggdb -Wall -Wdouble-promotion -Wshadow -ffunction-sections -fdata-sections -fno-exceptions -fstack-usage -fmerge-constants -fno-common -mcpu=cortex-m7 -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb")
 
 set(CMAKE_C_FLAGS   "${OBJECT_GEN_FLAGS} -std=c17 " CACHE INTERNAL "C Compiler options")
 set(CMAKE_CXX_FLAGS "${OBJECT_GEN_FLAGS} -std=c++20 " CACHE INTERNAL "C++ Compiler options")

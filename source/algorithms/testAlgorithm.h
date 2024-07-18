@@ -49,7 +49,7 @@ public:
         if (allValid)
         {
             static float counter = 0;
-            counter += 0.01;
+            counter += 0.01f;
             static uint32_t counter2 = 0;
 
             uint8_t value = 0;
@@ -60,7 +60,7 @@ public:
 
             m_barOutputPorts[0]->setValue(100 * m_buttonInputPorts[0]->getValue());
             m_barOutputPorts[1]->setValue(100 * m_buttonInputPorts[2]->getValue());
-            m_barOutputPorts[2]->setValue(sinf(counter * 2*3.14) * 50 + 50);
+            m_barOutputPorts[2]->setValue(sinf(counter * 2*3.14f) * 50 + 50);
             m_barOutputPorts[3]->setValue((counter2++)%100);
             m_barOutputPorts[4]->setValue(value);
             m_barOutputPorts[5]->setValue(100 * m_buttonInputPorts[1]->getValue());

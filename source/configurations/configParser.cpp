@@ -861,7 +861,7 @@ static float stringToFloat(std::string_view str, bool& success)
         {
             if (decimal)
             {
-                decimalFactor *= 0.1;
+                decimalFactor *= 0.1f;
                 value += (c - '0') * decimalFactor;
             }
             else
