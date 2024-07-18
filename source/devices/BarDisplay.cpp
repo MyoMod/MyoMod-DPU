@@ -7,30 +7,45 @@
 BarDisplay::BarDisplay(std::array<char, 10> id) : 
     DeviceNode(id, 
         std::array<char, 10>({'B','a','r','D','i','s','p','7','C','h'})),
-    m_outputPort(std::make_shared<OutputPort<std::array<uint8_t, 4>>>()),
+    m_buttonPorts(),
     m_hostInStorage(std::make_shared<InputStorage<std::array<uint8_t, 4>>>()),
-    m_inputPort(std::make_shared<InputPort<std::array<uint8_t, 7>>>(std::array<uint8_t, 7>({0,0,0,0,0,0,0}))),
+    m_barPorts(),
     m_hostOutStorage({
         std::make_shared<std::array<uint8_t, 7>>(std::array<uint8_t, 7>({0,0,0,0,0,0,0})),
         std::make_shared<std::array<uint8_t, 7>>(std::array<uint8_t, 7>({0,0,0,0,0,0,0}))
     })
 {
-    m_outputPorts.push_back(m_outputPort);
-    m_inputPorts.push_back(m_inputPort);
+    for(size_t i = 0; i < m_barPorts.size(); i++)
+    {
+        m_barPorts[i] = std::make_shared<InputPort<uint8_t>>(0);
+        m_inputPorts.push_back(m_barPorts[i]);
+    }
+
+    for(size_t i = 0; i < m_buttonPorts.size(); i++)
+    {
+        m_buttonPorts[i] = std::make_shared<OutputPort<bool>>();
+        m_outputPorts.push_back(m_buttonPorts[i]);
+    }
 }
 
 void BarDisplay::processInData()
 {
     // TODO: Do some validation here
-    m_outputPort->setValue((*m_hostInStorage).data);
+    auto& data = m_hostInStorage->data;
+    for (size_t i = 0; i < m_buttonPorts.size(); i++)
+    {
+        m_buttonPorts[i]->setValue(data[i] == 1);
+        m_buttonPorts[i]->setValid(true);
+    }
 }
 
 void BarDisplay::processOutData()
 {
-    if (m_inputPort->isValid())
+    auto data = m_hostOutStorage[m_activeBuffer].get();
+    m_activeBuffer = !m_activeBuffer;
+    for (size_t i = 0; i < m_barPorts.size(); i++)
     {
-        *(m_hostOutStorage[m_activeBuffer]) = m_inputPort->getValue();
-        m_activeBuffer = !m_activeBuffer;
+        (*data)[i] = m_barPorts[i]->getValue();
     }
 }
 

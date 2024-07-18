@@ -15,35 +15,56 @@
 #pragma once
 
 #include <array>
+#include "math.h"
 
 #include "algorithmicNode.h"
 
 class TestAlgorithm : public AlgorithmicNode
 {
+protected :
+    std::array<std::shared_ptr<OutputPort<uint8_t>>, 7> m_barOutputPorts;
+    std::array<std::shared_ptr<InputPort<bool>>, 4> m_buttonInputPorts;
 public:
-    TestAlgorithm():
-        m_outputPort{std::make_shared<OutputPort<std::array<uint8_t, 7>>>()},
-        m_buttonInputPort{std::make_shared<InputPort<std::array<uint8_t, 4>>>()}
+    TestAlgorithm()
     {
-        m_outputPorts.push_back(m_outputPort);
-        m_inputPorts.push_back(m_buttonInputPort);
+        for (size_t i = 0; i < m_barOutputPorts.size(); i++)
+        {
+            m_barOutputPorts[i] = std::make_shared<OutputPort<uint8_t>>();
+            m_outputPorts.push_back(m_barOutputPorts[i]);
+        }
+        for (size_t i = 0; i < m_buttonInputPorts.size(); i++)
+        {
+            m_buttonInputPorts[i] = std::make_shared<InputPort<bool>>(false);
+            m_inputPorts.push_back(m_buttonInputPorts[i]);
+        }
     }
     ~TestAlgorithm() = default;
 
     void process() override{
-        if (m_buttonInputPort->isValid())
+        bool allValid = true;
+        for (const auto& button : m_buttonInputPorts)
         {
-            std::array<uint8_t, 7> output;
-            output[0] = 100 * m_buttonInputPort->getValue()[0];
-            output[1] = 100 * m_buttonInputPort->getValue()[1];
-            output[2] = 100 * m_buttonInputPort->getValue()[2];
-            output[3] = 100 * m_buttonInputPort->getValue()[3];
-            m_outputPort->setValue(output);
+            allValid &= button->isValid();
         }
-        return;
-    
+        if (allValid)
+        {
+            static float counter = 0;
+            counter += 0.01;
+            static uint32_t counter2 = 0;
+
+            uint8_t value = 0;
+            for (size_t i = 0; i < m_buttonInputPorts.size(); i++)
+            {
+                value += m_buttonInputPorts[i]->getValue() * (i + 1) * 20;
+            }
+
+            m_barOutputPorts[0]->setValue(100 * m_buttonInputPorts[0]->getValue());
+            m_barOutputPorts[1]->setValue(100 * m_buttonInputPorts[2]->getValue());
+            m_barOutputPorts[2]->setValue(sinf(counter * 2*3.14) * 50 + 50);
+            m_barOutputPorts[3]->setValue((counter2++)%100);
+            m_barOutputPorts[4]->setValue(value);
+            m_barOutputPorts[5]->setValue(100 * m_buttonInputPorts[1]->getValue());
+            m_barOutputPorts[6]->setValue(100 * m_buttonInputPorts[3]->getValue());
+        }    
     }
-protected :
-    std::shared_ptr<OutputPort<std::array<uint8_t, 7>>> m_outputPort;
-    std::shared_ptr<InputPort<std::array<uint8_t, 4>>> m_buttonInputPort;
 };
