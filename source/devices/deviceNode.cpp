@@ -5,23 +5,23 @@
 
 
 /**
- * @brief Returns true if m_initialized flag is set, 0 otherwise, returns RegisterNotUpdated if the register has not been updated yet
+ * @brief Returns true if initialized flag is set, 0 otherwise, returns RegisterNotUpdated if the register has not been updated yet
  * 
- * @param m_initialized 
+ * @param initialized 
  * @return Status 
  */
-Status DeviceNode::getDeviceInitialized(bool* m_initialized) {
+Status DeviceNode::getDeviceInitialized(bool* initialized) {
 	// TODO: Implement getDeviceNodeInitialized method
 	return Status::Error;
 }
 
 /**
- * @brief Shedules a write to the m_initialized flag of the DeviceNode
+ * @brief Shedules a write to the initialized flag of the DeviceNode
  * 
- * @param m_initialized 
+ * @param initialized 
  * @return Status 
  */
-Status DeviceNode::setDeviceInitialized(bool m_initialized) {
+Status DeviceNode::setDeviceInitialized(bool initialized) {
 	// TODO: Implement setDeviceNodeInitialized method
 	return Status::Error;
 }
