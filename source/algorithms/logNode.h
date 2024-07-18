@@ -47,7 +47,7 @@ public:
         const std::type_info  &ti = typeid(T);
         int status;
         std::string typeName = abi::__cxa_demangle(ti.name(), NULL, NULL, &status);
-        SEGGER_RTT_printf(1, "{node} %s:%s:%s\n", longId.data(), m_shortId.c_str(), typeName.c_str());
+        SEGGER_RTT_printf(1, "{node} %s:%s:%d:%s\n", longId.data(), m_shortId.c_str(), nInputs, typeName.c_str());
     
     }
     ~LogNode() = default;
