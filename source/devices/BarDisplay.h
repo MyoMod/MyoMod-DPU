@@ -22,7 +22,7 @@ public:
     void processOutData() override;
     DeviceNodeStorage getNodeStorage() override;
 private:
-    std::array<std::shared_ptr<OutputPort<bool>>, 4> m_buttonPorts;
+    std::array<std::shared_ptr<OutputPort<uint8_t>>, 4> m_buttonPorts;
     std::shared_ptr<InputStorage<std::array<uint8_t, 4>>> m_hostInStorage;
 
     std::array<std::shared_ptr<InputPort<uint8_t>>, 7> m_barPorts;

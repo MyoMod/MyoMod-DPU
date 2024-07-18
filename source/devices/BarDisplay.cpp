@@ -23,7 +23,7 @@ BarDisplay::BarDisplay(std::array<char, 10> id) :
 
     for(size_t i = 0; i < m_buttonPorts.size(); i++)
     {
-        m_buttonPorts[i] = std::make_shared<OutputPort<bool>>();
+        m_buttonPorts[i] = std::make_shared<OutputPort<uint8_t>>();
         m_outputPorts.push_back(m_buttonPorts[i]);
     }
 }
@@ -37,6 +37,7 @@ void BarDisplay::processInData()
         m_buttonPorts[i]->setValue(data[i] == 1);
         m_buttonPorts[i]->setValid(true);
     }
+    SEGGER_RTT_Write(1, data.data(), data.size());
 }
 
 void BarDisplay::processOutData()

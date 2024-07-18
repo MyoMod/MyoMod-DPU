@@ -23,7 +23,7 @@ class TestAlgorithm : public AlgorithmicNode
 {
 protected :
     std::array<std::shared_ptr<OutputPort<uint8_t>>, 7> m_barOutputPorts;
-    std::array<std::shared_ptr<InputPort<bool>>, 4> m_buttonInputPorts;
+    std::array<std::shared_ptr<InputPort<uint8_t>>, 4> m_buttonInputPorts;
 public:
     TestAlgorithm()
     {
@@ -34,7 +34,7 @@ public:
         }
         for (size_t i = 0; i < m_buttonInputPorts.size(); i++)
         {
-            m_buttonInputPorts[i] = std::make_shared<InputPort<bool>>(false);
+            m_buttonInputPorts[i] = std::make_shared<InputPort<uint8_t>>(false);
             m_inputPorts.push_back(m_buttonInputPorts[i]);
         }
     }
