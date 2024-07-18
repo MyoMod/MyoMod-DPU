@@ -24,8 +24,8 @@
 template <typename T>
 struct __attribute__((__packed__)) InputStorage
 {
-	T data;
 	StatusByte_t statusByte;
+	T data;
 };
 
 class DeviceNode : public BaseNode
