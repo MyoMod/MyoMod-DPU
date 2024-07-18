@@ -57,10 +57,10 @@ class BaseNode
 public:
     virtual ~BaseNode() = default;
 
-    bool linkInputPort(uint32_t inputIndex, BaseNode* outputNode, uint32_t outputIndex);
+    virtual bool linkInputPort(uint32_t inputIndex, BaseNode* outputNode, uint32_t outputIndex);
+    std::shared_ptr<BaseOutputPort> getOutputPort(uint32_t index) const;
 protected:
     
-    std::shared_ptr<BaseOutputPort> getOutputPort(uint32_t index) const;
     std::vector<std::shared_ptr<BaseOutputPort>> m_outputPorts;
     std::vector<std::shared_ptr<BaseInputPort>> m_inputPorts;
 };

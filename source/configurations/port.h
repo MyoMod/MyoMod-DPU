@@ -12,10 +12,13 @@
 #pragma once
 #include <memory>
 
+class LogNode;
 
 class BaseOutputPort
 {
 public:
+    friend class LogNode;
+
     virtual ~BaseOutputPort() = default;
     BaseOutputPort(BaseOutputPort&&) = default;
     BaseOutputPort& operator=(BaseOutputPort&&) = default;
@@ -27,6 +30,10 @@ public:
     bool hasError() const {return m_error;};
 
 protected:
+        // Interfaces for loggers
+    virtual std::vector<std::byte> getRawData() const = 0;
+    virtual std::string getDataType() const = 0;
+
     BaseOutputPort() = default;
     BaseOutputPort(const BaseOutputPort&) = delete;
     BaseOutputPort& operator=(const BaseOutputPort&) = delete;
@@ -42,6 +49,15 @@ class OutputPort : public BaseOutputPort
 public:
     void setValue(T const & value) {m_value = value;};
     const T& getValue() const {return m_value;};
+
+    std::vector<std::byte> getRawData() const override
+    {
+        return std::vector<std::byte>(reinterpret_cast<std::byte const *>(&m_value), reinterpret_cast<std::byte const *>(&m_value + 1));
+    }
+    std::string getDataType() const override
+    {
+        return typeid(T).name();
+    }
 private:
     T m_value;
 };
