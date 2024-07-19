@@ -78,14 +78,14 @@
                <pin_label pin_num="A9" pin_signal="GPIO_B0_07" label="LCDIF_D3/BT_CFG[3]" identifier="LCDIF_D3"/>
                <pin_label pin_num="B9" pin_signal="GPIO_B0_08" label="LCDIF_D4/BT_CFG[4]" identifier="LCDIF_D4"/>
                <pin_label pin_num="C9" pin_signal="GPIO_B0_09" label="LCDIF_D5/BT_CFG[5]" identifier="LCDIF_D5"/>
-               <pin_label pin_num="D9" pin_signal="GPIO_B0_10" label="LCDIF_D6/BT_CFG[6]" identifier="LCDIF_D6"/>
-               <pin_label pin_num="A10" pin_signal="GPIO_B0_11" label="LCDIF_D7/BT_CFG[7]" identifier="LCDIF_D7"/>
+               <pin_label pin_num="D9" pin_signal="GPIO_B0_10" label="RGB_R" identifier="LCDIF_D6;RGB_R"/>
+               <pin_label pin_num="A10" pin_signal="GPIO_B0_11" label="RGB_B" identifier="RGB_B"/>
                <pin_label pin_num="C10" pin_signal="GPIO_B0_12" label="DEBUG4" identifier="DEBUG4"/>
                <pin_label pin_num="D10" pin_signal="GPIO_B0_13" label="LCDIF_D9/BT_CFG[9]" identifier="LCDIF_D9"/>
                <pin_label pin_num="E10" pin_signal="GPIO_B0_14" label="LCDIF_D10/BT_CFG[10]" identifier="LCDIF_D10"/>
                <pin_label pin_num="E11" pin_signal="GPIO_B0_15" label="LCDIF_D11/BT_CFG[11]" identifier="LCDIF_D11"/>
-               <pin_label pin_num="A11" pin_signal="GPIO_B1_00" label="LCDIF_D12" identifier="LCDIF_D12"/>
-               <pin_label pin_num="B11" pin_signal="GPIO_B1_01" label="LCDIF_D13" identifier="LCDIF_D13"/>
+               <pin_label pin_num="A11" pin_signal="GPIO_B1_00" label="RGB_GND" identifier="LCDIF_D12;RGB_GND"/>
+               <pin_label pin_num="B11" pin_signal="GPIO_B1_01" label="RGB_G" identifier="LCDIF_D13;RGB_G"/>
                <pin_label pin_num="C11" pin_signal="GPIO_B1_02" label="LCDIF_D14" identifier="LCDIF_D14"/>
                <pin_label pin_num="D11" pin_signal="GPIO_B1_03" label="LCDIF_D15" identifier="LCDIF_D15"/>
                <pin_label pin_num="E12" pin_signal="GPIO_B1_04" label="ENET_RXD0" identifier="ENET_RXD0"/>
@@ -361,6 +361,29 @@
                      </pin_features>
                   </pin>
                   <pin peripheral="GPIO2" signal="gpio_io, 12" pin_num="C10" pin_signal="GPIO_B0_12">
+                     <pin_features>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO2" signal="gpio_io, 10" pin_num="D9" pin_signal="GPIO_B0_10">
+                     <pin_features>
+                        <pin_feature name="identifier" value="RGB_R"/>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO2" signal="gpio_io, 17" pin_num="B11" pin_signal="GPIO_B1_01">
+                     <pin_features>
+                        <pin_feature name="identifier" value="RGB_G"/>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO2" signal="gpio_io, 16" pin_num="A11" pin_signal="GPIO_B1_00">
+                     <pin_features>
+                        <pin_feature name="identifier" value="RGB_GND"/>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO2" signal="gpio_io, 11" pin_num="A10" pin_signal="GPIO_B0_11">
                      <pin_features>
                         <pin_feature name="direction" value="OUTPUT"/>
                      </pin_features>

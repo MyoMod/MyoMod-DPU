@@ -38,7 +38,7 @@ extern "C" {
 void BOARD_InitBootPins(void);
 
 #define BOARD_INITPINS_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK 0x080000U /*!< GPIO1 and GPIO6 share same IO MUX function, GPIO_MUX1 selects one GPIO function: affected bits mask */
-#define BOARD_INITPINS_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK 0x031C08U /*!< GPIO2 and GPIO7 share same IO MUX function, GPIO_MUX2 selects one GPIO function: affected bits mask */
+#define BOARD_INITPINS_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK 0x1008U /*!< GPIO2 and GPIO7 share same IO MUX function, GPIO_MUX2 selects one GPIO function: affected bits mask */
 #define BOARD_INITPINS_IOMUXC_GPR_GPR28_GPIO_MUX3_GPIO_SEL_MASK 0xC00000U /*!< GPIO3 and GPIO8 share same IO MUX function, GPIO_MUX3 selects one GPIO function: affected bits mask */
 #define BOARD_INITPINS_IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL_MASK 0x80000170U /*!< GPIO4 and GPIO9 share same IO MUX function, GPIO_MUX4 selects one GPIO function: affected bits mask */
 
@@ -201,62 +201,6 @@ void BOARD_InitBootPins(void);
 #define BOARD_INITPINS_DEBUG4_PORT                                         GPIO2   /*!< PORT peripheral base pointer */
 #define BOARD_INITPINS_DEBUG4_PIN                                            12U   /*!< PORT pin number */
 #define BOARD_INITPINS_DEBUG4_PIN_MASK                               (1U << 12U)   /*!< PORT pin mask */
-
-/* GPIO_B0_10 (coord D9), RGB_R */
-/* Routed pin properties */
-#define BOARD_INITPINS_RGB_R_PERIPHERAL                                    GPIO2   /*!< Peripheral name */
-#define BOARD_INITPINS_RGB_R_SIGNAL                                      gpio_io   /*!< Signal name */
-#define BOARD_INITPINS_RGB_R_CHANNEL                                         10U   /*!< Signal channel */
-
-/* Symbols to be used with GPIO driver */
-#define BOARD_INITPINS_RGB_R_GPIO                                          GPIO2   /*!< GPIO peripheral base pointer */
-#define BOARD_INITPINS_RGB_R_GPIO_PIN                                        10U   /*!< GPIO pin number */
-#define BOARD_INITPINS_RGB_R_GPIO_PIN_MASK                           (1U << 10U)   /*!< GPIO pin mask */
-#define BOARD_INITPINS_RGB_R_PORT                                          GPIO2   /*!< PORT peripheral base pointer */
-#define BOARD_INITPINS_RGB_R_PIN                                             10U   /*!< PORT pin number */
-#define BOARD_INITPINS_RGB_R_PIN_MASK                                (1U << 10U)   /*!< PORT pin mask */
-
-/* GPIO_B1_01 (coord B11), RGB_G */
-/* Routed pin properties */
-#define BOARD_INITPINS_RGB_G_PERIPHERAL                                    GPIO2   /*!< Peripheral name */
-#define BOARD_INITPINS_RGB_G_SIGNAL                                      gpio_io   /*!< Signal name */
-#define BOARD_INITPINS_RGB_G_CHANNEL                                         17U   /*!< Signal channel */
-
-/* Symbols to be used with GPIO driver */
-#define BOARD_INITPINS_RGB_G_GPIO                                          GPIO2   /*!< GPIO peripheral base pointer */
-#define BOARD_INITPINS_RGB_G_GPIO_PIN                                        17U   /*!< GPIO pin number */
-#define BOARD_INITPINS_RGB_G_GPIO_PIN_MASK                           (1U << 17U)   /*!< GPIO pin mask */
-#define BOARD_INITPINS_RGB_G_PORT                                          GPIO2   /*!< PORT peripheral base pointer */
-#define BOARD_INITPINS_RGB_G_PIN                                             17U   /*!< PORT pin number */
-#define BOARD_INITPINS_RGB_G_PIN_MASK                                (1U << 17U)   /*!< PORT pin mask */
-
-/* GPIO_B1_00 (coord A11), RGB_GND */
-/* Routed pin properties */
-#define BOARD_INITPINS_RGB_GND_PERIPHERAL                                  GPIO2   /*!< Peripheral name */
-#define BOARD_INITPINS_RGB_GND_SIGNAL                                    gpio_io   /*!< Signal name */
-#define BOARD_INITPINS_RGB_GND_CHANNEL                                       16U   /*!< Signal channel */
-
-/* Symbols to be used with GPIO driver */
-#define BOARD_INITPINS_RGB_GND_GPIO                                        GPIO2   /*!< GPIO peripheral base pointer */
-#define BOARD_INITPINS_RGB_GND_GPIO_PIN                                      16U   /*!< GPIO pin number */
-#define BOARD_INITPINS_RGB_GND_GPIO_PIN_MASK                         (1U << 16U)   /*!< GPIO pin mask */
-#define BOARD_INITPINS_RGB_GND_PORT                                        GPIO2   /*!< PORT peripheral base pointer */
-#define BOARD_INITPINS_RGB_GND_PIN                                           16U   /*!< PORT pin number */
-#define BOARD_INITPINS_RGB_GND_PIN_MASK                              (1U << 16U)   /*!< PORT pin mask */
-
-/* GPIO_B0_11 (coord A10), RGB_B */
-/* Routed pin properties */
-#define BOARD_INITPINS_RGB_B_PERIPHERAL                                    GPIO2   /*!< Peripheral name */
-#define BOARD_INITPINS_RGB_B_SIGNAL                                      gpio_io   /*!< Signal name */
-#define BOARD_INITPINS_RGB_B_CHANNEL                                         11U   /*!< Signal channel */
-
-/* Symbols to be used with GPIO driver */
-#define BOARD_INITPINS_RGB_B_GPIO                                          GPIO2   /*!< GPIO peripheral base pointer */
-#define BOARD_INITPINS_RGB_B_GPIO_PIN                                        11U   /*!< GPIO pin number */
-#define BOARD_INITPINS_RGB_B_GPIO_PIN_MASK                           (1U << 11U)   /*!< GPIO pin mask */
-#define BOARD_INITPINS_RGB_B_PORT                                          GPIO2   /*!< PORT peripheral base pointer */
-#define BOARD_INITPINS_RGB_B_PIN                                             11U   /*!< PORT pin number */
-#define BOARD_INITPINS_RGB_B_PIN_MASK                                (1U << 11U)   /*!< PORT pin mask */
 
 /*!
  * @brief Configures pin routing and optionally pin electrical features.

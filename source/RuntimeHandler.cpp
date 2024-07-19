@@ -28,6 +28,7 @@
 #include "Configuration.h"
 #include "PeripheralHandler.h"
 #include "Status.h"
+#include "dpu_gpio.h"
 
 
 /*******************************************************************************

@@ -47,6 +47,8 @@ target_include_directories(
   ./configurations
   ./devices
   ./structure
+  ./hardware
+  ./generated
   ../CMSIS
   ../CMSIS/DSP/Include
   ../generated
