@@ -18,6 +18,9 @@
 #include <cxxabi.h>
 #include "SEGGER_RTT.h"
 
+#include "assert.h"
+
+#include "dpu_gpio.h"
 #include "base64.h"
 
 class LogNode : public AlgorithmicNode
@@ -48,16 +51,33 @@ public:
     void process() override
     {
         std::vector<std::byte> inData;
+        
+        // TODO: check if prepending a counter is needed
+        size_t index = 0;
+
         for (const auto& m_opposingOutputPort : m_opposingOutputPorts)
         {
-            if (m_opposingOutputPort == nullptr || !m_opposingOutputPort->isValid())
+            assert(m_opposingOutputPort != nullptr);
+            if (!m_opposingOutputPort->isValid())
             {
                 return;
             }
-            auto data = m_opposingOutputPort->getRawData();
-            inData.insert(inData.end(), data.begin(), data.end());
-        }
 
+            
+            auto data = m_opposingOutputPort->getRawData();
+
+            // resize inData to fit the new data
+            if(inData.size() == 0)
+            {
+                inData.resize(data.size() * m_opposingOutputPorts.size());
+            }
+            
+            for (size_t i = 0; i < data.size(); i++)
+            {
+                inData[i + index] = data[i];
+            }
+            index += data.size();
+        }
         const unsigned char *binData = reinterpret_cast<const unsigned char *> (&inData[0]);
         std::string encodedData = base64_encode(binData, inData.size() * sizeof(inData[0]));
         SEGGER_RTT_printf(1, "%s:%s\n", m_shortId.c_str(), encodedData.c_str());

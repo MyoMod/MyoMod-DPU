@@ -11,6 +11,9 @@
 
 #pragma once
 #include <memory>
+#include <vector>
+#include <span>
+
 
 class LogNode;
 
@@ -31,7 +34,7 @@ public:
 
 protected:
         // Interfaces for loggers
-    virtual std::vector<std::byte> getRawData() const = 0;
+    virtual std::span<const std::byte> getRawData() const = 0;
     virtual std::string getDataType() const = 0;
 
     BaseOutputPort() = default;
@@ -50,9 +53,13 @@ public:
     void setValue(T const & value) {m_value = value;};
     const T& getValue() const {return m_value;};
 
-    std::vector<std::byte> getRawData() const override
+    std::span<const std::byte> getRawData() const override
     {
-        return std::vector<std::byte>(reinterpret_cast<std::byte const *>(&m_value), reinterpret_cast<std::byte const *>(&m_value + 1));
+        const std::byte * ptr = reinterpret_cast<const std::byte *>(&m_value);
+        std::span<const std::byte> span(ptr, sizeof(T));
+        return std::span<const std::byte>(reinterpret_cast<const std::byte *>(&m_value), sizeof(T));
+        //return std::span (reinterpret_cast<std::byte const *>(&m_value), sizeof(T));
+        //return std::span<std::byte>(reinterpret_cast<std::byte const *>(&m_value), reinterpret_cast<std::byte const *>(&m_value + 1));
     }
     std::string getDataType() const override
     {
