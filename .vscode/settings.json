@@ -65,9 +65,10 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "iostream": "cpp"
     },
-    "cmake.sourceDirectory": "/workspace/"
+    "cmake.sourceDirectory": "/workspace/",
     "cmake.options.advanced": {
         "cpack": {
             "statusBarVisibility": "hidden"
@@ -87,5 +88,20 @@
         "buildTarget": {
             "statusBarVisibility": "hidden"
         },
-    }
+    },
+    "VsCodeTaskButtons.showCounter": false,
+    "VsCodeTaskButtons.tasks": [
+        {
+            "label": "$(notebook-move-down) JFlashLite",
+            "task": "Start JFlashLite"
+        },
+        {
+            "label": "$(file-binary) Start RTT Logger",
+            "task": "Start RTT Logger"
+        },
+        {
+            "label": "$(disassembly-editor-label-icon) Start Ozone",
+            "task": "Start Ozone"
+        }
+    ]
 }

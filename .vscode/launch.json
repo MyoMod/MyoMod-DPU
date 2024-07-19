@@ -38,7 +38,7 @@
                 "decoders": [
                     {
                         "label": "RTT stream",
-                        "port": 1,
+                        "port": 0,
                         "type": "console"
                     }
                 ]
