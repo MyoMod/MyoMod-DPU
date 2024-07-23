@@ -6,8 +6,9 @@ enum class Status
 {
     Ok = 1,
     Error,
-    RegisterNotUpdated,
+    IllegalArgument,
     RegisterInvalid,
+    RegisterNotImplemented,
     OutOfRange,
     Warning,
     Timeout

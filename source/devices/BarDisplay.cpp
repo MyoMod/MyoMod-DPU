@@ -62,3 +62,49 @@ DeviceNodeStorage BarDisplay::getNodeStorage()
     return storage;
 }
 
+/**
+ * @brief Returns the raw data of the register specified by registerType
+ * 
+ * @param registerType 		The type of the register to get the raw data from
+ * @param status 			The status of the operation
+ * 								- Status::Ok if the operation was successful
+ *                              - Status::RegisterNotSupported if this device doesn't implement the register
+ * @return std::span<const std::byte> 
+ */
+std::span<const std::byte> BarDisplay::getRegisterRawData(DeviceRegisterType registerType, Status& status) const
+{
+    status = Status::Ok;
+    switch (registerType)
+    {
+    case DeviceRegisterType::DeviceSpecificConfiguration:
+        return std::span<const std::byte>(
+            reinterpret_cast<const std::byte*>(&m_deviceSpecificConfiguration),
+            sizeof(m_deviceSpecificConfiguration));
+    default:
+        return DeviceNode::getRegisterRawData(registerType, status);
+    }
+}
+
+/**
+ * @brief Sets the raw data of the register specified by registerType
+ * 
+ * 
+ * @param registerType 		The type of the register to set the raw data to
+ * @param value 			The raw data to set
+ * @return  				The status of the operation
+ * 								- Status::Ok if the operation was successful
+ *                              - Status::RegisterNotSupported if this device doesn't implement the register
+ */
+Status BarDisplay::setRegisterRawData(DeviceRegisterType registerType, std::span<const std::byte> value)
+{
+    switch (registerType)
+    {
+    case DeviceRegisterType::DeviceSpecificConfiguration:
+        assert(value.size() == sizeof(m_deviceSpecificConfiguration));
+        m_deviceSpecificConfiguration = *reinterpret_cast<const DeviceSpecificConfiguration*>(value.data());
+        return Status::Ok;
+    default:
+        return DeviceNode::setRegisterRawData(registerType, value);
+    }
+}
+

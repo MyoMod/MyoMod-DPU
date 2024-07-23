@@ -28,8 +28,25 @@ struct __attribute__((__packed__)) InputStorage
 	T data;
 };
 
+enum class DeviceRegisterType
+{
+	Status,
+	CommonDeviceStatus,
+	CommonDeviceInformation,
+	CommonDeviceConfiguration,
+	DeviceSpecificStatus,
+	DeviceSpecificInformation,
+	DeviceSpecificConfiguration
+};
+
+// Forward Declaration of PeripheralHandler for friend declaration
+class PeripheralHandler;
+
 class DeviceNode : public BaseNode
 {
+	// PeripheralHandler may access raw data, this shouldn't be public
+    friend class PeripheralHandler;
+
 public:
 	DeviceNode(std::array<char, 10> id, const std::array<char, 10> type) :
         m_id{id},
@@ -41,17 +58,18 @@ public:
 	virtual void processInData() = 0;
     virtual void processOutData() = 0;
     virtual DeviceNodeStorage getNodeStorage() = 0;
-    DeviceIdentifier const getDeviceIdentifier();
+    const DeviceIdentifier getDeviceIdentifier() const;
 
 protected:
 	/** User (common) Register Access **/
 	// Status getDeviceVersion(uint32_t* version); TODO: implement versioning
-	Status getDeviceInitialized(bool* initialized);
-	Status setDeviceInitialized(bool initialized);
+	CommonDeviceStatus_t m_commonDeviceStatus;
+	CommonDeviceInformation_t m_commonDeviceInformation;
+	CommonDeviceConfiguration_t m_commonDeviceConfiguration;
 
 	/** Raw Register Access **/
-	Status getRegisterRawData(uint32_t registerIndex, void* value);
-	Status setRegisterRawData(uint32_t registerIndex, void* value);
+	virtual std::span<const std::byte> getRegisterRawData (DeviceRegisterType registerType, Status& status) const;
+	virtual Status setRegisterRawData(DeviceRegisterType registerType, std::span<const std::byte> value);
 
     std::array<char, 10> m_id;
 	const std::array<char, 10> m_type;

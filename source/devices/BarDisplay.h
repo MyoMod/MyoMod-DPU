@@ -10,6 +10,20 @@ enum class BarDisplayButtonNames
     Y = 3
 };
 
+struct DeviceSpecificConfiguration
+{
+    uint32_t barColors[7] =
+    {
+        0x00ff00,
+        0xffff00,
+        0xff0000,
+        0xff00ff,
+        0x0000ff,
+        0x00ffff,
+        0x000000
+    };
+};
+
 class BarDisplay : public DeviceNode {
 public:
     // Constructor
@@ -22,6 +36,10 @@ public:
     void processOutData() override;
     DeviceNodeStorage getNodeStorage() override;
 private:
+    DeviceSpecificConfiguration m_deviceSpecificConfiguration;
+    std::span<const std::byte> getRegisterRawData (DeviceRegisterType registerType, Status& status) const override;
+    Status setRegisterRawData(DeviceRegisterType registerType, std::span<const std::byte> value) override;
+
     std::array<std::shared_ptr<OutputPort<uint8_t>>, 4> m_buttonPorts;
     std::shared_ptr<InputStorage<std::array<uint8_t, 4>>> m_hostInStorage;
 
