@@ -9,6 +9,7 @@ enum class Status
     IllegalArgument,
     RegisterInvalid,
     RegisterNotImplemented,
+    DeviceNotConnected,
     OutOfRange,
     Warning,
     Timeout

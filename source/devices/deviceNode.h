@@ -28,17 +28,6 @@ struct __attribute__((__packed__)) InputStorage
 	T data;
 };
 
-enum class DeviceRegisterType
-{
-	Status,
-	CommonDeviceStatus,
-	CommonDeviceInformation,
-	CommonDeviceConfiguration,
-	DeviceSpecificStatus,
-	DeviceSpecificInformation,
-	DeviceSpecificConfiguration
-};
-
 // Forward Declaration of PeripheralHandler for friend declaration
 class PeripheralHandler;
 

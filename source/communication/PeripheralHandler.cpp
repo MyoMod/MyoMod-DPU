@@ -114,8 +114,6 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, void (*pr
 	LPI2C_MasterInit(m_i2cBase, &i2cConfig, LPI2C_CLOCK_FREQUENCY);
 
 	// Activate IRQ
-	LPI2C_MasterEnableInterrupts(m_i2cBase, kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag
-										 | kLPI2C_MasterStopDetectFlag);
 	interrupt = static_cast<IRQn>((static_cast<uint32_t>(LPI2C1_IRQn) + i2cIndex));
     EnableIRQ(interrupt);
 
@@ -363,6 +361,104 @@ Status PeripheralHandler::sendSync() {
 }
 
 /**
+ * @brief Writes data to a register of a device
+ * 
+ * @param deviceAddress 		Address of the device
+ * @param registerType 		Address of the register
+ * @param data 					Data to write to the register
+ * @return Status 				Returns Status::Ok if the function was successful
+ * 				  				Returns Status::DeviceNotConnected if the device is not connected
+ */
+Status PeripheralHandler::writeRegister(uint8_t deviceAddress, DeviceRegisterType registerType, std::span<std::byte> data) {
+	assert(registerType == DeviceRegisterType::CommonDeviceConfiguration || 
+			registerType == DeviceRegisterType::DeviceSpecificConfiguration);
+
+	// Start transmission
+	status_t i2cStatus = LPI2C_MasterStart(m_i2cBase, deviceAddress, kLPI2C_Write);
+	if(i2cStatus != kStatus_Success)
+	{
+		return Status::DeviceNotConnected;
+	}
+	
+	// Send control byte
+	uint8_t ctrlByte = 	CONTROL_BYTE_ADDR(static_cast<uint8_t>(registerType)) | 
+						CONTROL_BYTE_HOSTOUT | 
+						CONTROL_BYTE_REGISTER;
+	i2cStatus = LPI2C_MasterSend(m_i2cBase, &ctrlByte, 1);
+	if(i2cStatus != kStatus_Success)
+	{
+		return Status::Error;
+	}
+
+	// Send data
+	i2cStatus = LPI2C_MasterSend(m_i2cBase, reinterpret_cast<uint8_t*>(data.data()), data.size());
+	if(i2cStatus != kStatus_Success)
+	{
+		return Status::Error;
+	}
+
+	// Stop transmission
+	i2cStatus = LPI2C_MasterStop(m_i2cBase);
+	if(i2cStatus != kStatus_Success)
+	{
+		return Status::Error;
+	}
+	return Status::Ok;
+}
+
+/**
+ * @brief Reads data from a register of a device
+ * 
+ * @param deviceAddress 		Address of the device
+ * @param registerType 		Address of the register
+ * @param data 					Data to write to the register
+ * @return Status 				Returns Status::Ok if the function was successful
+ * 				  				Returns Status::DeviceNotConnected if the device is not connected
+ * 				  				Returns Status::Error it another error occured
+ */
+Status PeripheralHandler::readRegister(uint8_t deviceAddress, DeviceRegisterType registerType, std::span<std::byte> data) {
+
+	// Start transmission
+	status_t i2cStatus = LPI2C_MasterStart(m_i2cBase, deviceAddress, kLPI2C_Write);
+	if(i2cStatus != kStatus_Success)
+	{
+		return Status::DeviceNotConnected;
+	}
+	
+	// Send control byte
+	uint8_t ctrlByte = 	CONTROL_BYTE_ADDR(static_cast<uint8_t>(registerType)) | 
+						CONTROL_BYTE_HOSTIN | 
+						CONTROL_BYTE_REGISTER;
+	i2cStatus = LPI2C_MasterSend(m_i2cBase, &ctrlByte, 1);
+	if(i2cStatus != kStatus_Success)
+	{
+		return i2cStatus==kStatus_LPI2C_Nak?Status::DeviceNotConnected:Status::Error;
+	}
+
+	// Switch to receiving mode
+	i2cStatus = LPI2C_MasterRepeatedStart(m_i2cBase, deviceAddress, kLPI2C_Read);
+	if(i2cStatus != kStatus_Success)
+	{
+		return Status::Error;
+	}
+
+	// Receive data
+	i2cStatus = LPI2C_MasterReceive(m_i2cBase, reinterpret_cast<uint8_t*>(data.data()), data.size());
+	if(i2cStatus != kStatus_Success)
+	{
+		return Status::Error;
+	}
+
+	// Stop transmission
+	i2cStatus = LPI2C_MasterStop(m_i2cBase);
+	if(i2cStatus != kStatus_Success)
+	{
+		return Status::Error;
+	}
+	return Status::Ok;
+}
+
+/**
  * @brief Starts a new cycle
  * 
  * @return Status Returns Status::Ok if the function was successful
@@ -407,6 +503,8 @@ Status PeripheralHandler::enterRealTimeMode() {
 		// It is not allowed to enter realTime mode when not in stopped state
 		return Status::Error;
 	}
+	LPI2C_MasterEnableInterrupts(m_i2cBase, kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag
+										 | kLPI2C_MasterStopDetectFlag);
 	m_commState = CommState::Idle;
 	return Status::Ok;
 }
@@ -423,6 +521,8 @@ Status PeripheralHandler::exitRealTimeMode() {
 		// It is not allowed to exit realTime mode when not in idle state
 		return Status::Error;
 	}
+	LPI2C_MasterDisableInterrupts(m_i2cBase, kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag
+										 | kLPI2C_MasterStopDetectFlag);
 	m_commState = CommState::Stopped;
 	return Status::Ok;
 }

@@ -22,7 +22,11 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
+#define CONTROL_BYTE_ADDR(x) ((x) << 2)
+#define CONTROL_BYTE_HOSTIN 0b10
+#define CONTROL_BYTE_HOSTOUT 0
+#define CONTROL_BYTE_PDS 0b1
+#define CONTROL_BYTE_REGISTER 0
 /*******************************************************************************
  * Data Types
  * ****************************************************************************/
@@ -36,11 +40,24 @@
  */
 struct __attribute__((packed)) ControlByte_t
 {    
-    uint32_t ADDR : 6; // used only for register access, otherwise reserved
-    uint32_t HostIn_nHostOut : 1;
-    uint32_t PDS_nRegister : 1;
+    uint8_t ADDR : 6; // used only for register access, otherwise reserved
+    uint8_t HostIn_nHostOut : 1;
+    uint8_t PDS_nRegister : 1;
 };
 
+
+enum class DeviceRegisterType
+{
+	Status = 0,
+	CommonDeviceStatus,
+	CommonDeviceInformation,
+	CommonDeviceConfiguration,
+	DeviceSpecificStatus,
+	DeviceSpecificInformation,
+	DeviceSpecificConfiguration,
+    n
+};
+#define NUM_REGISTERS ((int)DeviceRegisterType::n)
 
 /**
  * @brief Status byte for the communication interface
@@ -78,12 +95,12 @@ struct __attribute__((packed)) CommonDeviceStatus_t
  */
 struct __attribute__((packed)) CommonDeviceInformation_t
 {
-    uint8_t     device_version[2];
-    uint16_t    hostIn_size;
-    uint16_t    hostOut_size;
-    char        identifier[10];
-    char        device_type[10];
-    uint8_t     protocol_version[2];
+    uint8_t             device_version[2];
+    uint16_t            hostIn_size;
+    uint16_t            hostOut_size;
+    std::array<char,10> identifier;
+    std::array<char,10> device_type;
+    uint8_t             protocol_version[2];
 };
 
 

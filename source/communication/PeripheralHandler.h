@@ -33,7 +33,7 @@
 
 #define DMA_CHANNELS 32
 #define I2C_UNITS 4
-#define SIMULATE_DEVICE_SCAN 1
+#define SIMULATE_DEVICE_SCAN 0
 
 enum class CommState
 {
@@ -105,6 +105,10 @@ private:
 	Status linkTcds();
 
 	Status sendCommand(std::span<const uint16_t> command, uint32_t timeout = 50);
+
+	Status writeRegister(uint8_t deviceAddress, DeviceRegisterType registerType, std::span<std::byte> data);
+	Status readRegister(uint8_t deviceAddress, DeviceRegisterType registerType, std::span<std::byte> data);
+	Status probeAddress(uint8_t deviceAddress);
 
 	Status addrAvailable(uint32_t address);
 
