@@ -125,6 +125,10 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, void (*pr
 
 #if SIMULATE_DEVICE_SCAN == 1
 	m_i2cIndex = i2cIndex;
+#else
+	// Scan for devices
+	m_connectedDevicesChanged = true;
+
 #endif
 }
 
@@ -169,6 +173,7 @@ std::vector<DeviceIdentifier> PeripheralHandler::listConnectedDevices(Status& st
 	{
 		// TODO: scan for new devices and get their identifiers
 		m_connectedDevices.clear();
+
 #if SIMULATE_DEVICE_SCAN == 1
 		switch (m_i2cIndex)
 		{
@@ -198,6 +203,31 @@ std::vector<DeviceIdentifier> PeripheralHandler::listConnectedDevices(Status& st
 		default:
 			break;
 		}
+#else
+
+		// Scan for addresses
+		std::vector<uint8_t> connectedAddresses;
+
+		for (uint8_t i = 1; i < 128; i++)
+		{
+			// Check if device is connected
+			if(probeAddress(i) == Status::Ok)
+			{
+				connectedAddresses.push_back(i);
+			}
+		}
+
+		// Get device identifiers
+		for(auto address : connectedAddresses)
+		{
+			CommonDeviceInformation_t devInfo;
+			std::span<std::byte> data{reinterpret_cast<std::byte*>(&devInfo), sizeof(devInfo)};
+			readRegister(address, DeviceRegisterType::CommonDeviceInformation, data);
+
+			DeviceIdentifier identifier = { devInfo.device_type, devInfo.identifier };
+			m_connectedDevices[address] = identifier;
+		}
+
 #endif
 		m_connectedDevicesChanged = false;
 		status = Status::Ok;
@@ -257,7 +287,7 @@ Status PeripheralHandler::installDevice(DeviceNode* device) {
 		}
 		m_installedHostInStorages[address] = nodeStoarge.inStorage;
 
-		// Create memory region for data in
+		// Create memory region for dataIn
 		MemoryRegion dataInStorage{ nodeStoarge.inStorage.get(), nodeStoarge.inSize };
 
 		//Install 
@@ -272,7 +302,7 @@ Status PeripheralHandler::installDevice(DeviceNode* device) {
 		}
 		m_installedHostOutStorages[address] = nodeStoarge.outStorage;
 
-		// Create memory region for data in
+		// Create memory region for dataOut
 		std::array<MemoryRegion,2> dataOutBuffer{ 
 			MemoryRegion{ nodeStoarge.outStorage[0].get(), nodeStoarge.outSize },
 			MemoryRegion{ nodeStoarge.outStorage[1].get(), nodeStoarge.outSize }
@@ -457,6 +487,12 @@ Status PeripheralHandler::readRegister(uint8_t deviceAddress, DeviceRegisterType
 	}
 	return Status::Ok;
 }
+
+Status PeripheralHandler::probeAddress(uint8_t deviceAddress) {
+	uint8_t status;
+	return readRegister(deviceAddress, DeviceRegisterType::Status, std::span{reinterpret_cast<std::byte*>(&status), 1});
+}
+
 
 /**
  * @brief Starts a new cycle
