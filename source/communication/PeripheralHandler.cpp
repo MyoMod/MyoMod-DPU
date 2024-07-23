@@ -179,6 +179,7 @@ std::vector<DeviceIdentifier> PeripheralHandler::listConnectedDevices(Status& st
 			m_connectedDevices[0x08] = DeviceIdentifier{ "Elctr6Ch", "Elctrode1" };
 			//m_connectedDevices[0x18] = DeviceIdentifier{ "BarDis7Ch", "BDisplay1" };
 			m_connectedDevices[0x28] = DeviceIdentifier{ "Elctr6Ch", "SDSource1" };
+			m_connectedDevices[0x48] = DeviceIdentifier{ {'S','e','r','v','o',' ','H','a','n','d'}, {'S','e','r','v','o','H','a','n','d','1'} };
 			//m_connectedDevices[0x38] = DeviceIdentifier{ "BtSink6Ch", "Blt_Sink1" };
 			break;
 		case 2:
@@ -352,7 +353,7 @@ Status PeripheralHandler::sendSync() {
 	// If there are no active devices, we expect a nack, otherwise an ack
 	uint16_t startCmd = m_noInstalledDevices ? LPI2C_MTDR_CMD(4) : LPI2C_MTDR_CMD(4);
 	static std::array<uint16_t, 2> syncCommand = {
-		startCmd | 0x00 | kLPI2C_Write, //General Call 
+		startCmd | 0x00u | kLPI2C_Write, //General Call 
 		LPI2C_MTDR_CMD(2)};//Stop
 
 	m_commState = CommState::Sync;
