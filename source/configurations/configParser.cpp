@@ -13,10 +13,12 @@
 #include "SEGGER_RTT.h"
 
 #include "configParser.h"
+
 #include "BarDisplay.h"
 #include "testAlgorithm.h"
 #include "logNode.h"
 #include "linearFuncNode.h"
+#include "ServoHand.h"
 
 // Data structures
 #ifdef CONFIG_PARSER_DEBUG
@@ -502,6 +504,11 @@ std::unique_ptr<DeviceNode> ConfigParser::createDeviceNode(const NodeData& nodeD
     {
         return std::make_unique<BarDisplay>(ID);
     }
+    else if (nodeData.type == "Servo Hand")
+    {
+        return std::make_unique<ServoHand>(ID);
+    }
+    
     /*else if (nodeData.type == "BltSink6Ch")
     {
         return std::make_unique<OutputNode>(ID);
