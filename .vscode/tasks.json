@@ -25,6 +25,12 @@
         },
         {
             "type": "cmake",
+            "label": "CMake: (re)configure",
+            "command": "configure",
+            "group": "build"
+        },
+        {
+            "type": "cmake",
             "label": "CMake: build",
             "command": "build",
             "targets": [

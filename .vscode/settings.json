@@ -92,6 +92,10 @@
     "VsCodeTaskButtons.showCounter": false,
     "VsCodeTaskButtons.tasks": [
         {
+            "label": "$(search-refresh) Reconfigure",
+            "task": "CMake: (re)configure"
+        },
+        {
             "label": "$(notebook-move-down) JFlashLite",
             "task": "Start JFlashLite"
         },
