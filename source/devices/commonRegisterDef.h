@@ -22,10 +22,10 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define CONTROL_BYTE_ADDR(x) ((x) << 2)
-#define CONTROL_BYTE_HOSTIN 0b10
+#define CONTROL_BYTE_ADDR(x) ((x) & 0x3F)
+#define CONTROL_BYTE_HOSTIN 0x40
 #define CONTROL_BYTE_HOSTOUT 0
-#define CONTROL_BYTE_PDS 0b1
+#define CONTROL_BYTE_PDS 0x80
 #define CONTROL_BYTE_REGISTER 0
 /*******************************************************************************
  * Data Types
@@ -95,13 +95,13 @@ struct __attribute__((packed)) CommonDeviceStatus_t
  */
 struct __attribute__((packed)) CommonDeviceInformation_t
 {
-    uint8_t             device_version[2];
-    uint16_t            hostIn_size;
-    uint16_t            hostOut_size;
-    std::array<char,10> identifier;
-    std::array<char,10> device_type;
     uint8_t             protocol_version[2];
-};
+    std::array<char,10> device_type;
+    std::array<char,10> identifier;
+    uint16_t            hostOut_size;
+    uint16_t            hostIn_size;
+    uint8_t             device_version[2];
+};;
 
 
 /**
