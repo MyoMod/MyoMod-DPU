@@ -76,9 +76,14 @@ int main()
 	initPerpheralHandler();
 	init_debug();
 
+	RGB_B(1);
+
 	/** fill globals **/
 	g_configManager = new ConfigurationManager();
 	assert(g_configManager->readConfigurations() == Status::Ok);
+
+	/** wait 500 ms for the devices to start up **/
+	SDK_DelayAtLeastUs(500000, CLOCK_GetFreq(kCLOCK_CoreSysClk));
 
 	/** Initialzation done -> Enumerate the devices **/
 	renumrateDevices();
@@ -148,19 +153,18 @@ void updateConfiguration()
 		}
 
 		// Add the new devices to the peripheral handlers
-		for (auto& deviceNode : g_deviceNodes)
+		for (auto&& deviceNode : g_deviceNodes)
 		{
+			auto deviceIdentifier = deviceNode->getDeviceIdentifier();
 			for (auto& peripheralHandler : g_peripheralHandlers)
 			{
-				if(peripheralHandler->getDeviceAdress(deviceNode->getDeviceIdentifier()) != -1)
+				if(peripheralHandler->getDeviceAdress(deviceIdentifier) != -1)
 				{
 					// Device is connected to this peripheral handler
 					// -> Install the device and don't try to install it in another peripheral handler
 
 					status = peripheralHandler->installDevice(deviceNode.get());
 					assert(status != Status::Error);
-
-					break;
 				}
 				
 			}
@@ -257,21 +261,26 @@ void peripheralHandlerCallback(uint32_t index)
  */
 void inputHandlingDone()
 {
+	RGB_B(1);
+
 	for (auto&& deviceNode : g_deviceNodes)
 	{
 		deviceNode->processInData();
 	}
 
+	DEBUG_PINS(1);
 	for (auto&& algorithmicNode : g_algorithmicNodes)
 	{
 		algorithmicNode->process();
 	}
+		DEBUG_PINS(0);
 
 	for (auto&& deviceNode : g_deviceNodes)
 	{
 		deviceNode->processOutData();
 	}
 
+	RGB_B(0);
 }
 
 /*******************************************************************************
@@ -379,7 +388,7 @@ void init_debug()
 
     SEGGER_RTT_Init();
     SEGGER_RTT_ConfigUpBuffer(1, "DataOut", &g_debugBuffer[0], sizeof(g_debugBuffer),
-                              SEGGER_RTT_MODE_BLOCK_IF_FIFO_FULL);
+                              SEGGER_RTT_MODE_NO_BLOCK_SKIP);
 
     SEGGER_RTT_WriteString(0, "MyoMod DPU\r\n\r\n");
     SEGGER_RTT_WriteString(0, BOARD_NAME);
