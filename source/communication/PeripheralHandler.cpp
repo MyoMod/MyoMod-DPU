@@ -315,6 +315,15 @@ Status PeripheralHandler::installDevice(DeviceNode* device) {
 	// Update all links
 	linkTcds();
 
+	// Configure the device
+	Status status;
+	auto specificConf = device->getRegisterRawData(DeviceRegisterType::DeviceSpecificConfiguration, status);
+	if (status == Status::Ok)
+	{
+		writeRegister(address, DeviceRegisterType::DeviceSpecificConfiguration, specificConf);
+	}
+
+
 	return Status::Ok;
 }
 
@@ -399,7 +408,7 @@ Status PeripheralHandler::sendSync() {
  * @return Status 				Returns Status::Ok if the function was successful
  * 				  				Returns Status::DeviceNotConnected if the device is not connected
  */
-Status PeripheralHandler::writeRegister(uint8_t deviceAddress, DeviceRegisterType registerType, std::span<std::byte> data) {
+Status PeripheralHandler::writeRegister(uint8_t deviceAddress, DeviceRegisterType registerType, std::span<const std::byte> data) {
 	assert(registerType == DeviceRegisterType::CommonDeviceConfiguration || 
 			registerType == DeviceRegisterType::DeviceSpecificConfiguration);
 
@@ -420,8 +429,10 @@ Status PeripheralHandler::writeRegister(uint8_t deviceAddress, DeviceRegisterTyp
 		return Status::Error;
 	}
 
-	// Send data
-	i2cStatus = LPI2C_MasterSend(m_i2cBase, reinterpret_cast<uint8_t*>(data.data()), data.size());
+	// Send data (LPI2C_MasterSend doesn't alter the data, so we can cast away the const)
+	i2cStatus = LPI2C_MasterSend(m_i2cBase, 
+		const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(data.data())), 
+		data.size());
 	if(i2cStatus != kStatus_Success)
 	{
 		return Status::Error;

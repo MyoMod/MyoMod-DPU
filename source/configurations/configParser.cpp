@@ -502,7 +502,13 @@ std::unique_ptr<DeviceNode> ConfigParser::createDeviceNode(const NodeData& nodeD
     }
     if (nodeData.type == "BarDisp7Ch")
     {
-        return std::make_unique<BarDisplay>(ID);
+        std::array<uint32_t, 7> barColors;
+        if (!parseParameter("barColors", nodeData, barColors))
+        {
+            return nullptr;
+        }
+
+        return std::make_unique<BarDisplay>(ID, barColors);
     }
     else if (nodeData.type == "Servo Hand")
     {

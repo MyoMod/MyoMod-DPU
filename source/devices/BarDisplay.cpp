@@ -4,9 +4,10 @@
 
 
 
-BarDisplay::BarDisplay(std::array<char, 10> id) : 
+BarDisplay::BarDisplay(std::array<char, 10> id, std::array<uint32_t, 7> barColors) : 
     DeviceNode(id, 
         std::array<char, 10>({'B','a','r','D','i','s','p','7','C','h'})),
+    m_deviceSpecificConfiguration({barColors}),
     m_buttonPorts(),
     m_hostInStorage(std::make_shared<InputStorage<std::array<uint8_t, 4>>>()),
     m_barPorts(),

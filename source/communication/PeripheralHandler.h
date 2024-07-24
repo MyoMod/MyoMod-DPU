@@ -106,7 +106,7 @@ private:
 
 	Status sendCommand(std::span<const uint16_t> command, uint32_t timeout = 50);
 
-	Status writeRegister(uint8_t deviceAddress, DeviceRegisterType registerType, std::span<std::byte> data);
+	Status writeRegister(uint8_t deviceAddress, DeviceRegisterType registerType, std::span<const std::byte> data);
 	Status readRegister(uint8_t deviceAddress, DeviceRegisterType registerType, std::span<std::byte> data);
 	Status probeAddress(uint8_t deviceAddress);
 

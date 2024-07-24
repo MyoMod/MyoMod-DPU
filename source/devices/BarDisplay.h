@@ -12,7 +12,7 @@ enum class BarDisplayButtonNames
 
 struct DeviceSpecificConfiguration
 {
-    uint32_t barColors[7] =
+    std::array<uint32_t, 7> barColors =
     {
         0x00ff00,
         0xffff00,
@@ -27,7 +27,7 @@ struct DeviceSpecificConfiguration
 class BarDisplay : public DeviceNode {
 public:
     // Constructor
-    BarDisplay(std::array<char, 10> id);
+    BarDisplay(std::array<char, 10> id, std::array<uint32_t, 7> barColors);
 
     // Destructor
     ~BarDisplay() = default;
