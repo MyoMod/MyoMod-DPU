@@ -62,4 +62,4 @@ function(make_includable input_file output_file)
     file(WRITE ${output_file} "${content}")
 endfunction(make_includable)
 
-make_includable(configurations/config.json generated/config.enveloped_json)
+make_includable(../config.json generated/config.enveloped_json)
