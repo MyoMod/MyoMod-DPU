@@ -1072,12 +1072,17 @@ Status PeripheralHandler::hardStop()
  * @return false 
  */
 bool PeripheralHandler::isUnstalled() {
-	
+	// try trigger master busy via fifo reset
+	m_i2cBase->MCR |= LPI2C_MCR_RRF_MASK | LPI2C_MCR_RTF_MASK;
+
+	// write a dummy command to trigger a reevaluation of the bus state
+	m_i2cBase->MTDR = LPI2C_MTDR_CMD(4);
+	m_i2cBase->MTDR = LPI2C_MTDR_CMD(2);
 
 
-	volatile uint32_t fifoCount = ((m_i2cBase->MFSR & LPI2C_MFSR_TXCOUNT_MASK) >> LPI2C_MFSR_TXCOUNT_SHIFT);
+	//volatile uint32_t fifoCount = ((m_i2cBase->MFSR & LPI2C_MFSR_TXCOUNT_MASK) >> LPI2C_MFSR_TXCOUNT_SHIFT);
 	volatile uint32_t busBusy = m_i2cBase->MSR & LPI2C_MSR_BBF_MASK;
-	m_stalled = (busBusy || fifoCount > 0);
+	m_stalled = (busBusy);
 	return !m_stalled;
 }
 
