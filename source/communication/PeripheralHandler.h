@@ -14,6 +14,7 @@
 #include <span>
 #include <map>
 #include <functional>
+#include <optional>
 #include "peripherals.h"
 #include "board.h"
 #include "pin_mux.h"
@@ -69,7 +70,7 @@ public:
 	virtual ~PeripheralHandler();
 
 	std::vector<DeviceIdentifier> listConnectedDevices(Status& status);
-	bool detectedNewDevices();
+	bool connectedDevicesChanged();
 
 	Status installDevice(DeviceNode* device);
 	int32_t getDeviceAdress(const DeviceIdentifier& device) const;
@@ -85,7 +86,7 @@ public:
 	void dmaInterruptHandler();
 	void i2cInterruptHandler();
 
-	bool hasDevices() { return !m_hInTcdhandles.empty(); }
+	bool hasInstalledDevices() { return !m_hInTcdhandles.empty(); }
 	bool isConnected(DeviceIdentifier& device);
 
 	static void DMA4_DMA20_IRQHandler();
@@ -112,6 +113,8 @@ private:
 
 	Status addrAvailable(uint32_t address);
 
+	Status hardStop();
+
 	std::vector<TcdOutHandle> m_hOutTcdhandles;
 	std::vector<TcdInHandle> m_hInTcdhandles;
 
@@ -129,14 +132,13 @@ private:
 	std::map<uint8_t, std::shared_ptr<std::byte>> m_installedHostInStorages;
 	std::map<uint8_t, std::array<std::shared_ptr<std::byte>,2>> m_installedHostOutStorages;
 	bool m_connectedDevicesChanged;
-	bool m_noInstalledDevices;
+	bool m_deviceExpected;
 
 	void (*m_processDataCallback)(void);
-	//void (*processDataCallback)(uint8_t callbackParam, bool pingPongIndex);
 
-#if SIMULATE_DEVICE_SCAN == 1
 	uint32_t m_i2cIndex;
-#endif
+	std::optional<bool> m_gotNack;
+
 };
 
 

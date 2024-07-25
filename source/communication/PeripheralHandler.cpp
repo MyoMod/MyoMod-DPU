@@ -37,7 +37,7 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, void (*pr
 	m_tcdIndex{ 0 },
 	m_pingPongIndex{ 0 },
 	m_connectedDevicesChanged{ true }, // Set to true to trigger the first listNewDevices call
-	m_noInstalledDevices{ true },
+	m_deviceExpected{ false },
 	m_processDataCallback{ processDataCallback }
 {
 	i2cIndex--; // i2cIndex is 1 based, but the array is 0 based
@@ -123,13 +123,11 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, void (*pr
 	// register handler
 	PeripheralHandler::handlers[i2cIndex] = this;
 
-#if SIMULATE_DEVICE_SCAN == 1
 	m_i2cIndex = i2cIndex;
-#else
+
 	// Scan for devices
 	m_connectedDevicesChanged = true;
 
-#endif
 }
 
 /**
@@ -253,7 +251,7 @@ std::vector<DeviceIdentifier> PeripheralHandler::listConnectedDevices(Status& st
  * @return true if new devices were detected
  * @return false if no new devices were detected
  */
-bool PeripheralHandler::detectedNewDevices() {
+bool PeripheralHandler::connectedDevicesChanged() {
 	return m_connectedDevicesChanged;
 }
 
@@ -323,6 +321,9 @@ Status PeripheralHandler::installDevice(DeviceNode* device) {
 		writeRegister(address, DeviceRegisterType::DeviceSpecificConfiguration, specificConf);
 	}
 
+	// there is at least one installed device
+	// -> we are not in the state of having no installed devices
+	m_deviceExpected = true;
 
 	return Status::Ok;
 }
@@ -356,9 +357,11 @@ void PeripheralHandler::uninstallAllDevices() {
 	m_installedHostInStorages.clear();
 	m_installedHostOutStorages.clear();
 
-	m_noInstalledDevices = true;
+	m_gotNack.reset();
+	m_deviceExpected = false;
 	m_tcdIndex = 0;
 	m_pingPongIndex = 0;
+	m_commandQueue = std::queue<uint16_t>();
 }
 
 /**
@@ -373,24 +376,31 @@ uint32_t PeripheralHandler::getPingPongIndex() {
 /**
  * @brief Sends a sync command to all connected devices
  * 
+ * @note The function will return Status::Warning if a new device was detected 
+ * 			and won't send the sync command
+ * 
  * @return Status Returns Status::Ok if the function was successful
  * 				  Returns Status::Timeout if the a timeout occured
+ * 				  Returns Status::Warning if a new device was detected
  */
 Status PeripheralHandler::sendSync() {
 	// Make a general call with a sync command to all devices
 	// The command may not be one of the following: 0b0000 0110, 0b0000 0100, 0b0000 0000
 
+	if(!m_deviceExpected && m_gotNack.has_value() && !*m_gotNack)
+	{
+		// We expected that there was no devices, but we got an ack (because we got no nack)
+		// -> a new device is present
+		m_connectedDevicesChanged = true;
+		m_deviceExpected = true;
 
-	/*static std::array<uint16_t, 3> syncCommand = {
-		LPI2C_MTDR_CMD(4) | 0x00 | kLPI2C_Write, //General Call 
-		LPI2C_MTDR_CMD(0) | 0xA5, //Sync command
-		LPI2C_MTDR_CMD(2)};//Stop
-	*/
+		return Status::Warning;
+	}
+	m_gotNack = false;
 
-	// If there are no active devices, we expect a nack, otherwise an ack
-	uint16_t startCmd = m_noInstalledDevices ? LPI2C_MTDR_CMD(4) : LPI2C_MTDR_CMD(4);
+	// We do allways expect a nack, as for some reason expecting nacks doesn't work
 	static std::array<uint16_t, 2> syncCommand = {
-		startCmd | 0x00u | kLPI2C_Write, //General Call 
+		LPI2C_MTDR_CMD(4) | 0x00u | kLPI2C_Write, //General Call 
 		LPI2C_MTDR_CMD(2)};//Stop
 
 	m_commState = CommState::Sync;
@@ -633,28 +643,32 @@ void PeripheralHandler::dmaInterruptHandler() {
 void PeripheralHandler::i2cInterruptHandler() {
 	uint32_t i2cIndex = (uint32_t(m_i2cBase) - LPI2C1_BASE)/0x4000 + 1;
 	// If we receive a nack, no device are present anymore -> stop transmission
+	
 	if(LPI2C_MasterGetStatusFlags(m_i2cBase) & kLPI2C_MasterNackDetectFlag)
 	{
 		// Clear flag
 		LPI2C_MasterClearStatusFlags(m_i2cBase, kLPI2C_MasterNackDetectFlag);
+		m_gotNack = true;
 
-		if(m_commState == CommState::Sync && !m_noInstalledDevices)
+		if(m_deviceExpected)
 		{
-			// Sync command was not acknowledged -> no devices are present
-			// and it is the first time we detected this
+			// first stop the transfer
+			hardStop();
 
-			m_noInstalledDevices = true;
-			/* Reset fifos. */
-			m_i2cBase->MCR |= LPI2C_MCR_RRF_MASK | LPI2C_MCR_RTF_MASK;
+			// We expected an ack (i.e. a device) but it wasn't there
+			// -> connected devices changed
+			m_connectedDevicesChanged = true;
 
-			/* If master is still busy and has not send out stop signal yet. */
-			if (LPI2C_MasterGetStatusFlags(m_i2cBase) & ((uint32_t)kLPI2C_MasterStopDetectFlag))
+
+			if (m_commState == CommState::Sync)
 			{
-				/* Send a stop command to finalize the transfer. */
-				m_i2cBase->MTDR = LPI2C_MTDR_CMD(2);//Stop
+				// Sync command was not acknowledged -> there are no devices present
+				m_deviceExpected = false;
 			}
 
-			SEGGER_RTT_printf(0, "I2C%d detected a NAck during sync call\n", i2cIndex);
+			SEGGER_RTT_printf(0, "I2C%d %s\n", 
+								i2cIndex, 
+								(m_commState == CommState::Sync) ? "detected no devices" : "lost device");
 		}
 	}
 
@@ -663,11 +677,16 @@ void PeripheralHandler::i2cInterruptHandler() {
 		// Clear flag
 		LPI2C_MasterClearStatusFlags(m_i2cBase, kLPI2C_MasterStopDetectFlag);
 
-		// Stop condition was detected -> if we where in sync mode, 
-		//  we are done -> change to receiving
-		if(m_commState == CommState::Sync)
+		// Stop condition was detected -> if we where in sync mode 
+		//  and there are devices present we can start receiving
+		if(hasInstalledDevices() && m_commState == CommState::Sync)
 		{
 			m_commState = CommState::Receiving;
+		}
+		//  and there are no devices present we can stop the transmission
+		else if(!hasInstalledDevices() && m_commState == CommState::Sync)
+		{
+			m_commState = CommState::Idle;
 		}
 	}
 
@@ -955,6 +974,45 @@ Status PeripheralHandler::sendCommand(std::span<const uint16_t> command, uint32_
 		// Activate the interrupt for the fifo empty flag
 		LPI2C_MasterEnableInterrupts(m_i2cBase, kLPI2C_MasterTxReadyFlag);
 	}
+
+	return Status::Ok;
+}
+
+/**
+ * @brief Stops all i2c and dma communication and resets the states. 
+ * 			Use this for stopping the communication mid cycle
+ * 
+ * @return Status::Ok if the function was successful
+ */
+Status PeripheralHandler::hardStop()
+{
+	// Disable dma requests	
+	LPI2C_MasterEnableDMA(m_i2cBase, false, false);
+
+	// Reset fifos
+	m_i2cBase->MCR |= LPI2C_MCR_RRF_MASK | LPI2C_MCR_RTF_MASK;
+
+	// If master is still busy and has not send out stop signal yet.
+	if (LPI2C_MasterGetStatusFlags(m_i2cBase) & ((uint32_t)kLPI2C_MasterStopDetectFlag))
+	{
+		// Send a stop command to finalize the transfer.
+		m_i2cBase->MTDR = LPI2C_MTDR_CMD(2);//Stop
+	}
+
+	// Disable dma
+	while (m_dmaBase->HRS & (1 << m_dmaChannel))
+	{
+		// Wait until the dma channel is not active anymore
+	}
+	EDMA_DisableChannelRequest(m_dmaBase, m_dmaChannel);
+
+	// Cancel the edma transfer
+	m_dmaBase->CR |= DMA_CR_CX(1 << m_dmaChannel);
+
+	// Reset the state
+	m_commState = CommState::Stopped;
+	uninstallAllDevices();
+
 	return Status::Ok;
 }
 

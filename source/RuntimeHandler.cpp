@@ -118,10 +118,11 @@ void renumrateDevices()
 	}
 
 	// Update the valid configurations
-	g_configManager->updateValidConfigurations(foundDevices);
-
-	// Start the cycle
-	start();	
+	if(g_configManager->updateValidConfigurations(foundDevices) == Status::Ok)
+	{
+		// Start the cycle if the current configuration still is valid
+		start();
+	};	
 }
 
 /**
@@ -239,7 +240,7 @@ void peripheralHandlerCallback(uint32_t index)
 	bool allDataAvailable = true;
 	for (size_t i = 0; i < dataAvailable.size(); i++)
 	{
-		allDataAvailable &= (dataAvailable[i] || !g_peripheralHandlers[i]->hasDevices());
+		allDataAvailable &= (dataAvailable[i] || !g_peripheralHandlers[i]->hasInstalledDevices());
 	}
 
 	if (allDataAvailable)
@@ -312,12 +313,25 @@ void PIT_IRQHandler(void)
  */
 void startCycle()
 {
+	// check if devices have changed
+	for (auto& peripheralHandler : g_peripheralHandlers)
+	{
+		if (peripheralHandler->connectedDevicesChanged())
+		{
+			// Devices have changed
+			// -> Reenumerate the devices
+			renumrateDevices();
+			updateConfiguration();
+			return;
+		}
+	}
+
 	// Send the sync signal
 	Status status;
 	for (auto& peripheralHandler : g_peripheralHandlers)
 	{
 		status = peripheralHandler->sendSync();
-		if (status != Status::Ok)
+		if (status == Status::Error)
 		{
 			// Error sending the sync signal
 			// -> Stop the cycle
@@ -330,6 +344,12 @@ void startCycle()
 	// Start the cycles
 	for (auto& peripheralHandler : g_peripheralHandlers)
 	{
+		if (!peripheralHandler->hasInstalledDevices())
+		{
+			// No devices connected to this peripheral handler
+			// -> Skip this peripheral handler
+			continue;
+		}
 		status = peripheralHandler->startCycle();
 		if (status != Status::Ok)
 		{
