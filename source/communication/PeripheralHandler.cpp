@@ -176,6 +176,7 @@ std::vector<DeviceIdentifier> PeripheralHandler::listConnectedDevices(Status& st
 		// just return an empty list, as we can't communicate with the devices
 		status = Status::busStalled;
 		m_connectedDevices.clear();
+		m_connectedDevicesChanged = false;
 		return std::vector<DeviceIdentifier>();
 	}
 

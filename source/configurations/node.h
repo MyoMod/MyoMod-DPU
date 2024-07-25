@@ -20,6 +20,7 @@
 #include <tuple>
 #include <cstdint>
 #include <iostream>
+#include "SEGGER_RTT.h"
 
 #include "port.h"
 
@@ -48,6 +49,14 @@ struct DeviceIdentifier
 		return lhs.type == rhs.type &&
 			   lhs.id == rhs.id;
 	}
+    void print() const
+    {
+        char str[11];
+        std::copy(type.begin(), type.end(), str);
+        SEGGER_RTT_printf(0, "%s:", str);
+        std::copy(id.begin(), id.end(), str);
+        SEGGER_RTT_printf(0, "%s", str);
+    }
 };
 
 

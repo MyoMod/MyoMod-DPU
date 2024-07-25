@@ -104,10 +104,10 @@ int main()
 
 void renumrateDevices()
 {
-	SEGGER_RTT_printf(0, "Renumerate devices\n");
-
 	//Stop the cycle
 	stop();
+
+	SEGGER_RTT_printf(0, "Renumerate devices\n");
 
 	// Update devices
 	std::vector<DeviceIdentifier> foundDevices;
@@ -119,12 +119,20 @@ void renumrateDevices()
 		assert(status != Status::Error);
 	}
 
-	// Update the valid configurations
-	if(g_configManager->updateValidConfigurations(foundDevices) == Status::Ok)
+	// print found devices
+	SEGGER_RTT_printf(0, "Found device(s): \"");
+	for (size_t i = 0; i < foundDevices.size(); i++)
 	{
-		// Start the cycle if the current configuration still is valid
-		start();
-	};	
+		if (i != 0)
+		{
+			SEGGER_RTT_printf(0, ", ");
+		}
+		foundDevices[i].print();
+	}
+	SEGGER_RTT_printf(0, "\"\n");
+
+	// Update the valid configurations
+	g_configManager->updateValidConfigurations(foundDevices) == Status::Ok;
 }
 
 /**
@@ -174,6 +182,12 @@ void updateConfiguration()
 				
 			}
 		}
+	}
+	else
+	{
+		// Active configuration is still valid
+		// -> Nothing to do
+		SEGGER_RTT_printf(0, "Keep active Configuration \"%s\".\n", g_configManager->getActiveConfigurationName().c_str());
 	}
 
 	// Start the cycle
