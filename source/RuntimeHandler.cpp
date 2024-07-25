@@ -326,7 +326,6 @@ void startCycle()
 			// -> Reenumerate the devices
 			renumrateDevices();
 			updateConfiguration();
-			return;
 		}
 	}
 

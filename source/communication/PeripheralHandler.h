@@ -114,6 +114,7 @@ private:
 	Status addrAvailable(uint32_t address);
 
 	Status hardStop();
+	bool isUnstalled();
 
 	std::vector<TcdOutHandle> m_hOutTcdhandles;
 	std::vector<TcdInHandle> m_hInTcdhandles;
@@ -138,7 +139,7 @@ private:
 
 	uint32_t m_i2cIndex;
 	std::optional<bool> m_gotNack;
-
+	bool m_stalled;
 };
 
 

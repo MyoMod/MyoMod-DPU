@@ -40,7 +40,8 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, void (*pr
 	m_pingPongIndex{ 0 },
 	m_connectedDevicesChanged{ true }, // Set to true to trigger the first listNewDevices call
 	m_deviceExpected{ false },
-	m_processDataCallback{ processDataCallback }
+	m_processDataCallback{ processDataCallback },
+	m_stalled{ false }
 {
 	i2cIndex--; // i2cIndex is 1 based, but the array is 0 based
 	/* Init dma hardware */
@@ -169,7 +170,16 @@ std::vector<DeviceIdentifier> PeripheralHandler::listConnectedDevices(Status& st
 		return std::vector<DeviceIdentifier>();
 	}
 
-	if(m_connectedDevicesChanged)
+	if(m_stalled)
+	{
+		// we are stalled, no normal operation possible
+		// just return an empty list, as we can't communicate with the devices
+		status = Status::busStalled;
+		m_connectedDevices.clear();
+		return std::vector<DeviceIdentifier>();
+	}
+
+	if(m_connectedDevicesChanged )
 	{
 		// TODO: scan for new devices and get their identifiers
 		m_connectedDevices.clear();
@@ -384,10 +394,25 @@ uint32_t PeripheralHandler::getPingPongIndex() {
  * @return Status Returns Status::Ok if the function was successful
  * 				  Returns Status::Timeout if the a timeout occured
  * 				  Returns Status::Warning if a new device was detected
+ * 				  Returns Status::busStalled if the bus is stalled
  */
 Status PeripheralHandler::sendSync() {
 	// Make a general call with a sync command to all devices
 	// The command may not be one of the following: 0b0000 0110, 0b0000 0100, 0b0000 0000
+
+	if (m_stalled)
+	{
+		// we are stalled, no normal operation possible
+		// just check if we still are stalled
+		m_commState = CommState::Stopped;
+		if (isUnstalled())
+		{
+			m_connectedDevicesChanged = true;
+			SEGGER_RTT_printf(0, "I2C%d is unstalled!\n", m_i2cIndex + 1);
+			return Status::Warning;
+		}
+		return Status::busStalled;
+	}
 
 	if(!m_deviceExpected && m_gotNack.has_value() && !*m_gotNack)
 	{
@@ -978,7 +1003,18 @@ Status PeripheralHandler::sendCommand(std::span<const uint16_t> command, uint32_
 		//  buffer and send when the fifo has space again
 		for (size_t i = fifoAvailable; i < command.size(); i++)
 		{
-			m_commandQueue.push(command[i]);
+			
+			if (m_commandQueue.size() < 100)
+			{
+				m_commandQueue.push(command[i]);
+			}
+			else
+			{
+				m_stalled = true;
+				SEGGER_RTT_printf(0, "I2C%d is stalled\n", (uint32_t(m_i2cBase) - LPI2C1_BASE)/0x4000 + 1);
+				m_connectedDevicesChanged = true;
+				hardStop();
+			}
 		}
 		
 		// Activate the interrupt for the fifo empty flag
@@ -1024,6 +1060,25 @@ Status PeripheralHandler::hardStop()
 	uninstallAllDevices();
 
 	return Status::Ok;
+}
+
+/**
+ * @brief Checks if the bus is still stalled. 
+ * 			If the tx fifo is not empty, the bus is still stalled 
+ * 					(as we are the only place that writes to it right now)
+ * 			If the tx fifo is empty, we try to write
+ * 
+ * @return true 
+ * @return false 
+ */
+bool PeripheralHandler::isUnstalled() {
+	
+
+
+	volatile uint32_t fifoCount = ((m_i2cBase->MFSR & LPI2C_MFSR_TXCOUNT_MASK) >> LPI2C_MFSR_TXCOUNT_SHIFT);
+	volatile uint32_t busBusy = m_i2cBase->MSR & LPI2C_MSR_BBF_MASK;
+	m_stalled = (busBusy || fifoCount > 0);
+	return !m_stalled;
 }
 
 // Interrupt handlers

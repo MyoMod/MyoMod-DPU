@@ -12,5 +12,6 @@ enum class Status
     DeviceNotConnected,
     OutOfRange,
     Warning,
-    Timeout
+    Timeout,
+    busStalled
 };
