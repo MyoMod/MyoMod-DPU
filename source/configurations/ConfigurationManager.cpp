@@ -64,7 +64,6 @@ Status ConfigurationManager::readConfigurations()
  */
 Status ConfigurationManager::updateValidConfigurations(const std::vector<DeviceIdentifier> &foundDevices)
 {
-	SEGGER_RTT_printf(0, "ConfigurationManager: Update Valid Configurations\n");
 	for (auto &configHandle : configurationHandles)
 	{
 		bool compatible = configHandle.config.isCompatibleWith(foundDevices);

@@ -6,8 +6,10 @@
  */
 
 #include "PeripheralHandler.h"
+#include "cmsis_gcc.h"
 
-
+#define LPIIC_INTERRUPTS (kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag | kLPI2C_MasterStopDetectFlag \
+							| kLPI2C_MasterArbitrationLostFlag)
 
 /* Select USB1 PLL (480 MHz) as master lpi2c clock source */
 #define LPI2C_CLOCK_SOURCE_SELECT (0U)
@@ -104,8 +106,8 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, void (*pr
      * masterConfig.sdaGlitchFilterWidth_ns = 0;
      * masterConfig.sclGlitchFilterWidth_ns = 0;
      */
-
     LPI2C_MasterGetDefaultConfig(&i2cConfig);
+	i2cConfig.busIdleTimeout_ns = 10'000U; // 10us
 
 	// Change baudrate
 	i2cConfig.baudRate_Hz = highSpeed ? 1'000'000U : 400'000U;
@@ -392,6 +394,7 @@ Status PeripheralHandler::sendSync() {
 		// We expected that there was no devices, but we got an ack (because we got no nack)
 		// -> a new device is present
 		m_connectedDevicesChanged = true;
+		m_commState = CommState::Stopped;
 		m_deviceExpected = true;
 		SEGGER_RTT_printf(0, "I2C%d detected a device\n", m_i2cIndex + 1);
 		return Status::Warning;
@@ -560,8 +563,7 @@ Status PeripheralHandler::enterRealTimeMode() {
 		// It is not allowed to enter realTime mode when not in stopped state
 		return Status::Error;
 	}
-	LPI2C_MasterEnableInterrupts(m_i2cBase, kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag
-										 | kLPI2C_MasterStopDetectFlag);
+	LPI2C_MasterEnableInterrupts(m_i2cBase, LPIIC_INTERRUPTS);
 	m_commState = CommState::Idle;
 	return Status::Ok;
 }
@@ -578,8 +580,7 @@ Status PeripheralHandler::exitRealTimeMode() {
 		// It is not allowed to exit realTime mode when not in idle state
 		return Status::Error;
 	}
-	LPI2C_MasterDisableInterrupts(m_i2cBase, kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag
-										 | kLPI2C_MasterStopDetectFlag);
+	LPI2C_MasterDisableInterrupts(m_i2cBase, LPIIC_INTERRUPTS);
 	m_commState = CommState::Stopped;
 	return Status::Ok;
 }
@@ -653,6 +654,7 @@ void PeripheralHandler::i2cInterruptHandler() {
 		if(m_deviceExpected)
 		{
 			// first stop the transfer
+			auto commState = m_commState;
 			hardStop();
 
 			// We expected an ack (i.e. a device) but it wasn't there
@@ -660,7 +662,7 @@ void PeripheralHandler::i2cInterruptHandler() {
 			m_connectedDevicesChanged = true;
 
 
-			if (m_commState == CommState::Sync)
+			if (commState == CommState::Sync)
 			{
 				// Sync command was not acknowledged -> there are no devices present
 				m_deviceExpected = false;
@@ -668,7 +670,7 @@ void PeripheralHandler::i2cInterruptHandler() {
 
 			SEGGER_RTT_printf(0, "I2C%d %s\n", 
 								i2cIndex, 
-								(m_commState == CommState::Sync) ? "detected no devices" : "lost device");
+								(commState == CommState::Sync) ? "detected no devices" : "lost device");
 		}
 	}
 
@@ -724,6 +726,14 @@ void PeripheralHandler::i2cInterruptHandler() {
 
 		// clear flag
 		LPI2C_MasterClearStatusFlags(m_i2cBase, kLPI2C_MasterFifoErrFlag);
+	}
+
+	if(LPI2C_MasterGetStatusFlags(m_i2cBase) & kLPI2C_MasterArbitrationLostFlag)
+	{
+		SEGGER_RTT_printf(0, "I2C%d had an arbitration lost\n", i2cIndex);
+
+		// clear flag
+		LPI2C_MasterClearStatusFlags(m_i2cBase, kLPI2C_MasterArbitrationLostFlag);
 	}
 }
 
