@@ -1,12 +1,12 @@
 #include "ServoHand.h"
 #include <cstdint>
 #include "SEGGER_RTT.h"
-
+#include "charArray.h"
 
 
 ServoHand::ServoHand(std::array<char, 10> id) : 
     DeviceNode(id, 
-        std::array<char, 10>({'S','e','r','v','o',' ','H','a','n','d'})),
+        idArr("Servo Hand")),
     m_currentPos(std::make_shared<OutputPort<ServoHandHInData_t>>()),
     m_hostInStorage(std::make_shared<InputStorage<ServoHandHInData_t>>()),
     m_targetPos(std::make_shared<InputPort<ServoHandHInData_t>>(0)),

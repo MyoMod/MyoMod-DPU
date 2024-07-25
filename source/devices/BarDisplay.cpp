@@ -1,12 +1,13 @@
 #include "BarDisplay.h"
 #include <cstdint>
 #include "SEGGER_RTT.h"
+#include "charArray.h"
 
 
 
 BarDisplay::BarDisplay(std::array<char, 10> id, std::array<uint32_t, 7> barColors) : 
     DeviceNode(id, 
-        std::array<char, 10>({'B','a','r','D','i','s','p','7','C','h'})),
+        idArr("BarDisp7Ch")),
     m_deviceSpecificConfiguration({barColors}),
     m_buttonPorts(),
     m_hostInStorage(std::make_shared<InputStorage<std::array<uint8_t, 4>>>()),
