@@ -393,7 +393,7 @@ Status PeripheralHandler::sendSync() {
 		// -> a new device is present
 		m_connectedDevicesChanged = true;
 		m_deviceExpected = true;
-
+		SEGGER_RTT_printf(0, "I2C%d detected a device\n", m_i2cIndex + 1);
 		return Status::Warning;
 	}
 	m_gotNack = false;

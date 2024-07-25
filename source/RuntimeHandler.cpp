@@ -104,6 +104,8 @@ int main()
 
 void renumrateDevices()
 {
+	SEGGER_RTT_printf(0, "Renumerate devices\n");
+
 	//Stop the cycle
 	stop();
 
@@ -141,6 +143,8 @@ void updateConfiguration()
 		// -> Select a valid, non-trivial configuration
 		Status status = g_configManager->incrementActiveConfiguration();
 		assert(status != Status::Error);
+
+		SEGGER_RTT_printf(0, "Update configuration to %s\n", g_configManager->getActiveConfigurationName().c_str());
 		
 		// Get the active configuration
 		auto nodes = g_configManager->createActiveConfiguration();
