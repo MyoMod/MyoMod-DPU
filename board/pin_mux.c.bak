@@ -66,14 +66,14 @@ pin_labels:
 - {pin_num: A9, pin_signal: GPIO_B0_07, label: 'LCDIF_D3/BT_CFG[3]', identifier: LCDIF_D3}
 - {pin_num: B9, pin_signal: GPIO_B0_08, label: 'LCDIF_D4/BT_CFG[4]', identifier: LCDIF_D4}
 - {pin_num: C9, pin_signal: GPIO_B0_09, label: 'LCDIF_D5/BT_CFG[5]', identifier: LCDIF_D5}
-- {pin_num: D9, pin_signal: GPIO_B0_10, label: 'LCDIF_D6/BT_CFG[6]', identifier: LCDIF_D6}
-- {pin_num: A10, pin_signal: GPIO_B0_11, label: 'LCDIF_D7/BT_CFG[7]', identifier: LCDIF_D7}
+- {pin_num: D9, pin_signal: GPIO_B0_10, label: RGB_R, identifier: LCDIF_D6;RGB_R}
+- {pin_num: A10, pin_signal: GPIO_B0_11, label: RGB_B, identifier: RGB_B}
 - {pin_num: C10, pin_signal: GPIO_B0_12, label: DEBUG4, identifier: DEBUG4}
 - {pin_num: D10, pin_signal: GPIO_B0_13, label: 'LCDIF_D9/BT_CFG[9]', identifier: LCDIF_D9}
 - {pin_num: E10, pin_signal: GPIO_B0_14, label: 'LCDIF_D10/BT_CFG[10]', identifier: LCDIF_D10}
 - {pin_num: E11, pin_signal: GPIO_B0_15, label: 'LCDIF_D11/BT_CFG[11]', identifier: LCDIF_D11}
-- {pin_num: A11, pin_signal: GPIO_B1_00, label: LCDIF_D12, identifier: LCDIF_D12}
-- {pin_num: B11, pin_signal: GPIO_B1_01, label: LCDIF_D13, identifier: LCDIF_D13}
+- {pin_num: A11, pin_signal: GPIO_B1_00, label: RGB_GND, identifier: LCDIF_D12;RGB_GND}
+- {pin_num: B11, pin_signal: GPIO_B1_01, label: RGB_G, identifier: LCDIF_D13;RGB_G}
 - {pin_num: C11, pin_signal: GPIO_B1_02, label: LCDIF_D14, identifier: LCDIF_D14}
 - {pin_num: D11, pin_signal: GPIO_B1_03, label: LCDIF_D15, identifier: LCDIF_D15}
 - {pin_num: E12, pin_signal: GPIO_B1_04, label: ENET_RXD0, identifier: ENET_RXD0}
@@ -248,6 +248,10 @@ BOARD_InitPins:
   - {pin_num: E4, peripheral: GPIO3, signal: 'gpio_io, 23', pin_signal: GPIO_EMC_37, identifier: DEBUG2, direction: OUTPUT}
   - {pin_num: C3, peripheral: GPIO3, signal: 'gpio_io, 22', pin_signal: GPIO_EMC_36, direction: OUTPUT}
   - {pin_num: C10, peripheral: GPIO2, signal: 'gpio_io, 12', pin_signal: GPIO_B0_12, direction: OUTPUT}
+  - {pin_num: D9, peripheral: GPIO2, signal: 'gpio_io, 10', pin_signal: GPIO_B0_10, identifier: RGB_R, direction: OUTPUT}
+  - {pin_num: B11, peripheral: GPIO2, signal: 'gpio_io, 17', pin_signal: GPIO_B1_01, identifier: RGB_G, direction: OUTPUT}
+  - {pin_num: A11, peripheral: GPIO2, signal: 'gpio_io, 16', pin_signal: GPIO_B1_00, identifier: RGB_GND, direction: OUTPUT}
+  - {pin_num: A10, peripheral: GPIO2, signal: 'gpio_io, 11', pin_signal: GPIO_B0_11, direction: OUTPUT}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -260,6 +264,24 @@ BOARD_InitPins:
 void BOARD_InitPins(void) {
   CLOCK_EnableClock(kCLOCK_Iomuxc);           
 
+  /* GPIO configuration of RGB_R on GPIO_B0_10 (pin D9) */
+  gpio_pin_config_t RGB_R_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_B0_10 (pin D9) */
+  GPIO_PinInit(GPIO2, 10U, &RGB_R_config);
+
+  /* GPIO configuration of RGB_B on GPIO_B0_11 (pin A10) */
+  gpio_pin_config_t RGB_B_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_B0_11 (pin A10) */
+  GPIO_PinInit(GPIO2, 11U, &RGB_B_config);
+
   /* GPIO configuration of DEBUG4 on GPIO_B0_12 (pin C10) */
   gpio_pin_config_t DEBUG4_config = {
       .direction = kGPIO_DigitalOutput,
@@ -268,6 +290,24 @@ void BOARD_InitPins(void) {
   };
   /* Initialize GPIO functionality on GPIO_B0_12 (pin C10) */
   GPIO_PinInit(GPIO2, 12U, &DEBUG4_config);
+
+  /* GPIO configuration of RGB_GND on GPIO_B1_00 (pin A11) */
+  gpio_pin_config_t RGB_GND_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_B1_00 (pin A11) */
+  GPIO_PinInit(GPIO2, 16U, &RGB_GND_config);
+
+  /* GPIO configuration of RGB_G on GPIO_B1_01 (pin B11) */
+  gpio_pin_config_t RGB_G_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_B1_01 (pin B11) */
+  GPIO_PinInit(GPIO2, 17U, &RGB_G_config);
 
   /* GPIO configuration of DEBUG3 on GPIO_EMC_36 (pin C3) */
   gpio_pin_config_t DEBUG3_config = {
@@ -340,7 +380,11 @@ void BOARD_InitPins(void) {
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_06_LPI2C3_SDA, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_07_LPI2C3_SCL, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_B0_03_GPIO2_IO03, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_10_GPIO2_IO10, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_B0_11_GPIO2_IO11, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_B0_12_GPIO2_IO12, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_00_GPIO2_IO16, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_B1_01_GPIO2_IO17, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_04_GPIO4_IO04, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_05_GPIO4_IO05, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_06_GPIO4_IO06, 0U); 

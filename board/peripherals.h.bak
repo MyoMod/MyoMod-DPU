@@ -12,7 +12,7 @@
 #include "fsl_common.h"
 #include "fsl_gpio.h"
 #include "fsl_pit.h"
-#include "fsl_qtmr.h"
+#include "fsl_gpt.h"
 #include "fsl_clock.h"
 
 #if defined(__cplusplus)
@@ -51,17 +51,15 @@ extern "C" {
 /* PIT interrupt handler identifier. */
 #define PIT_IRQHANDLER PIT_IRQHandler
 /* Definition of peripheral ID */
-#define TMR1_PERIPHERAL TMR1
-/* Definition of the timer channel BaseTimeChannel. */
-#define TMR1_BASETIMECHANNEL_CHANNEL kQTMR_Channel_0
-/* Definition of the timer channel BaseTimeChannel clock source frequency. */
-#define TMR1_BASETIMECHANNEL_CLOCK_SOURCE 18750000UL
+#define GPT1_PERIPHERAL GPT1
+/* Definition of the clock source frequency */
+#define GPT1_CLOCK_SOURCE 24000000UL
 
 /***********************************************************************************************************************
  * Global variables
  **********************************************************************************************************************/
 extern const pit_config_t PIT_config;
-extern const qtmr_config_t TMR1_BaseTimeChannel_config;
+extern const gpt_config_t GPT1_config;
 
 /***********************************************************************************************************************
  * Initialization functions
