@@ -601,6 +601,11 @@ Status PeripheralHandler::enterRealTimeMode() {
  * 				  Returns Status::Error if the function was called while the handler was not in idle state
  */
 Status PeripheralHandler::exitRealTimeMode() {
+	while(m_commState > CommState::Idle)
+	{
+		// Wait until the sync command is done
+		// TODO: Add a timeout
+	}
 	if(m_commState > CommState::Idle)
 	{
 		// It is not allowed to exit realTime mode when not in idle state
