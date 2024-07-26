@@ -92,9 +92,12 @@ target_link_options(${EXECUTABLE} PRIVATE
   -T "${LINKER_FILE}"
 )
 
+# needed for ETL lib
+set(GIT_DIR_LOOKUP_POLICY ALLOW_LOOKING_ABOVE_CMAKE_SOURCE_DIR)
+
 # add linker flags to print cross-reference table in map file and memory usage on console
 add_link_options(-Wl,--cref,--print-memory-usage)
-
+add_subdirectory(./etl              etl)
 add_subdirectory(./board            board)
 add_subdirectory(./CMSIS/DSP/Source CMSISDSP)
 add_subdirectory(./drivers          drivers)

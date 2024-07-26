@@ -32,6 +32,7 @@ target_link_libraries(
   component
   utilities
   lwjson
+  etl
 )
  
 # target_include_directories: Libraries need to publish their header files 
