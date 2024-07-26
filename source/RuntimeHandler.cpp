@@ -31,6 +31,8 @@
 #include "Status.h"
 #include "dpu_gpio.h"
 
+#include "ui/button.h"
+
 
 /*******************************************************************************
  * Defines
@@ -50,6 +52,7 @@ std::vector<std::unique_ptr<DeviceNode>> g_deviceNodes;
 std::vector<std::unique_ptr<AlgorithmicNode>> g_algorithmicNodes;
 
 volatile bool g_isRunning = false;
+
 
 uint8_t g_debugBuffer[1024];
 /*******************************************************************************
@@ -77,7 +80,8 @@ int main()
 	initPerpheralHandler();
 	init_debug();
 
-	RGB_B(1);
+	Button<1> button_up(BOARD_INITPINS_SW_UP_PORT, BOARD_INITPINS_SW_UP_PIN, true);
+	Button<1> button_down(BOARD_INITPINS_SW_DOWN_PORT, BOARD_INITPINS_SW_DOWN_PIN, true);
 
 	/** fill globals **/
 	g_configManager = new ConfigurationManager();
@@ -91,6 +95,7 @@ int main()
 
 	updateConfiguration();
 
+	uint32_t currentTime = QTMR_GetCurrentTimerCount(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL);
 	//Main Loop
 	while(1)
 	{
@@ -98,6 +103,37 @@ int main()
 		{
 			SEGGER_RTT_printf(0, "runtime is not running, this shouldn't happen\n");
 		}
+
+		uint16_t tmrVal = QTMR_GetCurrentTimerCount(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL);
+		if((currentTime & 0xFFFF) != tmrVal)
+		{
+			// 1ms passed
+			if(tmrVal < (currentTime & 0xFFFF))
+			{
+				// timer overflow -> increment the high word
+				currentTime += 0x10000;
+			}
+			currentTime = (currentTime & 0xFFFF0000) | tmrVal;
+
+			static uint8_t counter = 0;
+			if(button_up.update())
+			{
+				if(!button_up.isSet())
+				{
+					counter++;
+				}
+			}
+			if(button_down.update())
+			{
+				if(!button_down.isSet())
+				{
+					counter--;
+				}
+			}
+			counter &= 0x7;
+			RGB(counter);
+		}
+
 	}
 	return 0;
 }
@@ -133,7 +169,7 @@ void renumrateDevices()
 	SEGGER_RTT_printf(0, "\"\n");
 
 	// Update the valid configurations
-	g_configManager->updateValidConfigurations(foundDevices) == Status::Ok;
+	g_configManager->updateValidConfigurations(foundDevices);
 }
 
 /**
@@ -281,8 +317,6 @@ void peripheralHandlerCallback(uint32_t index)
  */
 void inputHandlingDone()
 {
-	RGB_B(1);
-
 	for (auto&& deviceNode : g_deviceNodes)
 	{
 		deviceNode->processInData();
@@ -299,8 +333,6 @@ void inputHandlingDone()
 	{
 		deviceNode->processOutData();
 	}
-
-	RGB_B(0);
 }
 
 /*******************************************************************************
@@ -313,7 +345,7 @@ void PIT_IRQHandler(void)
 	/* Clear interrupt flag.*/
 	PIT_ClearStatusFlags(PIT_PERIPHERAL, PIT_CHANNEL_0, kPIT_TimerFlag);
 
-	static int i;
+	static uint32_t i;
     i++;
     GPIO_PinWrite(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, i & 1);
 
