@@ -165,10 +165,23 @@ void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream
     // Get config name
     if (lwjson_stack_seq_3(jsp, 0, ARRAY, OBJECT, KEY)
          && type == LWJSON_STREAM_TYPE_STRING
-         && jsp->stack_pos == 3)
+         && jsp->stack_pos == 3
+         && strcmp(jsp->stack[2].meta.name, "name") == 0)
     {
         parser.m_configurations.back().name = jsp->data.str.buff;
-        PARSE_DEBUG("%s\r\n", jsp->data.str.buff);
+        PARSE_DEBUG("%s", jsp->data.str.buff);
+    }
+
+    // Get config color
+    if (lwjson_stack_seq_3(jsp, 0, ARRAY, OBJECT, KEY)
+         && type == LWJSON_STREAM_TYPE_NUMBER
+         && jsp->stack_pos == 3
+         && strcmp(jsp->stack[2].meta.name, "color") == 0)
+    {
+        bool success = false;
+        uint32_t color = stringToUint(jsp->data.str.buff, success);
+        parser.m_configurations.back().color = color;
+        PARSE_DEBUG(" [color: 0x%06x]\r\n", color);
     }
 
     // Handle ConfigSection

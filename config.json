@@ -1,6 +1,7 @@
 [
 	{
 		"name": "Config 1",
+		"color": 0x00ff00,
 		"deviceNodes": [
 			{
 				"type": "BarDisp7Ch",

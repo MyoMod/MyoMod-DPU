@@ -27,7 +27,7 @@ ConfigurationManager::ConfigurationManager()
 {
 
 	// Add a default NOP configuration
-	configurationHandles.emplace_back(Configuration{"NOP",std::vector<DeviceIdentifier>()}, true);
+	configurationHandles.emplace_back(Configuration{"NOP",0,std::vector<DeviceIdentifier>()}, true);
 	setActiveConfiguration(0);
 }
 
@@ -123,9 +123,8 @@ Status ConfigurationManager::incrementActiveConfiguration()
 		return Status::Warning;
 	}
 
-	int32_t nextIndex = (activeConfigIndex + 1) % nValid; // iterate through the valid configurations
-	nextIndex++;										  // But skip the NOP configuration
-	SEGGER_RTT_printf(0, "Increment active configuration to %s\n", configurationHandles[nextIndex].config.name.data());
+	uint32_t nextIndex = activeConfigIndex + 1; // iterate through the valid configurations
+	nextIndex = nextIndex>nValid?1:nextIndex; // But skip the NOP configuration
 	return setActiveConfiguration(nextIndex);
 }
 
@@ -145,11 +144,12 @@ Status ConfigurationManager::decrementActiveConfiguration()
 	if (nValid == 0)
 	{
 		setActiveConfiguration(0);
+		SEGGER_RTT_printf(0, "No valid configuration found, reset to nop configuration\n");
 		return Status::Warning;
 	}
 
-	int32_t nextIndex = (activeConfigIndex - 1) % nValid; // iterate through the valid configurations
-	nextIndex++;										  // But skip the NOP configuration
+	int32_t nextIndex = activeConfigIndex - 1; // iterate through the valid configurations
+	nextIndex = nextIndex<=0?(nValid):nextIndex; // But skip the NOP configuration
 	return setActiveConfiguration(nextIndex);
 }
 
@@ -182,6 +182,11 @@ std::vector<DeviceIdentifier> ConfigurationManager::getNeededDevices()
 std::string ConfigurationManager::getActiveConfigurationName()
 {
 	return configurationHandles[activeConfigIndex].config.name;
+}
+
+uint32_t ConfigurationManager::getActiveConfigurationColor()
+{
+	return configurationHandles[activeConfigIndex].config.color;
 }
 
 /**

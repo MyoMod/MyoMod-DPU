@@ -27,6 +27,7 @@ struct PortDescriptor
 struct Configuration
 {
     std::string name;
+    uint32_t color;
     std::vector<DeviceIdentifier> deviceNodes;
 
 	bool isCompatibleWith (const std::vector<DeviceIdentifier>& devices) const;
