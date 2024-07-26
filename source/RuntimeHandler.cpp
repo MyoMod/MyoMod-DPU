@@ -60,6 +60,9 @@ uint8_t g_debugBuffer[1024];
  * ****************************************************************************/
 void renumrateDevices();
 void updateConfiguration();
+void incrementConfiguration();
+void decrementConfiguration();
+void installActiveConfiguration();
 void start();
 void stop();
 void inputHandlingDone();
@@ -115,23 +118,20 @@ int main()
 			}
 			currentTime = (currentTime & 0xFFFF0000) | tmrVal;
 
-			static uint8_t counter = 0;
 			if(button_up.update())
 			{
 				if(!button_up.isSet())
 				{
-					counter++;
+					incrementConfiguration();
 				}
 			}
 			if(button_down.update())
 			{
 				if(!button_down.isSet())
 				{
-					counter--;
+					decrementConfiguration();
 				}
 			}
-			counter &= 0x7;
-			RGB(counter);
 		}
 
 	}
@@ -190,35 +190,7 @@ void updateConfiguration()
 		assert(status != Status::Error);
 
 		SEGGER_RTT_printf(0, "Update configuration to %s\n", g_configManager->getActiveConfigurationName().c_str());
-		
-		// Get the active configuration
-		auto nodes = g_configManager->createActiveConfiguration();
-		g_deviceNodes = std::move(std::get<0>(nodes));
-		g_algorithmicNodes = std::move(std::get<1>(nodes));
-
-		// remove all old devices from the peripheral handlers
-		for (auto& peripheralHandler : g_peripheralHandlers)
-		{
-			peripheralHandler->uninstallAllDevices();
-		}
-
-		// Add the new devices to the peripheral handlers
-		for (auto&& deviceNode : g_deviceNodes)
-		{
-			auto deviceIdentifier = deviceNode->getDeviceIdentifier();
-			for (auto& peripheralHandler : g_peripheralHandlers)
-			{
-				if(peripheralHandler->getDeviceAdress(deviceIdentifier) != -1)
-				{
-					// Device is connected to this peripheral handler
-					// -> Install the device and don't try to install it in another peripheral handler
-
-					status = peripheralHandler->installDevice(deviceNode.get());
-					assert(status != Status::Error);
-				}
-				
-			}
-		}
+		installActiveConfiguration();
 	}
 	else
 	{
@@ -229,6 +201,87 @@ void updateConfiguration()
 
 	// Start the cycle
 	start();
+}
+
+/**
+ * @brief Increments the active configuration
+ * 
+ */
+void incrementConfiguration()
+{
+	// Stop the cycle
+	stop();
+
+	// Increment the active configuration
+	Status status = g_configManager->incrementActiveConfiguration();
+	assert(status != Status::Error);
+
+	SEGGER_RTT_printf(0, "Update configuration to %s\n", g_configManager->getActiveConfigurationName().c_str());
+
+	installActiveConfiguration();
+
+	// Start the cycle
+	start();
+}
+
+/**
+ * @brief Decrements the active configuration
+ * 
+ */
+void decrementConfiguration()
+{
+	// Stop the cycle
+	stop();
+
+	// Decrement the active configuration
+	Status status = g_configManager->decrementActiveConfiguration();
+	assert(status != Status::Error);
+
+	SEGGER_RTT_printf(0, "Update configuration to %s\n", g_configManager->getActiveConfigurationName().c_str());
+
+	installActiveConfiguration();
+
+	// Start the cycle
+	start();
+}
+
+void installActiveConfiguration()
+{
+	Status status;
+
+	// Get the active configuration
+	auto nodes = g_configManager->createActiveConfiguration();
+	g_deviceNodes = std::move(std::get<0>(nodes));
+	g_algorithmicNodes = std::move(std::get<1>(nodes));
+
+	// remove all old devices from the peripheral handlers
+	for (auto& peripheralHandler : g_peripheralHandlers)
+	{
+		peripheralHandler->uninstallAllDevices();
+	}
+
+	// Add the new devices to the peripheral handlers
+	for (auto&& deviceNode : g_deviceNodes)
+	{
+		auto deviceIdentifier = deviceNode->getDeviceIdentifier();
+		for (auto& peripheralHandler : g_peripheralHandlers)
+		{
+			if(peripheralHandler->getDeviceAdress(deviceIdentifier) != -1)
+			{
+				// Device is connected to this peripheral handler
+				// -> Install the device and don't try to install it in another peripheral handler
+
+				status = peripheralHandler->installDevice(deviceNode.get());
+				assert(status != Status::Error);
+			}
+			
+		}
+	}
+
+	// Update the color	
+	uint32_t color = g_configManager->getActiveConfigurationColor();
+	uint8_t shortColor = !!(color & 0xFF0000) << 2 | !!(color & 0xFF00) << 1 | !!(color & 0xFF);
+	RGB(shortColor);
 }
 
 /**

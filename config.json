@@ -6,7 +6,7 @@
 			{
 				"type": "BarDisp7Ch",
 				"ID" : "BarDisplay",
-				"barColors": [0x00ff00, 0xffff00,0xff0000,0xff00ff,0x0000ff,0x00ffff,0xffff00]
+				"barColors": [0x00ff00, 0xffff00,0xffff00,0xff00ff,0x0000ff,0x00ffff,0xffff00]
 			},
 			{
 				"type": "Servo Hand",
@@ -87,5 +87,42 @@
 			"d0:5": "a0:5",
 			"d0:6": "a0:6"
 			}
+	},
+	{
+		"name": "Config 2",
+		"color": 0xff0000,
+		"deviceNodes": [
+			{
+				"type": "BarDisp7Ch",
+				"ID" : "BarDisplay",
+				"barColors": [0x00ff00, 0xffff00,0xffff00,0xff00ff,0x0000ff,0x00ffff,0xffff00]
+			}],
+		"algorithmicNodes": [
+			
+			{
+				"type": "TestAlgorithm"
+			},
+			{
+				"type": "LinearFuncNode",
+				"dataType": "uint8",
+				"slope": 1,
+				"offset": 128
+			}
+			],
+		"links": {
+			"a0:0": "d0:0",
+			"a0:1": "d0:1",
+			"a0:2": "d0:2",
+			"a0:3": "d0:3",
+
+			"d0:0": "a0:0",
+			"d0:1": "a0:1",
+			"d0:2": "a1:0",
+			"d0:3": "a1:0",
+			"d0:4": "a1:0",
+			"d0:5": "a0:5",
+			"d0:6": "a0:6"
+			}
+		
 	}
 ]
