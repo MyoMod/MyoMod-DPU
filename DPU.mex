@@ -1061,6 +1061,11 @@
                         <data type="Boolean">true</data>
                      </feature>
                   </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="TMR1.tmr_sec_in.0" description="Timer input 0 of peripheral TMR1 is not routed" problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="equal">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
                </dependencies>
                <instances>
                   <instance name="NVIC" uuid="93aead58-804b-4de1-ae2f-6922311c0b50" type="nvic" type_id="nvic_57b5eef3774cc60acaede6f5b8bddc67" mode="general" peripheral="NVIC" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
@@ -1126,12 +1131,12 @@
                         <setting name="clockSourceFreq" value="ClocksTool_DefaultInit"/>
                         <array name="qtmr_channels">
                            <struct name="0">
-                              <setting name="channel_prefix_id" value="BaseTimeChannel"/>
+                              <setting name="channel_prefix_id" value="TimePresacler"/>
                               <setting name="channel" value="kQTMR_Channel_0"/>
                               <setting name="primarySource" value="kQTMR_ClockDivide_8"/>
                               <setting name="secondarySource" value="kQTMR_Counter0InputPin"/>
-                              <setting name="countingMode" value="kQTMR_NoOperation"/>
-                              <setting name="enableMasterMode" value="false"/>
+                              <setting name="countingMode" value="kQTMR_PriSrcRiseEdge"/>
+                              <setting name="enableMasterMode" value="true"/>
                               <setting name="enableExternalForce" value="false"/>
                               <setting name="faultFilterCount" value="3"/>
                               <setting name="faultFilterPeriod" value="0"/>
@@ -1139,6 +1144,24 @@
                               <setting name="timerModeInit" value="timer"/>
                               <struct name="timerMode">
                                  <setting name="freq_value_str" value="1 ms"/>
+                              </struct>
+                              <setting name="dmaIntMode" value="polling"/>
+                           </struct>
+                           <struct name="1">
+                              <setting name="channel_prefix_id" value="ms_Counter"/>
+                              <setting name="channel" value="kQTMR_Channel_1"/>
+                              <setting name="primarySource" value="kQTMR_ClockCounter0Output"/>
+                              <setting name="primarySourceFreq" value="1 khz"/>
+                              <setting name="secondarySource" value="kQTMR_Counter0InputPin"/>
+                              <setting name="countingMode" value="kQTMR_CascadeCount"/>
+                              <setting name="enableMasterMode" value="true"/>
+                              <setting name="enableExternalForce" value="false"/>
+                              <setting name="faultFilterCount" value="3"/>
+                              <setting name="faultFilterPeriod" value="0"/>
+                              <setting name="debugMode" value="kQTMR_HaltCounter"/>
+                              <setting name="timerModeInit" value="timer"/>
+                              <struct name="timerMode">
+                                 <setting name="freq_value_str" value="65535"/>
                               </struct>
                               <setting name="dmaIntMode" value="polling"/>
                            </struct>

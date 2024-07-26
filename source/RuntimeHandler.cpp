@@ -22,6 +22,7 @@
 #include "fsl_gpio.h"
 #include "fsl_common.h"
 #include "fsl_clock.h"
+#include "fsl_qtmr.h"
 #include "SEGGER_RTT.h"
 
 #include "ConfigurationManager.h"
@@ -393,6 +394,11 @@ void initHardware()
     BOARD_InitBootPeripherals();
     // Set frequency to 200Hz
     PIT_SetTimerPeriod(PIT_PERIPHERAL, PIT_CHANNEL_0, USEC_TO_COUNT(5000, CLOCK_GetFreq(kCLOCK_PerClk)));
+
+	// Start system timer
+	//QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS)
+	QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, kQTMR_CascadeCount);
+	QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, kQTMR_PriSrcRiseEdge);
 
     gpio_init();
 }

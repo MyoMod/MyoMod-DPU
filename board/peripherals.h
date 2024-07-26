@@ -52,16 +52,21 @@ extern "C" {
 #define PIT_IRQHANDLER PIT_IRQHandler
 /* Definition of peripheral ID */
 #define TMR1_PERIPHERAL TMR1
-/* Definition of the timer channel BaseTimeChannel. */
-#define TMR1_BASETIMECHANNEL_CHANNEL kQTMR_Channel_0
-/* Definition of the timer channel BaseTimeChannel clock source frequency. */
-#define TMR1_BASETIMECHANNEL_CLOCK_SOURCE 18750000UL
+/* Definition of the timer channel TimePresacler. */
+#define TMR1_TIMEPRESACLER_CHANNEL kQTMR_Channel_0
+/* Definition of the timer channel ms_Counter. */
+#define TMR1_MS_COUNTER_CHANNEL kQTMR_Channel_1
+/* Definition of the timer channel TimePresacler clock source frequency. */
+#define TMR1_TIMEPRESACLER_CLOCK_SOURCE 18750000UL
+/* Definition of the timer channel ms_Counter clock source frequency. */
+#define TMR1_MS_COUNTER_CLOCK_SOURCE 1000UL
 
 /***********************************************************************************************************************
  * Global variables
  **********************************************************************************************************************/
 extern const pit_config_t PIT_config;
-extern const qtmr_config_t TMR1_BaseTimeChannel_config;
+extern const qtmr_config_t TMR1_TimePresacler_config;
+extern const qtmr_config_t TMR1_ms_Counter_config;
 
 /***********************************************************************************************************************
  * Initialization functions

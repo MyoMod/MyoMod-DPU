@@ -192,12 +192,12 @@ instance:
     - clockSourceFreq: 'ClocksTool_DefaultInit'
     - qtmr_channels:
       - 0:
-        - channel_prefix_id: 'BaseTimeChannel'
+        - channel_prefix_id: 'TimePresacler'
         - channel: 'kQTMR_Channel_0'
         - primarySource: 'kQTMR_ClockDivide_8'
         - secondarySource: 'kQTMR_Counter0InputPin'
-        - countingMode: 'kQTMR_NoOperation'
-        - enableMasterMode: 'false'
+        - countingMode: 'kQTMR_PriSrcRiseEdge'
+        - enableMasterMode: 'true'
         - enableExternalForce: 'false'
         - faultFilterCount: '3'
         - faultFilterPeriod: '0'
@@ -205,6 +205,22 @@ instance:
         - timerModeInit: 'timer'
         - timerMode:
           - freq_value_str: '1 ms'
+        - dmaIntMode: 'polling'
+      - 1:
+        - channel_prefix_id: 'ms_Counter'
+        - channel: 'kQTMR_Channel_1'
+        - primarySource: 'kQTMR_ClockCounter0Output'
+        - primarySourceFreq: '1 khz'
+        - secondarySource: 'kQTMR_Counter0InputPin'
+        - countingMode: 'kQTMR_CascadeCount'
+        - enableMasterMode: 'true'
+        - enableExternalForce: 'false'
+        - faultFilterCount: '3'
+        - faultFilterPeriod: '0'
+        - debugMode: 'kQTMR_HaltCounter'
+        - timerModeInit: 'timer'
+        - timerMode:
+          - freq_value_str: '65535'
         - dmaIntMode: 'polling'
     - interruptVector:
       - enable_irq: 'false'
@@ -216,10 +232,19 @@ instance:
         - enable_custom_name: 'false'
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
-const qtmr_config_t TMR1_BaseTimeChannel_config = {
+const qtmr_config_t TMR1_TimePresacler_config = {
   .primarySource = kQTMR_ClockDivide_8,
   .secondarySource = kQTMR_Counter0InputPin,
-  .enableMasterMode = false,
+  .enableMasterMode = true,
+  .enableExternalForce = false,
+  .faultFilterCount = 0,
+  .faultFilterPeriod = 0,
+  .debugMode = kQTMR_HaltCounter
+};
+const qtmr_config_t TMR1_ms_Counter_config = {
+  .primarySource = kQTMR_ClockCounter0Output,
+  .secondarySource = kQTMR_Counter0InputPin,
+  .enableMasterMode = true,
   .enableExternalForce = false,
   .faultFilterCount = 0,
   .faultFilterPeriod = 0,
@@ -227,10 +252,18 @@ const qtmr_config_t TMR1_BaseTimeChannel_config = {
 };
 
 static void TMR1_init(void) {
-  /* Quad timer channel BaseTimeChannel peripheral initialization */
-  QTMR_Init(TMR1_PERIPHERAL, TMR1_BASETIMECHANNEL_CHANNEL, &TMR1_BaseTimeChannel_config);
+  /* Quad timer channel TimePresacler peripheral initialization */
+  QTMR_Init(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, &TMR1_TimePresacler_config);
   /* Setup the timer period of the channel */
-  QTMR_SetTimerPeriod(TMR1_PERIPHERAL, TMR1_BASETIMECHANNEL_CHANNEL, 18750U);
+  QTMR_SetTimerPeriod(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, 18750U);
+  /* Quad timer channel ms_Counter peripheral initialization */
+  QTMR_Init(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, &TMR1_ms_Counter_config);
+  /* Setup the timer period of the channel */
+  QTMR_SetTimerPeriod(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, 65535U);
+  /* Start the timer - select the timer counting mode */
+  QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, kQTMR_PriSrcRiseEdge);
+  /* Start the timer - select the timer counting mode */
+  QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, kQTMR_CascadeCount);
 }
 
 /***********************************************************************************************************************

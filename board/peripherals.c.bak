@@ -174,63 +174,94 @@ static void PIT_init(void) {
 }
 
 /***********************************************************************************************************************
- * GPT1 initialization code
+ * TMR1 initialization code
  **********************************************************************************************************************/
 /* clang-format off */
 /* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 instance:
-- name: 'GPT1'
-- type: 'gpt'
+- name: 'TMR1'
+- type: 'qtmr'
 - mode: 'general'
 - custom_name_enabled: 'false'
-- type_id: 'gpt_e92a0cbd07e389b82a1d19b05eb9fdda'
+- type_id: 'qtmr_460dd7aa3f3371843c2548acd54252b0'
 - functional_group: 'BOARD_InitPeripherals'
-- peripheral: 'GPT1'
+- peripheral: 'TMR1'
 - config_sets:
-  - fsl_gpt:
-    - gpt_config:
-      - clockSource: 'kGPT_ClockSource_Osc'
-      - clockSourceFreq: 'BOARD_BootClockRUN_528M'
-      - oscDivider: '16'
-      - divider: '1500'
-      - enableFreeRun: 'true'
-      - enableRunInWait: 'true'
-      - enableRunInStop: 'true'
-      - enableRunInDoze: 'false'
-      - enableRunInDbg: 'false'
-      - enableMode: 'true'
-    - input_capture_channels: []
-    - output_compare_channels: []
-    - interrupt_requests: ''
-    - isInterruptEnabled: 'false'
-    - interrupt:
-      - IRQn: 'GPT1_IRQn'
-      - enable_interrrupt: 'enabled'
-      - enable_priority: 'false'
-      - priority: '0'
-      - enable_custom_name: 'false'
-    - EnableTimerInInit: 'true'
+  - fsl_qtmr:
+    - clockSource: 'BusInterfaceClock'
+    - clockSourceFreq: 'ClocksTool_DefaultInit'
+    - qtmr_channels:
+      - 0:
+        - channel_prefix_id: 'TimePresacler'
+        - channel: 'kQTMR_Channel_0'
+        - primarySource: 'kQTMR_ClockDivide_8'
+        - secondarySource: 'kQTMR_Counter0InputPin'
+        - countingMode: 'kQTMR_NoOperation'
+        - enableMasterMode: 'true'
+        - enableExternalForce: 'false'
+        - faultFilterCount: '3'
+        - faultFilterPeriod: '0'
+        - debugMode: 'kQTMR_HaltCounter'
+        - timerModeInit: 'timer'
+        - timerMode:
+          - freq_value_str: '1 ms'
+        - dmaIntMode: 'polling'
+      - 1:
+        - channel_prefix_id: 'ms_Counter'
+        - channel: 'kQTMR_Channel_1'
+        - primarySource: 'kQTMR_ClockCounter0Output'
+        - primarySourceFreq: '1 khz'
+        - secondarySource: 'kQTMR_Counter0InputPin'
+        - countingMode: 'kQTMR_PriSrcRiseEdge'
+        - enableMasterMode: 'true'
+        - enableExternalForce: 'false'
+        - faultFilterCount: '3'
+        - faultFilterPeriod: '0'
+        - debugMode: 'kQTMR_HaltCounter'
+        - timerModeInit: 'timer'
+        - timerMode:
+          - freq_value_str: '65535'
+        - dmaIntMode: 'polling'
+    - interruptVector:
+      - enable_irq: 'false'
+      - interrupt:
+        - IRQn: 'TMR1_IRQn'
+        - enable_interrrupt: 'enabled'
+        - enable_priority: 'false'
+        - priority: '0'
+        - enable_custom_name: 'false'
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
-const gpt_config_t GPT1_config = {
-  .clockSource = kGPT_ClockSource_Osc,
-  .divider = 1500UL,
-  .enableFreeRun = true,
-  .enableRunInWait = true,
-  .enableRunInStop = true,
-  .enableRunInDoze = false,
-  .enableRunInDbg = false,
-  .enableMode = true
+const qtmr_config_t TMR1_TimePresacler_config = {
+  .primarySource = kQTMR_ClockDivide_8,
+  .secondarySource = kQTMR_Counter0InputPin,
+  .enableMasterMode = true,
+  .enableExternalForce = false,
+  .faultFilterCount = 0,
+  .faultFilterPeriod = 0,
+  .debugMode = kQTMR_HaltCounter
+};
+const qtmr_config_t TMR1_ms_Counter_config = {
+  .primarySource = kQTMR_ClockCounter0Output,
+  .secondarySource = kQTMR_Counter0InputPin,
+  .enableMasterMode = true,
+  .enableExternalForce = false,
+  .faultFilterCount = 0,
+  .faultFilterPeriod = 0,
+  .debugMode = kQTMR_HaltCounter
 };
 
-static void GPT1_init(void) {
-  /* GPT device and channels initialization */
-  GPT_Init(GPT1_PERIPHERAL, &GPT1_config);
-  GPT_SetOscClockDivider(GPT1_PERIPHERAL, 16);
-  /* Enable GPT interrupt sources */
-  GPT_EnableInterrupts(GPT1_PERIPHERAL, 0);
-  /* Start the GPT timer */ 
-  GPT_StartTimer(GPT1_PERIPHERAL);
+static void TMR1_init(void) {
+  /* Quad timer channel TimePresacler peripheral initialization */
+  QTMR_Init(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, &TMR1_TimePresacler_config);
+  /* Setup the timer period of the channel */
+  QTMR_SetTimerPeriod(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, 18750U);
+  /* Quad timer channel ms_Counter peripheral initialization */
+  QTMR_Init(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, &TMR1_ms_Counter_config);
+  /* Setup the timer period of the channel */
+  QTMR_SetTimerPeriod(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, 65535U);
+  /* Start the timer - select the timer counting mode */
+  QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, kQTMR_PriSrcRiseEdge);
 }
 
 /***********************************************************************************************************************
@@ -241,7 +272,7 @@ void BOARD_InitPeripherals(void)
   /* Initialize components */
   GPIO2_init();
   PIT_init();
-  GPT1_init();
+  TMR1_init();
 }
 
 /***********************************************************************************************************************
