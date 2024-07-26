@@ -23,6 +23,8 @@
 #include "fsl_common.h"
 #include "fsl_clock.h"
 #include "fsl_qtmr.h"
+#include "fsl_src.h"
+
 #include "SEGGER_RTT.h"
 
 #include "ConfigurationManager.h"
@@ -409,7 +411,26 @@ void PIT_IRQHandler(void)
 		startCycle();
 	}
 }
+
+/* GPIO4_Combined_0_15_IRQn interrupt handler */
+void GPIO4_GPIO_COMB_0_15_IRQHANDLER(void) {
+  /* Get pins flags */ 
+  uint32_t pins_flags = GPIO_GetPinsInterruptFlags(GPIO4); 
+
+  /* Place your interrupt code here */ 
+  if (GPIO_PinRead(BOARD_INITPINS_SW_RESET_GPIO, BOARD_INITPINS_SW_RESET_PIN) == 0)
+  {
+	  SEGGER_RTT_printf(0, "Reset button pressed\n");
+	  SRC_DoSoftwareResetARMCore0(SRC);
+  }
+
+  /* Clear ins flags */ 
+  GPIO_ClearPinsInterruptFlags(GPIO4, pins_flags); 
 }
+
+}
+
+
 
 /**
  * @brief Starts a new cycle

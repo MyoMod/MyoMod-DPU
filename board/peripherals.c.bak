@@ -196,7 +196,7 @@ instance:
         - channel: 'kQTMR_Channel_0'
         - primarySource: 'kQTMR_ClockDivide_8'
         - secondarySource: 'kQTMR_Counter0InputPin'
-        - countingMode: 'kQTMR_NoOperation'
+        - countingMode: 'kQTMR_PriSrcRiseEdge'
         - enableMasterMode: 'true'
         - enableExternalForce: 'false'
         - faultFilterCount: '3'
@@ -212,7 +212,7 @@ instance:
         - primarySource: 'kQTMR_ClockCounter0Output'
         - primarySourceFreq: '1 khz'
         - secondarySource: 'kQTMR_Counter0InputPin'
-        - countingMode: 'kQTMR_PriSrcRiseEdge'
+        - countingMode: 'kQTMR_CascadeCount'
         - enableMasterMode: 'true'
         - enableExternalForce: 'false'
         - faultFilterCount: '3'
@@ -261,7 +261,9 @@ static void TMR1_init(void) {
   /* Setup the timer period of the channel */
   QTMR_SetTimerPeriod(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, 65535U);
   /* Start the timer - select the timer counting mode */
-  QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, kQTMR_PriSrcRiseEdge);
+  QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, kQTMR_PriSrcRiseEdge);
+  /* Start the timer - select the timer counting mode */
+  QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, kQTMR_CascadeCount);
 }
 
 /***********************************************************************************************************************

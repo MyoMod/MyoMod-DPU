@@ -242,8 +242,8 @@ BOARD_InitPins:
   - {pin_num: H3, peripheral: GPIO4, signal: 'gpio_io, 08', pin_signal: GPIO_EMC_08, identifier: SW_MOD, direction: INPUT, pull_up_down_config: Pull_Up_47K_Ohm, pull_keeper_select: Pull}
   - {pin_num: G5, peripheral: GPIO4, signal: 'gpio_io, 05', pin_signal: GPIO_EMC_05, identifier: SW_DOWN, direction: INPUT, pull_up_down_config: Pull_Up_47K_Ohm,
     pull_keeper_select: Pull}
-  - {pin_num: H5, peripheral: GPIO4, signal: 'gpio_io, 06', pin_signal: GPIO_EMC_06, identifier: SW_RESET, direction: INPUT, gpio_interrupt: kGPIO_NoIntmode, pull_up_down_config: Pull_Up_47K_Ohm,
-    pull_keeper_select: Pull}
+  - {pin_num: H5, peripheral: GPIO4, signal: 'gpio_io, 06', pin_signal: GPIO_EMC_06, identifier: SW_RESET, direction: INPUT, gpio_interrupt: kGPIO_IntFallingEdge,
+    pull_up_down_config: Pull_Up_47K_Ohm, pull_keeper_select: Pull}
   - {pin_num: C5, peripheral: GPIO4, signal: 'gpio_io, 31', pin_signal: GPIO_EMC_31, identifier: DEBUG1, direction: OUTPUT}
   - {pin_num: E4, peripheral: GPIO3, signal: 'gpio_io, 23', pin_signal: GPIO_EMC_37, identifier: DEBUG2, direction: OUTPUT}
   - {pin_num: C3, peripheral: GPIO3, signal: 'gpio_io, 22', pin_signal: GPIO_EMC_36, direction: OUTPUT}
@@ -349,10 +349,12 @@ void BOARD_InitPins(void) {
   gpio_pin_config_t SW_RESET_config = {
       .direction = kGPIO_DigitalInput,
       .outputLogic = 0U,
-      .interruptMode = kGPIO_NoIntmode
+      .interruptMode = kGPIO_IntFallingEdge
   };
   /* Initialize GPIO functionality on GPIO_EMC_06 (pin H5) */
   GPIO_PinInit(GPIO4, 6U, &SW_RESET_config);
+  /* Enable GPIO pin interrupt on GPIO_EMC_06 (pin H5) */
+  GPIO_PortEnableInterrupts(GPIO4, 1U << 6U);
 
   /* GPIO configuration of SW_MOD on GPIO_EMC_08 (pin H3) */
   gpio_pin_config_t SW_MOD_config = {

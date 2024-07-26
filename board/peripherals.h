@@ -60,6 +60,12 @@ extern "C" {
 #define TMR1_TIMEPRESACLER_CLOCK_SOURCE 18750000UL
 /* Definition of the timer channel ms_Counter clock source frequency. */
 #define TMR1_MS_COUNTER_CLOCK_SOURCE 1000UL
+/* GPIO4 interrupt vector ID (number). */
+#define GPIO4_GPIO_COMB_0_15_IRQN GPIO4_Combined_0_15_IRQn
+/* GPIO4 interrupt vector priority. */
+#define GPIO4_GPIO_COMB_0_15_IRQ_PRIORITY 0
+/* GPIO4 interrupt handler identifier. */
+#define GPIO4_GPIO_COMB_0_15_IRQHANDLER GPIO4_Combined_0_15_IRQHandler
 
 /***********************************************************************************************************************
  * Global variables

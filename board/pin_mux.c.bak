@@ -242,7 +242,7 @@ BOARD_InitPins:
   - {pin_num: H3, peripheral: GPIO4, signal: 'gpio_io, 08', pin_signal: GPIO_EMC_08, identifier: SW_MOD, direction: INPUT, pull_up_down_config: Pull_Up_47K_Ohm, pull_keeper_select: Pull}
   - {pin_num: G5, peripheral: GPIO4, signal: 'gpio_io, 05', pin_signal: GPIO_EMC_05, identifier: SW_DOWN, direction: INPUT, pull_up_down_config: Pull_Up_47K_Ohm,
     pull_keeper_select: Pull}
-  - {pin_num: H5, peripheral: GPIO4, signal: 'gpio_io, 06', pin_signal: GPIO_EMC_06, identifier: SW_RESET, direction: INPUT, pull_up_down_config: Pull_Up_47K_Ohm,
+  - {pin_num: H5, peripheral: GPIO4, signal: 'gpio_io, 06', pin_signal: GPIO_EMC_06, identifier: SW_RESET, direction: INPUT, gpio_interrupt: kGPIO_NoIntmode, pull_up_down_config: Pull_Up_47K_Ohm,
     pull_keeper_select: Pull}
   - {pin_num: C5, peripheral: GPIO4, signal: 'gpio_io, 31', pin_signal: GPIO_EMC_31, identifier: DEBUG1, direction: OUTPUT}
   - {pin_num: E4, peripheral: GPIO3, signal: 'gpio_io, 23', pin_signal: GPIO_EMC_37, identifier: DEBUG2, direction: OUTPUT}

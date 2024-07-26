@@ -72,6 +72,7 @@ instance:
       - 0: []
       - 1: []
       - 2: []
+      - 3: []
     - interrupts: []
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
@@ -267,6 +268,46 @@ static void TMR1_init(void) {
 }
 
 /***********************************************************************************************************************
+ * GPIO4 initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'GPIO4'
+- type: 'igpio'
+- mode: 'GPIO'
+- custom_name_enabled: 'false'
+- type_id: 'igpio_b1c1fa279aa7069dca167502b8589cb7'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'GPIO4'
+- config_sets:
+  - fsl_gpio:
+    - enable_irq_comb_0_15: 'true'
+    - gpio_interrupt_comb_0_15:
+      - IRQn: 'GPIO4_Combined_0_15_IRQn'
+      - enable_interrrupt: 'enabled'
+      - enable_priority: 'true'
+      - priority: '0'
+      - enable_custom_name: 'false'
+    - enable_irq_comb_16_31: 'false'
+    - gpio_interrupt_comb_16_31:
+      - IRQn: 'GPIO1_Combined_16_31_IRQn'
+      - enable_interrrupt: 'enabled'
+      - enable_priority: 'false'
+      - priority: '0'
+      - enable_custom_name: 'false'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+
+static void GPIO4_init(void) {
+  /* Make sure, the clock gate for GPIO4 is enabled (e. g. in pin_mux.c) */
+  /* Interrupt vector GPIO4_Combined_0_15_IRQn priority settings in the NVIC. */
+  NVIC_SetPriority(GPIO4_GPIO_COMB_0_15_IRQN, GPIO4_GPIO_COMB_0_15_IRQ_PRIORITY);
+  /* Enable interrupt GPIO4_Combined_0_15_IRQn request in the NVIC. */
+  EnableIRQ(GPIO4_GPIO_COMB_0_15_IRQN);
+}
+
+/***********************************************************************************************************************
  * Initialization functions
  **********************************************************************************************************************/
 void BOARD_InitPeripherals(void)
@@ -275,6 +316,7 @@ void BOARD_InitPeripherals(void)
   GPIO2_init();
   PIT_init();
   TMR1_init();
+  GPIO4_init();
 }
 
 /***********************************************************************************************************************
