@@ -19,6 +19,7 @@
 #include "logNode.h"
 #include "linearFuncNode.h"
 #include "ServoHand.h"
+#include "EMGSensor6Chn.h"
 
 // Data structures
 #ifdef CONFIG_PARSER_DEBUG
@@ -526,6 +527,11 @@ std::unique_ptr<DeviceNode> ConfigParser::createDeviceNode(const NodeData& nodeD
     else if (nodeData.type == "Servo Hand")
     {
         return std::make_unique<ServoHand>(ID);
+    }
+    else if (nodeData.type == "EMGSens6Ch")
+    {
+        
+        return std::make_unique<EMGSensor6Chn>(ID);
     }
     
     /*else if (nodeData.type == "BltSink6Ch")
