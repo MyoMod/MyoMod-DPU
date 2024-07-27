@@ -29,6 +29,7 @@ void OnProjectLoad (void) {
   Project.AddPathSubstitute ("/workspace", "$(ProjectDir)");
   Project.AddPathSubstitute ("/workspace", "$(ProjectDir)");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M7F.svd");
+  Project.AddSvdFile ("$(ProjectDir)/.vscode/MIMXRT1062.svd");
   //
   // User settings
   //

@@ -1,18 +1,33 @@
 
 
-OpenDocument="RuntimeHandler.cpp", FilePath="/workspace/source/RuntimeHandler.cpp", Line=0
+
+Breakpoint=/workspace/source/communication/PeripheralHandler.cpp:685:6, State=BP_STATE_DISABLED
+Breakpoint=/workspace/source/communication/PeripheralHandler.cpp:711:31, State=BP_STATE_DISABLED
+Breakpoint=/workspace/source/communication/PeripheralHandler.cpp:764:20, State=BP_STATE_DISABLED
+Breakpoint=/opt/arm-none-eabi-gcc-13.3.rel1/arm-none-eabi/include/c++/13.3.1/array:200:7, State=BP_STATE_DISABLED
+OpenDocument="RuntimeHandler.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/RuntimeHandler.cpp", Line=70
+OpenDocument="ConfigurationManager.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/configurations/ConfigurationManager.cpp", Line=119
+OpenDocument="startup_mimxrt1062.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/startup/startup_mimxrt1062.cpp", Line=644
+OpenDocument="configParser.cpp", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/source/configurations/configParser.cpp", Line=161
+OpenDocument="fsl_assert.c", FilePath="/home/leon/Programs/FreeThetics/DPU/firmware/DPU/utilities/fsl_assert.c", Line=31
 OpenToolbar="File", Floating=0, x=1, y=0
 OpenToolbar="View", Floating=0, x=2, y=0
 OpenToolbar="Debug", Floating=0, x=0, y=0
 OpenToolbar="Breakpoints", Floating=0, x=3, y=0
-OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=1, w=601, h=373, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
-OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=0, w=601, h=243, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Functions", DockArea=LEFT, x=0, y=0, w=300, h=622, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Console", DockArea=BOTTOM, x=0, y=0, w=1167, h=319, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Memory 1", DockArea=BOTTOM, x=1, y=0, w=685, h=319, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, EditorAddress=0x0
+OpenWindow="Call Stack", DockArea=BOTTOM, x=1, y=0, w=865, h=303, TabPos=0, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=0, w=635, h=603, TabPos=0, TopOfStack=0, FilterBarShown=1, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
+OpenWindow="Source Files", DockArea=LEFT, x=0, y=0, w=241, h=603, TabPos=0, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Disassembly", DockArea=LEFT, x=0, y=0, w=241, h=603, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Local Data", DockArea=RIGHT, x=0, y=0, w=635, h=603, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Functions", DockArea=LEFT, x=0, y=0, w=241, h=603, TabPos=2, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Terminal", DockArea=BOTTOM, x=0, y=0, w=987, h=320, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Console", DockArea=BOTTOM, x=1, y=0, w=865, h=303, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 SmartViewPlugin="", Page="", Toolbar="Hidden", Window="SmartView 1"
-TableHeader="Functions", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Class";"Source"], ColWidths=[5971;100;100;100;1624;1162]
+TableHeader="Local Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[202;100;100;100;245;0;100]
+TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Auto";"Name";"Value";"Description"], ColWidths=[37;119;105;378]
+TableHeader="Source Files", SortCol="File", SortOrder="ASCENDING", VisibleCols=["File";"Status";"Size";"#Insts";"Path"], ColWidths=[288;100;100;100;868]
+TableHeader="Functions", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Class";"Source"], ColWidths=[5971;100;100;100;280;266]
 TableHeader="Power Sampling", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Ch 0"], ColWidths=[100;100;100]
-TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Auto";"Name";"Value";"Description"], ColWidths=[100;100;105;280]
 TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
-TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[26;26;26;26]
+TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[239;112;210;100;168;100]
+TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[200;100;100;359]
