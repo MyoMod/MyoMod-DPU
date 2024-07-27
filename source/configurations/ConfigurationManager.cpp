@@ -115,17 +115,24 @@ Status ConfigurationManager::setActiveConfiguration(uint32_t index)
 Status ConfigurationManager::incrementActiveConfiguration()
 {
 	// normally the NOP configuration should be ignored, but is used as a fallback
-	uint32_t nValid = getNumberOfValidConfigurations();
-	if (nValid == 0)
+	uint32_t nConfigurations = configurationHandles.size();
+	if (getNumberOfValidConfigurations() == 0)
 	{
 		setActiveConfiguration(0);
 		SEGGER_RTT_printf(0, "No valid configuration found, reset to nop configuration\n");
 		return Status::Warning;
 	}
 
-	uint32_t nextIndex = activeConfigIndex + 1; // iterate through the valid configurations
-	nextIndex = nextIndex>nValid?1:nextIndex; // But skip the NOP configuration
-	return setActiveConfiguration(nextIndex);
+	// it is next valid configuration is not the next one (like we A and C are valid, but B is not)
+	//  in this case we must skip B when we start at A
+	//  at the same time we must make sure that we do not get stuck in an infinite loop
+	int32_t startIndex = activeConfigIndex;
+	int32_t nextIndex = startIndex;
+	do{
+		nextIndex = nextIndex + 1; // iterate through the valid configurations
+		nextIndex = nextIndex>=nConfigurations?1:nextIndex; // But skip the NOP configuration
+	} while ((setActiveConfiguration(nextIndex) == Status::Error) && nextIndex != startIndex);
+	return startIndex == nextIndex ? Status::Error : Status::Ok;
 }
 
 /**
@@ -140,17 +147,25 @@ Status ConfigurationManager::incrementActiveConfiguration()
 Status ConfigurationManager::decrementActiveConfiguration()
 {
 	// normally the NOP configuration should be ignored, but is used as a fallback
-	uint32_t nValid = getNumberOfValidConfigurations();
-	if (nValid == 0)
+	uint32_t nConfigurations = configurationHandles.size();
+	if (getNumberOfValidConfigurations() == 0)
 	{
 		setActiveConfiguration(0);
 		SEGGER_RTT_printf(0, "No valid configuration found, reset to nop configuration\n");
 		return Status::Warning;
 	}
 
-	int32_t nextIndex = activeConfigIndex - 1; // iterate through the valid configurations
-	nextIndex = nextIndex<=0?(nValid):nextIndex; // But skip the NOP configuration
-	return setActiveConfiguration(nextIndex);
+	// it is next valid configuration is not the next one (like we A and C are valid, but B is not)
+	//  in this case we must skip B when we start at C
+	//  at the same time we must make sure that we do not get stuck in an infinite loop
+	int32_t startIndex = activeConfigIndex;
+	int32_t nextIndex = startIndex;
+	do{
+		nextIndex = nextIndex - 1; // iterate through the valid configurations
+		nextIndex = nextIndex<=0?(nConfigurations - 1):nextIndex; // But skip the NOP configuration
+	} while ((setActiveConfiguration(nextIndex) == Status::Error) && nextIndex != startIndex);
+	
+	return startIndex == nextIndex ? Status::Error : Status::Ok; 
 }
 
 /**
