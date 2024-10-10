@@ -14,12 +14,17 @@
 
 #include "configParser.h"
 
+// Devices
 #include "BarDisplay.h"
+#include "BLEBridge.h"
+#include "ServoHand.h"
+#include "EMGSensor6Chn.h"
+
+// Algorithms
 #include "testAlgorithm.h"
 #include "logNode.h"
 #include "linearFuncNode.h"
-#include "ServoHand.h"
-#include "EMGSensor6Chn.h"
+#include "handAnimationNode.h"
 
 // Data structures
 #ifdef CONFIG_PARSER_DEBUG
@@ -524,6 +529,10 @@ std::unique_ptr<DeviceNode> ConfigParser::createDeviceNode(const NodeData& nodeD
 
         return std::make_unique<BarDisplay>(ID, barColors);
     }
+    if (nodeData.type == "BLE Bridge")
+    {
+        return std::make_unique<BLEBridge>(ID);
+    }
     else if (nodeData.type == "Servo Hand")
     {
         return std::make_unique<ServoHand>(ID);
@@ -565,6 +574,10 @@ std::unique_ptr<AlgorithmicNode> ConfigParser::createAlgorithmicNode(const NodeD
     if (nodeData.type == "TestAlgorithm")
     {
         return std::make_unique<TestAlgorithm>();
+    }
+    else if (nodeData.type == "HandAnimation")
+    {
+        return std::make_unique<HandAnimationNode>();
     }
     else if (nodeData.type == "LogNode")
     {
