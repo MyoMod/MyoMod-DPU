@@ -48,7 +48,7 @@ void BarDisplay::processOutData()
     m_activeBuffer = !m_activeBuffer;
     for (size_t i = 0; i < m_barPorts.size(); i++)
     {
-        (*data)[i] = m_barPorts[i]->getValue();
+        (*data)[i] = m_barPorts[i]->getValue() * (100.0/255.0);
     }
 }
 
@@ -103,7 +103,7 @@ Status BarDisplay::setRegisterRawData(DeviceRegisterType registerType, std::span
     {
     case DeviceRegisterType::DeviceSpecificConfiguration:
         assert(value.size() == sizeof(m_deviceSpecificConfiguration));
-        m_deviceSpecificConfiguration = *reinterpret_cast<const DeviceSpecificConfiguration*>(value.data());
+        m_deviceSpecificConfiguration = *reinterpret_cast<const bar_display::DeviceSpecificConfiguration*>(value.data());
         return Status::Ok;
     default:
         return DeviceNode::setRegisterRawData(registerType, value);
