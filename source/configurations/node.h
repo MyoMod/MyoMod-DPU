@@ -39,6 +39,10 @@ struct DeviceNodeStorage
     size_t outSize;
 };
 
+/**
+ * @brief This identifier is used to identify a device, it does not contain any information about the device itself.
+ * 
+ */
 struct DeviceIdentifier
 {
     std::array<char, 10> type;

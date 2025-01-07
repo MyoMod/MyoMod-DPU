@@ -175,7 +175,7 @@ void renumrateDevices()
 }
 
 /**
- * @brief Updates the configuration if needed
+ * @brief Updates the active configuration if necessary
  * 
  */
 void updateConfiguration()
@@ -309,6 +309,10 @@ void start()
 		assert(status == Status::Ok);
 	}
 
+	// TODO: Start the virtual devices
+
+	//?: TODO: Start the algorithmic nodes
+
 	// Set the running flag
 	g_isRunning = true;
 }
@@ -335,6 +339,10 @@ void stop()
 		status = peripheralHandler->exitRealTimeMode();
 		assert(status == Status::Ok);
 	}
+
+	// TODO: Stop the virtual devices
+
+	//?: TODO: Stop the algorithmic nodes
 
 	// Clear the running flag
 	g_isRunning = false;
