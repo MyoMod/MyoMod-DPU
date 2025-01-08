@@ -12,6 +12,7 @@ commonClasses/*.cpp
 communication/*.cpp
 configurations/*.cpp
 devices/*.cpp
+embeddedDevices/*.cpp
 #structure/*.cpp
  )
  
@@ -47,6 +48,7 @@ target_include_directories(
   ./communication
   ./configurations
   ./devices
+  ./embeddedDevices
   ./structure
   ./hardware
   ./generated

@@ -20,6 +20,9 @@
 #include "ServoHand.h"
 #include "EMGSensor6Chn.h"
 
+// Virtual devices
+#include "embeddedIMU.h"
+
 // Algorithms
 #include "testAlgorithm.h"
 #include "logNode.h"
@@ -52,6 +55,7 @@ ConfigParser::ConfigParser():
         m_currentConfigSection{ConfigSection::None},
         m_parseError{false},
         m_devices{},
+        m_embeddedDevices{},
         m_algorithms{}
 {
 
@@ -61,6 +65,7 @@ NodesTuple ConfigParser::loadConfig(std::string_view configString, uint32_t conf
 {
     // Reset parsed data
     m_devices.clear();
+    m_embeddedDevices.clear();
     m_algorithms.clear();
     m_currentConfigId = 0;
 
@@ -97,11 +102,13 @@ NodesTuple ConfigParser::loadConfig(std::string_view configString, uint32_t conf
 
     if (m_parseError)
     {
-        return std::make_tuple(std::vector<std::unique_ptr<DeviceNode>>{}, std::vector<std::unique_ptr<AlgorithmicNode>>{});
+        return std::make_tuple(std::vector<std::unique_ptr<DeviceNode>>{}, 
+                                std::vector<std::unique_ptr<EmbeddedDeviceNode>>{}, 
+                                std::vector<std::unique_ptr<AlgorithmicNode>>{});
     }
 
     // Move nodes to vectors 
-    return std::make_tuple(std::move(m_devices), std::move(m_algorithms));
+    return std::make_tuple(std::move(m_devices), std::move(m_embeddedDevices),  std::move(m_algorithms));
 }
 
 std::vector<Configuration> ConfigParser::scanConfigurations(std::string_view configString)
@@ -202,6 +209,11 @@ void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream
             parser.m_currentConfigSection = ConfigSection::DeviceNodes;// print section
             PARSE_DEBUG("\r\n Scan %s\r\n", jsp->stack[2].meta.name);
         }
+        else if (strcmp(jsp->stack[2].meta.name, "embeddedDeviceNodes") == 0)
+        {
+            parser.m_currentConfigSection = ConfigSection::EmbeddedDeviceNodes;
+            PARSE_DEBUG("\r\n Scan %s\r\n", jsp->stack[2].meta.name);
+        }
         else if (strcmp(jsp->stack[2].meta.name, "algorithmicNodes") == 0)
         {
             parser.m_currentConfigSection = ConfigSection::AlgorithmicNodes;
@@ -212,8 +224,9 @@ void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream
         }
     }
 
-    // Only load device nodes
-    if (parser.m_currentConfigSection != ConfigSection::DeviceNodes)
+    // Only load deviceNodes and embeddedDeviceNodes
+    if (parser.m_currentConfigSection != ConfigSection::DeviceNodes &&
+        parser.m_currentConfigSection != ConfigSection::EmbeddedDeviceNodes)
     {
         return;
     }
@@ -277,7 +290,8 @@ void ConfigParser::shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream
          && type == LWJSON_STREAM_TYPE_OBJECT_END
          && jsp->stack_pos == 4)
     {
-        if (parser.m_currentConfigSection == ConfigSection::DeviceNodes)
+        if (parser.m_currentConfigSection == ConfigSection::DeviceNodes ||
+            parser.m_currentConfigSection == ConfigSection::EmbeddedDeviceNodes)
         {
             if (parser.m_configurations.empty())
             {
@@ -339,6 +353,10 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
         if (strcmp(jsp->stack[2].meta.name, "deviceNodes") == 0)
         {
             parser.m_currentConfigSection = ConfigSection::DeviceNodes;
+        }
+        else if (strcmp(jsp->stack[2].meta.name, "embeddedDeviceNodes") == 0)
+        {
+            parser.m_currentConfigSection = ConfigSection::EmbeddedDeviceNodes;
         }
         else if (strcmp(jsp->stack[2].meta.name, "algorithmicNodes") == 0)
         {
@@ -472,6 +490,16 @@ void ConfigParser::deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_ty
                 PARSE_DEBUG( "Could not create device node\r\n");
             }
             break;
+        case ConfigSection::EmbeddedDeviceNodes:
+            parser.m_embeddedDevices.push_back(parser.createEmbeddedDeviceNode(parser.m_currentNodeData));
+
+            // check if creation was successful
+            if (parser.m_embeddedDevices.back() == nullptr)
+            {
+                parser.m_parseError = true;
+                PARSE_DEBUG( "Could not create embedded device node\r\n");
+            }
+            break;
         case ConfigSection::AlgorithmicNodes:
             parser.m_algorithms.push_back(parser.createAlgorithmicNode(parser.m_currentNodeData));
 
@@ -551,6 +579,23 @@ std::unique_ptr<DeviceNode> ConfigParser::createDeviceNode(const NodeData& nodeD
     {
         return std::make_unique<FloatInputNode>(ID);
     }*/
+    else
+    {
+        return nullptr;
+    }
+}
+
+std::unique_ptr<EmbeddedDeviceNode> ConfigParser::createEmbeddedDeviceNode(const NodeData& nodeData)
+{
+    std::array<char, 10> ID;
+    if (!getID(nodeData, ID))
+    {
+        return nullptr;
+    }
+    if (nodeData.type == "EmbeddedIMU")
+    {
+        return std::make_unique<EmbeddedIMU>(ID);
+    }
     else
     {
         return nullptr;
@@ -683,11 +728,18 @@ std::unique_ptr<AlgorithmicNode> ConfigParser::createAlgorithmicNode(const NodeD
 bool ConfigParser::linkNodes(const PortDescriptor& inputPort, const PortDescriptor& outputPort)
 {
     auto nDeviceNodes = m_devices.size();
+    auto nEmbeddedDeviceNodes = m_embeddedDevices.size();
     auto nAlgorithmNodes = m_algorithms.size();
     bool valid = true;
 
-    valid &= (inputPort.category == NodeCategory::DeviceNodes)?(inputPort.nodeIndex < nDeviceNodes):(inputPort.nodeIndex < nAlgorithmNodes);
-    valid &= (outputPort.category == NodeCategory::DeviceNodes)?(outputPort.nodeIndex < nDeviceNodes):(outputPort.nodeIndex < nAlgorithmNodes);
+    // check if node indices are valid
+    valid &= (inputPort.category == NodeCategory::DeviceNodes) ? (inputPort.nodeIndex < nDeviceNodes) :
+             (inputPort.category == NodeCategory::EmbeddedDeviceNodes) ? (inputPort.nodeIndex < nEmbeddedDeviceNodes) :
+             (inputPort.nodeIndex < nAlgorithmNodes);
+             
+    valid &= (outputPort.category == NodeCategory::DeviceNodes) ? (outputPort.nodeIndex < nDeviceNodes) :
+             (outputPort.category == NodeCategory::EmbeddedDeviceNodes) ? (outputPort.nodeIndex < nEmbeddedDeviceNodes) :
+             (outputPort.nodeIndex < nAlgorithmNodes);
 
     if (!valid)
     {
@@ -699,6 +751,10 @@ bool ConfigParser::linkNodes(const PortDescriptor& inputPort, const PortDescript
     {
         outputNode = m_devices[outputPort.nodeIndex].get();
     }
+    else if(outputPort.category == NodeCategory::EmbeddedDeviceNodes)
+    {
+        outputNode = m_embeddedDevices[outputPort.nodeIndex].get();
+    }
     else
     {
         outputNode = m_algorithms[outputPort.nodeIndex].get();
@@ -708,6 +764,10 @@ bool ConfigParser::linkNodes(const PortDescriptor& inputPort, const PortDescript
     if(inputPort.category == NodeCategory::DeviceNodes)
     {
         inputNode = m_devices[inputPort.nodeIndex].get();
+    }
+    else if(inputPort.category == NodeCategory::EmbeddedDeviceNodes)
+    {
+        inputNode = m_embeddedDevices[inputPort.nodeIndex].get();
     }
     else
     {
@@ -1036,8 +1096,10 @@ static bool createPortDescriptor(std::string_view stringDescriptor, PortDescript
     {
         return false;
     }
-    portDescriptor.category = category == 'D'?NodeCategory::DeviceNodes:
-                            category == 'A'?NodeCategory::AlgorithmNodes:NodeCategory::None;
+    portDescriptor.category = category == 'D'?NodeCategory::DeviceNodes : 
+                             category == 'E'?NodeCategory::EmbeddedDeviceNodes :
+                            category == 'A'?NodeCategory::AlgorithmNodes :
+                            NodeCategory::None;
     portDescriptor.nodeIndex = std::stoi(stringDescriptor.substr(1, seperatorPos - 1).data());
     portDescriptor.nodePort = std::stoi(stringDescriptor.substr(seperatorPos + 1).data());
     return true;

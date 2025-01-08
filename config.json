@@ -13,6 +13,12 @@
 				"ID" : "ServoHand1"
 			}
 			],
+		"embeddedDeviceNodes": [
+			{
+				"type": "embed' IMU",
+				"ID" : "IMU0      "
+			}
+		],
 		"algorithmicNodes": [
 			{
 				"type": "TestAlgorithm"
@@ -106,6 +112,12 @@
 				"ID" : "Bridge 001"
 			}
 			],
+		"embeddedDeviceNodes": [
+			{
+				"type": "embed' IMU",
+				"ID" : "IMU0      "
+			}
+		],
 		"algorithmicNodes": [
 			
 			{

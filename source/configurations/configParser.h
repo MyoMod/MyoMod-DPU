@@ -26,12 +26,14 @@
 #include "node.h"
 #include "algorithmicNode.h"
 #include "deviceNode.h"
+#include "embeddedDeviceNode.h"
 
 #define CONFIG_PARSER_DEBUG
 
 // Tuple that consists of input devices, algorithms and output devices
 using NodesTuple = std::tuple<
         std::vector<std::unique_ptr<DeviceNode>>,       // devices
+        std::vector<std::unique_ptr<EmbeddedDeviceNode>>,  // embedded devices
         std::vector<std::unique_ptr<AlgorithmicNode>>  // algorithms
     >;
 
@@ -46,6 +48,7 @@ enum class ConfigSection
 {
     None,
     DeviceNodes,
+    EmbeddedDeviceNodes,
     AlgorithmicNodes,
     Links
 };
@@ -71,6 +74,7 @@ private:
     static void deepTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_type_t type);
     static void shallowTokenParser(lwjson_stream_parser_t* jsp, lwjson_stream_type_t type);
     std::unique_ptr<DeviceNode> createDeviceNode(const NodeData& nodeData);
+    std::unique_ptr<EmbeddedDeviceNode> createEmbeddedDeviceNode(const NodeData& nodeData);
     std::unique_ptr<AlgorithmicNode> createAlgorithmicNode(const NodeData& nodeData);
     bool linkNodes(const PortDescriptor& inputPort, const PortDescriptor& outputPort);
 
@@ -86,6 +90,7 @@ private:
     bool m_typeFound;
 
     std::vector<std::unique_ptr<DeviceNode>> m_devices;
+    std::vector<std::unique_ptr<EmbeddedDeviceNode>> m_embeddedDevices;
     std::vector<std::unique_ptr<AlgorithmicNode>> m_algorithms;
 
     std::vector<Configuration> m_configurations;

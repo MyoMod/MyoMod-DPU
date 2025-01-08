@@ -30,11 +30,13 @@
 #include "ConfigurationManager.h"
 #include "Configuration.h"
 #include "PeripheralHandler.h"
+#include "embeddedDevicesManager.h"
 #include "Status.h"
 #include "dpu_gpio.h"
 
 #include "ui/button.h"
 
+#include "embeddedIMU.h"
 
 /*******************************************************************************
  * Defines
@@ -50,7 +52,9 @@
 
 ConfigurationManager* g_configManager = nullptr;
 std::array<PeripheralHandler*, 3> g_peripheralHandlers;
+EmbeddedDevicesManager g_embeddedDevicesManager;
 std::vector<std::unique_ptr<DeviceNode>> g_deviceNodes;
+std::vector<std::shared_ptr<EmbeddedDeviceNode>> g_embeddedDeviceNodes;
 std::vector<std::unique_ptr<AlgorithmicNode>> g_algorithmicNodes;
 
 volatile bool g_isRunning = false;
@@ -73,6 +77,7 @@ void startCycle();
 // init
 void initHardware();
 void initPerpheralHandler();
+void initEmbeddedDevices();
 void gpio_init();
 void init_debug();
 /*******************************************************************************
@@ -83,6 +88,7 @@ int main()
 	/** Initialization **/
 	initHardware();
 	initPerpheralHandler();
+	initEmbeddedDevices();
 	init_debug();
 
 	Button<1> button_up(BOARD_INITPINS_SW_UP_PORT, BOARD_INITPINS_SW_UP_PIN, true);
@@ -157,6 +163,10 @@ void renumrateDevices()
 		foundDevices.insert(foundDevices.end(), devices.begin(), devices.end());
 		assert(status != Status::Error);
 	}
+
+	// Add the embedded devices
+	auto embeddedDevices = g_embeddedDevicesManager.listConnectedDevices();
+	foundDevices.insert(foundDevices.end(), embeddedDevices.begin(), embeddedDevices.end());
 
 	// print found devices
 	SEGGER_RTT_printf(0, "Found device(s): \"");
@@ -254,18 +264,21 @@ void installActiveConfiguration()
 	// Get the active configuration
 	auto nodes = g_configManager->createActiveConfiguration();
 	g_deviceNodes = std::move(std::get<0>(nodes));
-	g_algorithmicNodes = std::move(std::get<1>(nodes));
+	auto embeddedDeviceNodes = std::move(std::get<1>(nodes));
+	g_algorithmicNodes = std::move(std::get<2>(nodes));
 
 	// remove all old devices from the peripheral handlers
 	for (auto& peripheralHandler : g_peripheralHandlers)
 	{
 		peripheralHandler->uninstallAllDevices();
 	}
+	g_embeddedDevicesManager.uninstallAllDevices();
 
 	// Add the new devices to the peripheral handlers
 	for (auto&& deviceNode : g_deviceNodes)
 	{
 		auto deviceIdentifier = deviceNode->getDeviceIdentifier();
+		// Install the device, if it is connected to a peripheral handler
 		for (auto& peripheralHandler : g_peripheralHandlers)
 		{
 			if(peripheralHandler->getDeviceAdress(deviceIdentifier) != -1)
@@ -276,9 +289,11 @@ void installActiveConfiguration()
 				status = peripheralHandler->installDevice(deviceNode.get());
 				assert(status != Status::Error);
 			}
-			
 		}
 	}
+
+	// Add the new devices to the embedded devices manager
+	g_embeddedDevicesManager.installDevices(std::move(embeddedDeviceNodes));
 
 	// Update the color	
 	uint32_t color = g_configManager->getActiveConfigurationColor();
@@ -309,7 +324,7 @@ void start()
 		assert(status == Status::Ok);
 	}
 
-	// TODO: Start the virtual devices
+	g_embeddedDevicesManager.enterRealTimeMode();
 
 	//?: TODO: Start the algorithmic nodes
 
@@ -384,6 +399,7 @@ void inputHandlingDone()
 	{
 		deviceNode->processInData();
 	}
+	g_embeddedDevicesManager.processInData();
 
 	DEBUG_PINS(1);
 	for (auto&& algorithmicNode : g_algorithmicNodes)
@@ -392,6 +408,7 @@ void inputHandlingDone()
 	}
 		DEBUG_PINS(0);
 
+	g_embeddedDevicesManager.processOutData();
 	for (auto&& deviceNode : g_deviceNodes)
 	{
 		deviceNode->processOutData();
@@ -522,6 +539,11 @@ void initPerpheralHandler()
 	g_peripheralHandlers[0] = new PeripheralHandler(DMA0, 1, [](){peripheralHandlerCallback(0);}, true);
 	g_peripheralHandlers[1] = new PeripheralHandler(DMA0, 3, [](){peripheralHandlerCallback(1);}, true);
 	g_peripheralHandlers[2] = new PeripheralHandler(DMA0, 4, [](){peripheralHandlerCallback(2);}, false);
+}
+
+void initEmbeddedDevices()
+{
+	g_embeddedDevicesManager.registerDevice(DeviceIdentifier(idArr("embed' IMU"), idArr("IMU      0")));
 }
 
 

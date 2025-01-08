@@ -115,7 +115,7 @@ Status ConfigurationManager::setActiveConfiguration(uint32_t index)
 Status ConfigurationManager::incrementActiveConfiguration()
 {
 	// normally the NOP configuration should be ignored, but is used as a fallback
-	uint32_t nConfigurations = configurationHandles.size();
+	int32_t nConfigurations = configurationHandles.size();
 	if (getNumberOfValidConfigurations() == 0)
 	{
 		setActiveConfiguration(0);
