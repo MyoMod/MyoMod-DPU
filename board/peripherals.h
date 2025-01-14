@@ -10,10 +10,15 @@
  * Included files
  **********************************************************************************************************************/
 #include "fsl_common.h"
-#include "fsl_gpio.h"
 #include "fsl_pit.h"
 #include "fsl_qtmr.h"
 #include "fsl_clock.h"
+#include "fsl_flexio_i2c_master.h"
+#include "fsl_lpuart_cmsis.h"
+#include "fsl_adapter_gpio.h"
+#include "pin_mux.h"
+#include "fsl_pwm.h"
+#include "fsl_lpspi_cmsis.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -23,14 +28,10 @@ extern "C" {
  * Definitions
  **********************************************************************************************************************/
 /* Definitions for BOARD_InitPeripherals functional group */
-/* GPIO2 interrupt vector ID (number). */
-#define GPIO2_GPIO_COMB_0_15_IRQN GPIO2_Combined_0_15_IRQn
-/* GPIO2 interrupt handler identifier. */
-#define GPIO2_GPIO_COMB_0_15_IRQHANDLER GPIO2_Combined_0_15_IRQHandler
-/* GPIO2 interrupt vector ID (number). */
-#define GPIO2_GPIO_COMB_16_31_IRQN GPIO2_Combined_16_31_IRQn
-/* GPIO2 interrupt handler identifier. */
-#define GPIO2_GPIO_COMB_16_31_IRQHANDLER GPIO2_Combined_16_31_IRQHandler
+/* NVIC interrupt vector ID (number). */
+#define ONOFF_PRESSED_IRQN SNVS_LP_WRAPPER_IRQn
+/* NVIC interrupt handler identifier. */
+#define ONOFF_PRESSED_IRQHANDLER SNVS_LP_WRAPPER_IRQHandler
 /* BOARD_InitPeripherals defines for PIT */
 /* Definition of peripheral ID. */
 #define PIT_PERIPHERAL PIT
@@ -60,12 +61,95 @@ extern "C" {
 #define TMR1_TIMEPRESACLER_CLOCK_SOURCE 18750000UL
 /* Definition of the timer channel ms_Counter clock source frequency. */
 #define TMR1_MS_COUNTER_CLOCK_SOURCE 1000UL
-/* GPIO4 interrupt vector ID (number). */
-#define GPIO4_GPIO_COMB_0_15_IRQN GPIO4_Combined_0_15_IRQn
-/* GPIO4 interrupt vector priority. */
-#define GPIO4_GPIO_COMB_0_15_IRQ_PRIORITY 0
-/* GPIO4 interrupt handler identifier. */
-#define GPIO4_GPIO_COMB_0_15_IRQHANDLER GPIO4_Combined_0_15_IRQHandler
+/* Definition of peripheral ID */
+#define FLEXIO1_PERIPHERAL FLEXIO1
+/* Definition of the clock source frequency */
+#define FLEXIO1_CLK_FREQ 30000000UL
+/* Definition of peripheral ID */
+#define LPUART1_PERIPHERAL Driver_USART1
+/* Definition of the clock source frequency */
+#define LPUART1_CLOCK_SOURCE_FREQ 80000000UL
+/* gpio_io, 16 signal defines */
+/* Definition of the pin direction */
+#define BOARD_INITDEBUG_UART_DEBUG0_PIN_DIRECTION kHAL_GpioDirectionIn
+/* Definition of the pin level after initialization */
+#define BOARD_INITDEBUG_UART_DEBUG0_PIN_LEVEL 0U
+/* gpio_io, 24 signal defines */
+/* Definition of the pin direction */
+#define BOARD_INITDEBUG_UART_DEBUG1_PIN_DIRECTION kHAL_GpioDirectionIn
+/* Definition of the pin level after initialization */
+#define BOARD_INITDEBUG_UART_DEBUG1_PIN_LEVEL 0U
+/* gpio_io, 25 signal defines */
+/* Definition of the pin direction */
+#define BOARD_INITDEBUG_UART_DEBUG2_PIN_DIRECTION kHAL_GpioDirectionIn
+/* Definition of the pin level after initialization */
+#define BOARD_INITDEBUG_UART_DEBUG2_PIN_LEVEL 0U
+/* gpio_io, 26 signal defines */
+/* Definition of the pin direction */
+#define BOARD_INITDEBUG_UART_DEBUG3_PIN_DIRECTION kHAL_GpioDirectionIn
+/* Definition of the pin level after initialization */
+#define BOARD_INITDEBUG_UART_DEBUG3_PIN_LEVEL 0U
+/* gpio_io, 29 signal defines */
+/* Definition of the pin direction */
+#define EXTERNAL_CONNECTIONS_IMU_INT2_PIN_DIRECTION kHAL_GpioDirectionIn
+/* Definition of the pin level after initialization */
+#define EXTERNAL_CONNECTIONS_IMU_INT2_PIN_LEVEL 0U
+/* Definition of the pin trigger mode */
+#define EXTERNAL_CONNECTIONS_IMU_INT2_TRIGGER_MODE kHAL_GpioInterruptRisingEdge
+/* gpio_io, 30 signal defines */
+/* Definition of the pin direction */
+#define EXTERNAL_CONNECTIONS_IMU_INT1_PIN_DIRECTION kHAL_GpioDirectionIn
+/* Definition of the pin level after initialization */
+#define EXTERNAL_CONNECTIONS_IMU_INT1_PIN_LEVEL 0U
+/* Definition of the pin trigger mode */
+#define EXTERNAL_CONNECTIONS_IMU_INT1_TRIGGER_MODE kHAL_GpioInterruptRisingEdge
+/* gpio_io, 31 signal defines */
+/* Definition of the pin direction */
+#define EXTERNAL_CONNECTIONS_IMU_SYNC_PIN_DIRECTION kHAL_GpioDirectionOut
+/* Definition of the pin level after initialization */
+#define EXTERNAL_CONNECTIONS_IMU_SYNC_PIN_LEVEL 0U
+/* Definition of peripheral ID */
+#define PWM1_PERIPHERAL PWM1
+/* Definition of submodule 1 ID */
+#define PWM1_SM1 kPWM_Module_1
+/* Definition of clock source of submodule 1 frequency in Hertz */
+#define PWM1_SM1_SM_CLK_SOURCE_FREQ_HZ 150000000U
+/* Definition of submodule 1 counter clock source frequency in Hertz - PWM1_SM1_SM_CLK_SOURCE_FREQ_HZ divided by prescaler */
+#define PWM1_SM1_COUNTER_CLK_SOURCE_FREQ_HZ 150000000U
+/* Definition of submodule 1 counter (PWM) frequency in Hertz */
+#define PWM1_SM1_COUNTER_FREQ_HZ 9264U
+/* Definition of submodule 1 channel A ID */
+#define PWM1_SM1_LED_G kPWM_PwmA
+/* Definition of submodule 1 channel B ID */
+#define PWM1_SM1_LED_B kPWM_PwmB
+/* Definition of submodule 1 channel X ID */
+#define PWM1_SM1_X kPWM_PwmX
+/* Definition of submodule 2 ID */
+#define PWM1_SM2 kPWM_Module_2
+/* Definition of clock source of submodule 2 frequency in Hertz */
+#define PWM1_SM2_SM_CLK_SOURCE_FREQ_HZ 150000000U
+/* Definition of submodule 2 counter clock source frequency in Hertz - PWM1_SM2_SM_CLK_SOURCE_FREQ_HZ divided by prescaler */
+#define PWM1_SM2_COUNTER_CLK_SOURCE_FREQ_HZ 150000000U
+/* Definition of submodule 2 counter (PWM) frequency in Hertz */
+#define PWM1_SM2_COUNTER_FREQ_HZ 9264U
+/* Definition of submodule 2 channel A ID */
+#define PWM1_SM2_A kPWM_PwmA
+/* Definition of submodule 2 channel B ID */
+#define PWM1_SM2_LED_R kPWM_PwmB
+/* Definition of submodule 2 channel X ID */
+#define PWM1_SM2_X kPWM_PwmX
+/* Definition of fault Fault0 ID */
+#define PWM1_F0_FAULT0 kPWM_Fault_0
+/* Definition of fault Fault1 ID */
+#define PWM1_F0_FAULT1 kPWM_Fault_1
+/* Definition of fault Fault2 ID */
+#define PWM1_F0_FAULT2 kPWM_Fault_2
+/* Definition of fault Fault3 ID */
+#define PWM1_F0_FAULT3 kPWM_Fault_3
+/* Definition of peripheral ID */
+#define LPSPI3_PERIPHERAL Driver_SPI3
+/* Definition of the clock source frequency */
+#define LPSPI3_CLOCK_SOURCE_FREQ 132000000UL
 
 /***********************************************************************************************************************
  * Global variables
@@ -73,6 +157,48 @@ extern "C" {
 extern const pit_config_t PIT_config;
 extern const qtmr_config_t TMR1_TimePresacler_config;
 extern const qtmr_config_t TMR1_ms_Counter_config;
+/* FlexIO peripheral configuration */
+extern FLEXIO_I2C_Type FLEXIO1_peripheralConfig;
+/* FlexIO I2C master configuration */
+extern flexio_i2c_master_config_t FLEXIO1_config;
+extern GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG0_handle);
+extern GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG1_handle);
+extern GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG2_handle);
+extern GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG3_handle);
+extern GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_INT2_handle);
+extern GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_INT1_handle);
+extern GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_SYNC_handle);
+extern pwm_config_t PWM1_SM1_config;
+
+extern pwm_signal_param_t PWM1_SM1_pwm_function_config[2];
+extern pwm_config_t PWM1_SM2_config;
+
+extern pwm_signal_param_t PWM1_SM2_pwm_function_config[1];
+extern const pwm_fault_input_filter_param_t PWM1_faultInputFilter_config;
+extern const pwm_fault_param_t PWM1_Fault0_fault_config;
+extern const pwm_fault_param_t PWM1_Fault1_fault_config;
+extern const pwm_fault_param_t PWM1_Fault2_fault_config;
+extern const pwm_fault_param_t PWM1_Fault3_fault_config;
+
+/***********************************************************************************************************************
+ * Global functions
+ **********************************************************************************************************************/
+/* Signal event function for component LPUART1*/
+extern void LPUART1_SignalEvent(uint32_t event);
+/* Get clock source frequency function for component LPUART1 */
+uint32_t LPUART1_GetFreq(void);
+/* Get GPIO pin configuration */
+hal_gpio_pin_config_t createAdapterGpioPinConfig(GPIO_Type *port, uint8_t pin, hal_gpio_direction_t direction, uint8_t level);
+/* Get clock source frequency function for component LPSPI3 */
+uint32_t LPSPI3_GetFreq(void);
+
+/***********************************************************************************************************************
+ * Callback functions
+ **********************************************************************************************************************/
+/* Callback function for the EXTERNAL_CONNECTIONS_IMU_INT2_handle*/
+extern void EXTERNAL_CONNECTIONS_IMU_INT2_callback(void *param);
+/* Callback function for the EXTERNAL_CONNECTIONS_IMU_INT1_handle*/
+extern void EXTERNAL_CONNECTIONS_IMU_INT1_callback(void *param);
 
 /***********************************************************************************************************************
  * Initialization functions

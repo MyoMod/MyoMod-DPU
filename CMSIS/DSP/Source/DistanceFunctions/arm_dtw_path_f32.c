@@ -149,11 +149,11 @@ void arm_dtw_path_f32(const arm_matrix_instance_f32 *pDTW,
   {
      temp = fh[0];
      fh[0] = sh[0];
-     sh[0] = temp;
+     sh[0] = (int16_t)temp;
 
      temp = fh[1];
      fh[1] = sh[1];
-     sh[1] = temp;
+     sh[1] = (int16_t)temp;
 
      fh += 2;
      sh -= 2;

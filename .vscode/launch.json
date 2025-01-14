@@ -27,7 +27,7 @@
             "serverpath": "/usr/bin/JLinkGDBServerCLExe",
             "serverArgs": [],
             "device": "MIMXRT1062XXX6B",
-            "interface": "jtag",
+            "interface": "swd",
             "serialNumber": "",
             "svdPath": "${workspaceFolder}/.vscode/MIMXRT1062.svd",
             "gdbPath": "arm-none-eabi-gdb-py",

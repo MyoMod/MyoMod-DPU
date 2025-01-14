@@ -123,6 +123,7 @@ target_include_directories(
     ${EXECUTABLE}
     PUBLIC
     ./CMSIS
+    ./CMSIS_driver/Include
 )
 
 # Optional: Print executable size as part of the post build process

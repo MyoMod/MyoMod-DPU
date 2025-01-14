@@ -2,6 +2,7 @@ file(GLOB FILES
 lists/*.c
 serial_manager/*.c
 uart/*.c
+gpio/*.c
  )
  
 # add_library: With this declaration, you express the intent to build a library. 
@@ -25,4 +26,5 @@ target_include_directories(
   ./lists
   ./serial_manager
   ./uart
+  ./gpio
 )

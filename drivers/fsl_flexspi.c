@@ -134,7 +134,7 @@ uint32_t FLEXSPI_GetInstance(FLEXSPI_Type *base)
     /* Find the instance index from base address mappings. */
     for (instance = 0; instance < ARRAY_SIZE(s_flexspiBases); instance++)
     {
-        if (s_flexspiBases[instance] == base)
+        if (MSDK_REG_SECURE_ADDR(s_flexspiBases[instance]) == MSDK_REG_SECURE_ADDR(base))
         {
             break;
         }
@@ -192,6 +192,9 @@ static uint32_t FLEXSPI_CalculateDll(FLEXSPI_Type *base, flexspi_device_config_t
             /* DLLEN = 1, SLVDLYTARGET = 0xF, */
             flexspiDllValue = FLEXSPI_DLLCR_DLLEN(1) | FLEXSPI_DLLCR_SLVDLYTARGET(0x0F);
 #endif
+#if (defined(FSL_FEATURE_FLEXSPI_HAS_REFPHASEGAP) && FSL_FEATURE_FLEXSPI_HAS_REFPHASEGAP)
+            flexspiDllValue |= FLEXSPI_DLLCR_REFPHASEGAP(2U);
+#endif /* FSL_FEATURE_FLEXSPI_HAS_REFPHASEGAP */
         }
         else
         {

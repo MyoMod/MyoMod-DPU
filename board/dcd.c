@@ -22,10 +22,9 @@ __attribute__((section(".boot_hdr.dcd_data"), used))
 !!GlobalInfo
 product: DCDx v3.0
 processor: MIMXRT1062xxxxB
-package_id: MIMXRT1062DVL6B
+package_id: MIMXRT1062DVJ6B
 mcu_data: ksdk2_0
-processor_version: 14.0.1
-board: MIMXRT1060-EVKC
+processor_version: 15.0.1
 output_format: c_array
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* COMMENTS BELOW ARE USED AS SETTINGS FOR DCD DATA */

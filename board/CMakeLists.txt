@@ -14,6 +14,7 @@ add_library(board ${FILES})
 # target_link_libraries: If you link with other libraries, list them here
 target_link_libraries(
   board 
+  component
 )
 
 # target_include_directories: Libraries need to publish their header files 
@@ -27,6 +28,7 @@ target_include_directories(
   ../utilities
   ../device
   ../CMSIS
+  ../CMSIS_driver/Include
   ../component/serial_manager
   ../component/uart
   ../component/lists

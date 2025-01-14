@@ -15,12 +15,11 @@
 
 /* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 !!GlobalInfo
-product: Clocks v12.0
+product: Clocks v13.0
 processor: MIMXRT1062xxxxB
-package_id: MIMXRT1062DVL6B
+package_id: MIMXRT1062DVJ6B
 mcu_data: ksdk2_0
-processor_version: 14.0.1
-board: MIMXRT1060-EVKC
+processor_version: 15.0.1
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 
 #include "clock_config.h"
@@ -52,6 +51,7 @@ called_from_default_init: true
 outputs:
 - {id: AHB_CLK_ROOT.outFreq, value: 600 MHz, locked: true, accuracy: '0.001'}
 - {id: CAN_CLK_ROOT.outFreq, value: 40 MHz}
+- {id: CKIL_SYNC_CLK_ROOT.outFreq, value: 32.768 kHz}
 - {id: CLK_1M.outFreq, value: 1 MHz}
 - {id: CLK_24M.outFreq, value: 24 MHz}
 - {id: CSI_CLK_ROOT.outFreq, value: 12 MHz}
@@ -107,6 +107,8 @@ settings:
 - {id: CCM_ANALOG.PLL3_PFD2_BYPASS.sel, value: CCM_ANALOG.PLL3_PFD2}
 - {id: CCM_ANALOG.PLL3_PFD3_BYPASS.sel, value: CCM_ANALOG.PLL3_PFD3}
 - {id: CCM_ANALOG_PLL_USB1_POWER_CFG, value: 'Yes'}
+sources:
+- {id: XTALOSC24M.RTC_OSC.outFreq, value: 32.768 kHz, enabled: true}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 
 /*******************************************************************************
@@ -143,6 +145,8 @@ const clock_enet_pll_config_t enetPllConfig_BOARD_BootClockRUN =
  ******************************************************************************/
 void BOARD_BootClockRUN(void)
 {
+    /* Init RTC OSC clock frequency. */
+    CLOCK_SetRtcXtalFreq(32768U);
     /* Enable 1MHz clock output. */
     XTALOSC24M->OSC_CONFIG2 |= XTALOSC24M_OSC_CONFIG2_ENABLE_1M_MASK;
     /* Use free 1MHz clock output. */

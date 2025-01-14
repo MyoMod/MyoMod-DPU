@@ -6,12 +6,11 @@
 /* clang-format off */
 /* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 !!GlobalInfo
-product: Peripherals v13.0
+product: Peripherals v14.0
 processor: MIMXRT1062xxxxB
-package_id: MIMXRT1062DVL6B
+package_id: MIMXRT1062DVJ6B
 mcu_data: ksdk2_0
-processor_version: 14.0.1
-board: MIMXRT1060-EVKC
+processor_version: 15.0.1
 functionalGroups:
 - name: BOARD_InitPeripherals
   UUID: 5d593d64-b05a-48b6-982b-7f0904718eaf
@@ -26,6 +25,7 @@ component:
 - global_system_definitions:
   - user_definitions: ''
   - user_includes: ''
+  - global_init: ''
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 
 /* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
@@ -33,6 +33,8 @@ component:
 - type: 'uart_cmsis_common'
 - type_id: 'uart_cmsis_common_9cb8e302497aa696fdbb5a4fd622c2a8'
 - global_USART_CMSIS_common:
+  - commonSetting:
+    - USART_RX_BUFFER_LEN: '64'
   - quick_selection: 'default'
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 
@@ -41,6 +43,9 @@ component:
 - type: 'gpio_adapter_common'
 - type_id: 'gpio_adapter_common_57579b9ac814fe26bf95df0a384c36b6'
 - global_gpio_adapter_common:
+  - commonSetting:
+    - HAL_GPIO_ISR_PRIORITY: '3'
+    - HAL_GpioPreInit: 'true'
   - quick_selection: 'default'
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
@@ -73,53 +78,21 @@ instance:
       - 1: []
       - 2: []
       - 3: []
-    - interrupts: []
+    - interrupts:
+      - 0:
+        - channelId: 'OnOff_Pressed'
+        - interrupt_t:
+          - IRQn: 'SNVS_LP_WRAPPER_IRQn'
+          - enable_interrrupt: 'enabled'
+          - enable_priority: 'false'
+          - priority: '0'
+          - enable_custom_name: 'false'
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
 
 /* Empty initialization function (commented out)
 static void NVIC_init(void) {
 } */
-
-/***********************************************************************************************************************
- * GPIO2 initialization code
- **********************************************************************************************************************/
-/* clang-format off */
-/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
-instance:
-- name: 'GPIO2'
-- type: 'igpio'
-- mode: 'GPIO'
-- custom_name_enabled: 'false'
-- type_id: 'igpio_b1c1fa279aa7069dca167502b8589cb7'
-- functional_group: 'BOARD_InitPeripherals'
-- peripheral: 'GPIO2'
-- config_sets:
-  - fsl_gpio:
-    - enable_irq_comb_0_15: 'true'
-    - gpio_interrupt_comb_0_15:
-      - IRQn: 'GPIO2_Combined_0_15_IRQn'
-      - enable_interrrupt: 'enabled'
-      - enable_priority: 'false'
-      - priority: '0'
-      - enable_custom_name: 'false'
-    - enable_irq_comb_16_31: 'true'
-    - gpio_interrupt_comb_16_31:
-      - IRQn: 'GPIO2_Combined_16_31_IRQn'
-      - enable_interrrupt: 'enabled'
-      - enable_priority: 'false'
-      - priority: '0'
-      - enable_custom_name: 'false'
- * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
-/* clang-format on */
-
-static void GPIO2_init(void) {
-  /* Make sure, the clock gate for GPIO2 is enabled (e. g. in pin_mux.c) */
-  /* Enable interrupt GPIO2_Combined_0_15_IRQn request in the NVIC. */
-  EnableIRQ(GPIO2_GPIO_COMB_0_15_IRQN);
-  /* Enable interrupt GPIO2_Combined_16_31_IRQn request in the NVIC. */
-  EnableIRQ(GPIO2_GPIO_COMB_16_31_IRQN);
-}
 
 /***********************************************************************************************************************
  * PIT initialization code
@@ -268,55 +241,633 @@ static void TMR1_init(void) {
 }
 
 /***********************************************************************************************************************
- * GPIO4 initialization code
+ * FLEXIO1 initialization code
  **********************************************************************************************************************/
 /* clang-format off */
 /* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 instance:
-- name: 'GPIO4'
-- type: 'igpio'
+- name: 'FLEXIO1'
+- type: 'flexio_i2c_master'
+- mode: 'polling'
+- custom_name_enabled: 'false'
+- type_id: 'flexio_i2c_master_337812fef13382b42ae08a3bbf349c7c'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'FLEXIO1'
+- config_sets:
+  - fsl_flexio_i2c_master:
+    - clockSource: 'FlexIoClock'
+    - clockSourceFreq: 'ClocksTool_DefaultInit'
+    - peripheralConfig:
+      - SDAPinIndex: '7'
+      - SCLPinIndex: '8'
+      - shifterIndex_0: '0'
+      - shifterIndex_1: '1'
+      - timerIndex_0: '0'
+      - timerIndex_1: '1'
+      - timerIndex_2: '2'
+    - config:
+      - enableMaster: 'true'
+      - enableInDoze: 'false'
+      - enableInDebug: 'true'
+      - enableFastAccess: 'false'
+      - baudRate_Bps: '100000'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+/* FlexIO peripheral configuration */
+FLEXIO_I2C_Type FLEXIO1_peripheralConfig = {
+  .flexioBase = FLEXIO1_PERIPHERAL,
+  .SDAPinIndex = 7,
+  .SCLPinIndex = 8,
+  .shifterIndex = {0, 1},
+  .timerIndex = {0, 1, 2}
+};
+/* I2C master configuration */
+flexio_i2c_master_config_t FLEXIO1_config = {
+  .enableMaster = true,
+  .enableInDoze = false,
+  .enableInDebug = true,
+  .enableFastAccess = false,
+  .baudRate_Bps = 100000UL
+};
+
+static void FLEXIO1_init(void) {
+  /* Master initialization */
+  FLEXIO_I2C_MasterInit(&FLEXIO1_peripheralConfig, &FLEXIO1_config, FLEXIO1_CLK_FREQ);
+}
+
+/***********************************************************************************************************************
+ * LPUART1 initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'LPUART1'
+- type: 'lpuart_cmsis'
+- mode: 'interrupt'
+- custom_name_enabled: 'false'
+- type_id: 'lpuart_cmsis_45ff8bb27f56563059427916f159562d'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'LPUART1'
+- config_sets:
+  - general:
+    - main_config:
+      - operationMode: 'ARM_USART_MODE_ASYNCHRONOUS'
+      - clockSource: 'LpuartClock'
+      - clockSourceFreq: 'ClocksTool_DefaultInit'
+      - power_state: 'ARM_POWER_FULL'
+      - baudRate_Bps: '115200'
+      - dataBits: 'ARM_USART_DATA_BITS_8'
+      - parityBit: 'ARM_USART_PARITY_NONE'
+      - stopBit: 'ARM_USART_STOP_BITS_1'
+      - enableRX: 'false'
+      - enableRXBuffer: 'true'
+      - enableTX: 'false'
+      - signalEventFunctionId: 'LPUART1_SignalEvent'
+      - enableGetFreqFnCustomName: 'false'
+      - getFreqFunctionCustomID: 'LPUART1_GetFreq'
+      - enableInitPinsFnCustomName: 'false'
+      - initPinFunctionCustomID: 'LPUART1_InitPins'
+      - enableDeinitPinsFnCustomName: 'false'
+      - deinitPinFunctionCustomID: 'LPUART1_DeinitPins'
+    - quick_selection: 'default'
+  - fsl_cmsis_uart:
+    - interrupt:
+      - IRQn: 'LPUART1_IRQn'
+      - enable_priority: 'false'
+      - priority: '0'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+/* Get clock source frequency */
+uint32_t LPUART1_GetFreq(void){
+  return LPUART1_CLOCK_SOURCE_FREQ;
+};
+
+static void LPUART1_init(void) {
+  /* Initialize CMSIS USART */
+  LPUART1_PERIPHERAL.Initialize(LPUART1_SignalEvent);
+  /* Power control of CMSIS USART */
+  LPUART1_PERIPHERAL.PowerControl(ARM_POWER_FULL);
+  /* Control of CMSIS USART */
+  LPUART1_PERIPHERAL.Control(ARM_USART_MODE_ASYNCHRONOUS | ARM_USART_DATA_BITS_8 | ARM_USART_PARITY_NONE | ARM_USART_STOP_BITS_1, 115200);
+  /* Enable or disable receiver. */
+  LPUART1_PERIPHERAL.Control(ARM_USART_CONTROL_RX , 0);
+  /* Enable or disable transmitter. */
+  LPUART1_PERIPHERAL.Control(ARM_USART_CONTROL_TX , 0);
+}
+
+/***********************************************************************************************************************
+ * GPIO7 initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'GPIO7'
+- type: 'igpio_adapter'
 - mode: 'GPIO'
 - custom_name_enabled: 'false'
-- type_id: 'igpio_b1c1fa279aa7069dca167502b8589cb7'
+- type_id: 'igpio_adapter_5c0a3d4fd4d107e507335b7419af3b4f'
 - functional_group: 'BOARD_InitPeripherals'
-- peripheral: 'GPIO4'
+- peripheral: 'GPIO7'
 - config_sets:
-  - fsl_gpio:
-    - enable_irq_comb_0_15: 'true'
-    - gpio_interrupt_comb_0_15:
-      - IRQn: 'GPIO4_Combined_0_15_IRQn'
-      - enable_interrrupt: 'enabled'
-      - enable_priority: 'true'
-      - priority: '0'
-      - enable_custom_name: 'false'
-    - enable_irq_comb_16_31: 'false'
-    - gpio_interrupt_comb_16_31:
-      - IRQn: 'GPIO1_Combined_16_31_IRQn'
+  - fsl_adapter_gpio:
+    - signalsFilter: 'default boot'
+    - gpioSignalsParameters:
+      - 0: []
+      - 1: []
+      - 2: []
+      - 3: []
+      - 4: []
+      - 5: []
+      - 6: []
+    - gpioPinsOverView:
+      - 0: []
+      - 1: []
+      - 2: []
+      - 3: []
+      - 4: []
+      - 5: []
+      - 6: []
+    - gpioPinsConfig:
+      - 0:
+        - pin_selection: 'gpio_io.29'
+        - userPinId: ''
+        - funtionalGroupEnum: 'External_Connections'
+        - setCallbackFnc: 'true'
+        - callbackFncCfg:
+          - functionName: 'defaultFunctionName'
+          - userData: ''
+      - 1:
+        - pin_selection: 'gpio_io.30'
+        - userPinId: ''
+        - funtionalGroupEnum: 'External_Connections'
+        - setCallbackFnc: 'true'
+        - callbackFncCfg:
+          - functionName: 'defaultFunctionName'
+          - userData: ''
+    - globalCfg: []
+    - differentPeripheralsAdd: []
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+/* Get GPIO pin configuration */
+hal_gpio_pin_config_t createAdapterGpioPinConfig(GPIO_Type *port, uint8_t pin, hal_gpio_direction_t direction, uint8_t level){
+  hal_gpio_pin_config_t temp;
+  /* Array of GPIO peripheral base address. */
+  static GPIO_Type *const s_gpioBases[] = GPIO_BASE_PTRS;
+  uint8_t portInd;
+  /* Find the port index from base address mappings. */
+  for (portInd = 0U; portInd < ARRAY_SIZE(s_gpioBases); portInd++)
+  {    if (s_gpioBases[portInd] == port)
+    {
+      break;
+    }
+  }
+  
+  assert(portInd < ARRAY_SIZE(s_gpioBases));
+  
+  temp.direction = direction;
+  temp.level = level;
+  temp.port = portInd;
+  temp.pin = pin;
+  
+  return temp;
+};
+GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG0_handle);
+GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG1_handle);
+GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG2_handle);
+GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG3_handle);
+GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_INT2_handle);
+GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_INT1_handle);
+GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_SYNC_handle);
+
+static void GPIO7_init(void) {
+  /* GPIO adapter initialization */
+  static hal_gpio_pin_config_t gpioPinConfig;
+  hal_gpio_status_t status;
+  (void)status; // suppress warning in the run configuration
+  /* gpio_io, 16 signal initialization */
+  gpioPinConfig = createAdapterGpioPinConfig(BOARD_INITDEBUG_UART_DEBUG0_PORT, BOARD_INITDEBUG_UART_DEBUG0_PIN, BOARD_INITDEBUG_UART_DEBUG0_PIN_DIRECTION, BOARD_INITDEBUG_UART_DEBUG0_PIN_LEVEL);
+  status = HAL_GpioInit(BOARD_INITDEBUG_UART_DEBUG0_handle, &gpioPinConfig);
+  assert(status == kStatus_HAL_GpioSuccess);
+  /* gpio_io, 24 signal initialization */
+  gpioPinConfig = createAdapterGpioPinConfig(BOARD_INITDEBUG_UART_DEBUG1_PORT, BOARD_INITDEBUG_UART_DEBUG1_PIN, BOARD_INITDEBUG_UART_DEBUG1_PIN_DIRECTION, BOARD_INITDEBUG_UART_DEBUG1_PIN_LEVEL);
+  status = HAL_GpioInit(BOARD_INITDEBUG_UART_DEBUG1_handle, &gpioPinConfig);
+  assert(status == kStatus_HAL_GpioSuccess);
+  /* gpio_io, 25 signal initialization */
+  gpioPinConfig = createAdapterGpioPinConfig(BOARD_INITDEBUG_UART_DEBUG2_PORT, BOARD_INITDEBUG_UART_DEBUG2_PIN, BOARD_INITDEBUG_UART_DEBUG2_PIN_DIRECTION, BOARD_INITDEBUG_UART_DEBUG2_PIN_LEVEL);
+  status = HAL_GpioInit(BOARD_INITDEBUG_UART_DEBUG2_handle, &gpioPinConfig);
+  assert(status == kStatus_HAL_GpioSuccess);
+  /* gpio_io, 26 signal initialization */
+  gpioPinConfig = createAdapterGpioPinConfig(BOARD_INITDEBUG_UART_DEBUG3_PORT, BOARD_INITDEBUG_UART_DEBUG3_PIN, BOARD_INITDEBUG_UART_DEBUG3_PIN_DIRECTION, BOARD_INITDEBUG_UART_DEBUG3_PIN_LEVEL);
+  status = HAL_GpioInit(BOARD_INITDEBUG_UART_DEBUG3_handle, &gpioPinConfig);
+  assert(status == kStatus_HAL_GpioSuccess);
+  /* gpio_io, 29 signal initialization */
+  gpioPinConfig = createAdapterGpioPinConfig(EXTERNAL_CONNECTIONS_IMU_INT2_PORT, EXTERNAL_CONNECTIONS_IMU_INT2_PIN, EXTERNAL_CONNECTIONS_IMU_INT2_PIN_DIRECTION, EXTERNAL_CONNECTIONS_IMU_INT2_PIN_LEVEL);
+  status = HAL_GpioInit(EXTERNAL_CONNECTIONS_IMU_INT2_handle, &gpioPinConfig);
+  assert(status == kStatus_HAL_GpioSuccess);
+  status = HAL_GpioInstallCallback(EXTERNAL_CONNECTIONS_IMU_INT2_handle, EXTERNAL_CONNECTIONS_IMU_INT2_callback, NULL);
+  assert(status == kStatus_HAL_GpioSuccess);
+  status = HAL_GpioSetTriggerMode(EXTERNAL_CONNECTIONS_IMU_INT2_handle, EXTERNAL_CONNECTIONS_IMU_INT2_TRIGGER_MODE);
+  assert(status == kStatus_HAL_GpioSuccess);
+  /* gpio_io, 30 signal initialization */
+  gpioPinConfig = createAdapterGpioPinConfig(EXTERNAL_CONNECTIONS_IMU_INT1_PORT, EXTERNAL_CONNECTIONS_IMU_INT1_PIN, EXTERNAL_CONNECTIONS_IMU_INT1_PIN_DIRECTION, EXTERNAL_CONNECTIONS_IMU_INT1_PIN_LEVEL);
+  status = HAL_GpioInit(EXTERNAL_CONNECTIONS_IMU_INT1_handle, &gpioPinConfig);
+  assert(status == kStatus_HAL_GpioSuccess);
+  status = HAL_GpioInstallCallback(EXTERNAL_CONNECTIONS_IMU_INT1_handle, EXTERNAL_CONNECTIONS_IMU_INT1_callback, NULL);
+  assert(status == kStatus_HAL_GpioSuccess);
+  status = HAL_GpioSetTriggerMode(EXTERNAL_CONNECTIONS_IMU_INT1_handle, EXTERNAL_CONNECTIONS_IMU_INT1_TRIGGER_MODE);
+  assert(status == kStatus_HAL_GpioSuccess);
+  /* gpio_io, 31 signal initialization */
+  gpioPinConfig = createAdapterGpioPinConfig(EXTERNAL_CONNECTIONS_IMU_SYNC_PORT, EXTERNAL_CONNECTIONS_IMU_SYNC_PIN, EXTERNAL_CONNECTIONS_IMU_SYNC_PIN_DIRECTION, EXTERNAL_CONNECTIONS_IMU_SYNC_PIN_LEVEL);
+  status = HAL_GpioInit(EXTERNAL_CONNECTIONS_IMU_SYNC_handle, &gpioPinConfig);
+  assert(status == kStatus_HAL_GpioSuccess);
+}
+
+/***********************************************************************************************************************
+ * PWM1 initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'PWM1'
+- type: 'pwm'
+- mode: 'general'
+- custom_name_enabled: 'false'
+- type_id: 'pwm_3d4233561d9e621ebdcd737703a67bfd'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'PWM1'
+- config_sets:
+  - fsl_pwm:
+    - clockSource: 'SystemClock'
+    - clockSourceFreq: 'ClocksTool_DefaultInit'
+    - submodules:
+      - 0:
+        - sm: 'kPWM_Module_1'
+        - sm_id: 'SM1'
+        - config:
+          - clockSource: 'kPWM_BusClock'
+          - prescale: 'kPWM_Prescale_Divide_1'
+          - pwmFreq: '150/16192 MHz'
+          - pairOperation: 'kPWM_Independent'
+          - operationMode: 'kPWM_SignedCenterAligned'
+          - initializationControl: 'kPWM_Initialize_LocalSync'
+          - reloadLogic: 'kPWM_ReloadImmediate'
+          - reloadSelect: 'kPWM_LocalReload'
+          - reloadFrequency: 'kPWM_LoadEveryOportunity'
+          - forceTrigger: 'kPWM_Force_Local'
+          - enableDebugMode: 'false'
+          - outputTrigger_sel: ''
+          - loadOK: 'false'
+          - startCounter: 'false'
+          - interrupt_sel: ''
+          - dma_used: 'false'
+          - dma:
+            - pwmDMA_activate: 'false'
+            - captureDMA_enable: ''
+            - captureDMA_source: 'kPWM_DMARequestDisable'
+            - captureDMA_watermark_control: 'kPWM_FIFOWatermarksOR'
+        - channels:
+          - 0:
+            - channel_id: 'LED_G'
+            - functionSel: 'pwmOutput'
+            - pwm:
+              - dutyCyclePercent: '50'
+              - level: 'kPWM_HighTrue'
+              - fault_channel0:
+                - dismap: 'kPWM_FaultDisable_0 kPWM_FaultDisable_1 kPWM_FaultDisable_2 kPWM_FaultDisable_3'
+                - quick_selection: 'default'
+              - faultState: 'kPWM_PwmFaultState0'
+              - pwmchannelenable: 'false'
+              - deadtime_input_by_force: 'kPWM_UsePwm'
+              - clockSource: 'kPWM_BusClock'
+              - deadtimeValue: '0'
+              - interrupt_sel: ''
+          - 1:
+            - channel_id: 'LED_B'
+            - functionSel: 'pwmOutput'
+            - pwm:
+              - dutyCyclePercent: '50'
+              - level: 'kPWM_HighTrue'
+              - fault_channel0:
+                - dismap: 'kPWM_FaultDisable_0 kPWM_FaultDisable_1 kPWM_FaultDisable_2 kPWM_FaultDisable_3'
+                - quick_selection: 'default'
+              - faultState: 'kPWM_PwmFaultState0'
+              - pwmchannelenable: 'false'
+              - deadtime_input_by_force: 'kPWM_UsePwm'
+              - clockSource: 'kPWM_BusClock'
+              - deadtimeValue: '0'
+              - interrupt_sel: ''
+          - 2:
+            - channel_id: 'X'
+            - functionSel: 'notUsed'
+        - common_interruptEn: 'false'
+        - common_interrupt:
+          - IRQn: 'PWM1_0_IRQn'
+          - enable_interrrupt: 'enabled'
+          - enable_priority: 'false'
+          - priority: '0'
+          - enable_custom_name: 'false'
+      - 1:
+        - sm: 'kPWM_Module_2'
+        - sm_id: 'SM2'
+        - config:
+          - clockSource: 'kPWM_BusClock'
+          - prescale: 'kPWM_Prescale_Divide_1'
+          - pwmFreq: '150/16192 MHz'
+          - pairOperation: 'kPWM_Independent'
+          - operationMode: 'kPWM_SignedCenterAligned'
+          - initializationControl: 'kPWM_Initialize_LocalSync'
+          - reloadLogic: 'kPWM_ReloadImmediate'
+          - reloadSelect: 'kPWM_LocalReload'
+          - reloadFrequency: 'kPWM_LoadEveryOportunity'
+          - forceTrigger: 'kPWM_Force_Local'
+          - enableDebugMode: 'false'
+          - outputTrigger_sel: ''
+          - loadOK: 'false'
+          - startCounter: 'false'
+          - interrupt_sel: ''
+          - dma_used: 'false'
+          - dma:
+            - pwmDMA_activate: 'false'
+            - captureDMA_enable: ''
+            - captureDMA_source: 'kPWM_DMARequestDisable'
+            - captureDMA_watermark_control: 'kPWM_FIFOWatermarksOR'
+        - channels:
+          - 0:
+            - channel_id: 'A'
+            - functionSel: 'notUsed'
+          - 1:
+            - channel_id: 'LED_R'
+            - functionSel: 'pwmOutput'
+            - pwm:
+              - dutyCyclePercent: '0'
+              - level: 'kPWM_HighTrue'
+              - fault_channel0:
+                - dismap: 'kPWM_FaultDisable_0 kPWM_FaultDisable_1 kPWM_FaultDisable_2 kPWM_FaultDisable_3'
+                - quick_selection: 'default'
+              - faultState: 'kPWM_PwmFaultState0'
+              - pwmchannelenable: 'false'
+              - deadtime_input_by_force: 'kPWM_UsePwm'
+              - clockSource: 'kPWM_BusClock'
+              - deadtimeValue: '0'
+              - interrupt_sel: ''
+          - 2:
+            - channel_id: 'X'
+            - functionSel: 'notUsed'
+        - common_interruptEn: 'false'
+        - common_interrupt:
+          - IRQn: 'PWM1_1_IRQn'
+          - enable_interrrupt: 'enabled'
+          - enable_priority: 'false'
+          - priority: '0'
+          - enable_custom_name: 'false'
+    - faultChannels:
+      - 0:
+        - commonFaultSetting:
+          - clockSource: 'kPWM_BusClock'
+          - faultFilterPeriod: '1'
+          - faultFilterCount: '3'
+          - faultGlitchStretch: 'false'
+        - faults:
+          - 0:
+            - fault_id: 'Fault0'
+            - faultClearingMode: 'kPWM_Automatic'
+            - faultLevelR: 'low'
+            - enableCombinationalPathR: 'filtered'
+            - recoverMode: 'kPWM_NoRecovery'
+            - fault_int_source: 'false'
+          - 1:
+            - fault_id: 'Fault1'
+            - faultClearingMode: 'kPWM_Automatic'
+            - faultLevelR: 'low'
+            - enableCombinationalPathR: 'filtered'
+            - recoverMode: 'kPWM_NoRecovery'
+            - fault_int_source: 'false'
+          - 2:
+            - fault_id: 'Fault2'
+            - faultClearingMode: 'kPWM_Automatic'
+            - faultLevelR: 'low'
+            - enableCombinationalPathR: 'filtered'
+            - recoverMode: 'kPWM_NoRecovery'
+            - fault_int_source: 'false'
+          - 3:
+            - fault_id: 'Fault3'
+            - faultClearingMode: 'kPWM_Automatic'
+            - faultLevelR: 'low'
+            - enableCombinationalPathR: 'filtered'
+            - recoverMode: 'kPWM_NoRecovery'
+            - fault_int_source: 'false'
+    - fault_error_interruptEn: 'false'
+    - fault_error_interrupt:
+      - IRQn: 'PWM1_FAULT_IRQn'
       - enable_interrrupt: 'enabled'
       - enable_priority: 'false'
       - priority: '0'
       - enable_custom_name: 'false'
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
+/* PWM main configuration */
+pwm_config_t PWM1_SM1_config = {
+  .clockSource = kPWM_BusClock,
+  .prescale = kPWM_Prescale_Divide_1,
+  .pairOperation = kPWM_Independent,
+  .initializationControl = kPWM_Initialize_LocalSync,
+  .reloadLogic = kPWM_ReloadImmediate,
+  .reloadSelect = kPWM_LocalReload,
+  .reloadFrequency = kPWM_LoadEveryOportunity,
+  .forceTrigger = kPWM_Force_Local,
+  .enableDebugMode = false,
+};
 
-static void GPIO4_init(void) {
-  /* Make sure, the clock gate for GPIO4 is enabled (e. g. in pin_mux.c) */
-  /* Interrupt vector GPIO4_Combined_0_15_IRQn priority settings in the NVIC. */
-  NVIC_SetPriority(GPIO4_GPIO_COMB_0_15_IRQN, GPIO4_GPIO_COMB_0_15_IRQ_PRIORITY);
-  /* Enable interrupt GPIO4_Combined_0_15_IRQn request in the NVIC. */
-  EnableIRQ(GPIO4_GPIO_COMB_0_15_IRQN);
+pwm_signal_param_t PWM1_SM1_pwm_function_config[2]= {
+  {
+    .pwmChannel = kPWM_PwmA,
+    .dutyCyclePercent = 50U,
+    .level = kPWM_HighTrue,
+    .faultState = kPWM_PwmFaultState0,
+    .pwmchannelenable = false,
+    .deadtimeValue = 0U
+  },
+  {
+    .pwmChannel = kPWM_PwmB,
+    .dutyCyclePercent = 50U,
+    .level = kPWM_HighTrue,
+    .faultState = kPWM_PwmFaultState0,
+    .pwmchannelenable = false,
+    .deadtimeValue = 0U
+  },
+};
+
+pwm_config_t PWM1_SM2_config = {
+  .clockSource = kPWM_BusClock,
+  .prescale = kPWM_Prescale_Divide_1,
+  .pairOperation = kPWM_Independent,
+  .initializationControl = kPWM_Initialize_LocalSync,
+  .reloadLogic = kPWM_ReloadImmediate,
+  .reloadSelect = kPWM_LocalReload,
+  .reloadFrequency = kPWM_LoadEveryOportunity,
+  .forceTrigger = kPWM_Force_Local,
+  .enableDebugMode = false,
+};
+
+pwm_signal_param_t PWM1_SM2_pwm_function_config[1]= {
+  {
+    .pwmChannel = kPWM_PwmB,
+    .dutyCyclePercent = 0U,
+    .level = kPWM_HighTrue,
+    .faultState = kPWM_PwmFaultState0,
+    .pwmchannelenable = false,
+    .deadtimeValue = 0U
+  },
+};
+
+const pwm_fault_input_filter_param_t PWM1_faultInputFilter_config = {
+  .faultFilterPeriod = 1U,
+  .faultFilterCount = 3U,
+  .faultGlitchStretch = false
+};
+const pwm_fault_param_t PWM1_Fault0_fault_config = {
+  .faultClearingMode = kPWM_Automatic,
+  .faultLevel = false,
+  .enableCombinationalPath = true,
+  .recoverMode = kPWM_NoRecovery
+};
+const pwm_fault_param_t PWM1_Fault1_fault_config = {
+  .faultClearingMode = kPWM_Automatic,
+  .faultLevel = false,
+  .enableCombinationalPath = true,
+  .recoverMode = kPWM_NoRecovery
+};
+const pwm_fault_param_t PWM1_Fault2_fault_config = {
+  .faultClearingMode = kPWM_Automatic,
+  .faultLevel = false,
+  .enableCombinationalPath = true,
+  .recoverMode = kPWM_NoRecovery
+};
+const pwm_fault_param_t PWM1_Fault3_fault_config = {
+  .faultClearingMode = kPWM_Automatic,
+  .faultLevel = false,
+  .enableCombinationalPath = true,
+  .recoverMode = kPWM_NoRecovery
+};
+
+static void PWM1_init(void) {
+  /* Initialize PWM submodule SM1 main configuration */
+  PWM_Init(PWM1_PERIPHERAL, PWM1_SM1, &PWM1_SM1_config);
+  /* Initialize PWM submodule SM2 main configuration */
+  PWM_Init(PWM1_PERIPHERAL, PWM1_SM2, &PWM1_SM2_config);
+  /* Initialize fault input filter configuration */
+  PWM_SetupFaultInputFilter(PWM1_PERIPHERAL, &PWM1_faultInputFilter_config);
+  /* Initialize fault channel 0 fault Fault0 configuration */
+  PWM_SetupFaults(PWM1_PERIPHERAL, PWM1_F0_FAULT0, &PWM1_Fault0_fault_config);
+  /* Initialize fault channel 0 fault Fault1 configuration */
+  PWM_SetupFaults(PWM1_PERIPHERAL, PWM1_F0_FAULT1, &PWM1_Fault1_fault_config);
+  /* Initialize fault channel 0 fault Fault2 configuration */
+  PWM_SetupFaults(PWM1_PERIPHERAL, PWM1_F0_FAULT2, &PWM1_Fault2_fault_config);
+  /* Initialize fault channel 0 fault Fault3 configuration */
+  PWM_SetupFaults(PWM1_PERIPHERAL, PWM1_F0_FAULT3, &PWM1_Fault3_fault_config);
+  /* Initialize submodule SM1 channel LED_G output disable mapping to the selected faults */
+  PWM_SetupFaultDisableMap(PWM1_PERIPHERAL, PWM1_SM1, PWM1_SM1_LED_G, kPWM_faultchannel_0, (kPWM_FaultDisable_0 | kPWM_FaultDisable_1 | kPWM_FaultDisable_2 | kPWM_FaultDisable_3));
+  /* Initialize submodule SM1 channel LED_B output disable mapping to the selected faults */
+  PWM_SetupFaultDisableMap(PWM1_PERIPHERAL, PWM1_SM1, PWM1_SM1_LED_B, kPWM_faultchannel_0, (kPWM_FaultDisable_0 | kPWM_FaultDisable_1 | kPWM_FaultDisable_2 | kPWM_FaultDisable_3));
+  /* Initialize submodule SM2 channel LED_R output disable mapping to the selected faults */
+  PWM_SetupFaultDisableMap(PWM1_PERIPHERAL, PWM1_SM2, PWM1_SM2_LED_R, kPWM_faultchannel_0, (kPWM_FaultDisable_0 | kPWM_FaultDisable_1 | kPWM_FaultDisable_2 | kPWM_FaultDisable_3));
+  /* Initialize deadtime logic input for the channel LED_G */
+  PWM_SetupForceSignal(PWM1_PERIPHERAL, PWM1_SM1, PWM1_SM1_LED_G, kPWM_UsePwm);
+  /* Initialize deadtime logic input for the channel LED_B */
+  PWM_SetupForceSignal(PWM1_PERIPHERAL, PWM1_SM1, PWM1_SM1_LED_B, kPWM_UsePwm);
+  /* Initialize deadtime logic input for the channel LED_R */
+  PWM_SetupForceSignal(PWM1_PERIPHERAL, PWM1_SM2, PWM1_SM2_LED_R, kPWM_UsePwm);
+  /* Setup PWM output setting for submodule SM1 */
+  PWM_SetupPwm(PWM1_PERIPHERAL, PWM1_SM1, PWM1_SM1_pwm_function_config, 2U, kPWM_SignedCenterAligned, PWM1_SM1_COUNTER_FREQ_HZ, PWM1_SM1_SM_CLK_SOURCE_FREQ_HZ);
+  /* Setup PWM output setting for submodule SM2 */
+  PWM_SetupPwm(PWM1_PERIPHERAL, PWM1_SM2, PWM1_SM2_pwm_function_config, 1U, kPWM_SignedCenterAligned, PWM1_SM2_COUNTER_FREQ_HZ, PWM1_SM2_SM_CLK_SOURCE_FREQ_HZ);
+}
+
+/***********************************************************************************************************************
+ * LPSPI3 initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'LPSPI3'
+- type: 'lpspi_cmsis'
+- mode: 'interrupt'
+- custom_name_enabled: 'false'
+- type_id: 'lpspi_cmsis_20c8e626b665b1f41c2023229558fbf2'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'LPSPI3'
+- config_sets:
+  - general:
+    - main_config:
+      - spi_mode_user: 'ARM_SPI_MODE_MASTER'
+      - clockSource: 'LpspiClock'
+      - clockSourceFreq: 'ClocksTool_DefaultInit'
+      - clock_polarity: 'ARM_SPI_CPOL0_CPHA0'
+      - power_state: 'ARM_POWER_FULL'
+      - baudRate_Bps: '8000000'
+      - data_bits: '8'
+      - bit_format: 'ARM_SPI_MSB_LSB'
+      - typeControlMaster: 'ARM_SPI_SS_MASTER_HW_OUTPUT'
+      - defaultValueInt: '0'
+      - spi_chip_select: 'PCS0'
+      - pcsToSckDelayInNanoSec: '0'
+      - lastSckToPcsDelayInNanoSec: '0'
+      - betweenTransferDelayInNanoSec: '0'
+      - signalEventFunctionId: 'NULL'
+      - enableGetFreqFnCustomName: 'false'
+      - getFreqFunctionCustomID: 'LPSPI1_GetFreq'
+      - enableInitPinsFnCustomName: 'false'
+      - initPinFunctionCustomID: 'LPSPI1_InitPins'
+      - enableDeinitPinsFnCustomName: 'false'
+      - deinitPinFunctionCustomID: 'LPSPI1_DeinitPins'
+  - fsl_spi:
+    - interrupt:
+      - IRQn: 'LPSPI3_IRQn'
+      - enable_priority: 'false'
+      - priority: '0'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+/* Get clock source frequency */
+uint32_t LPSPI3_GetFreq(void){
+  return LPSPI3_CLOCK_SOURCE_FREQ;
+};
+
+static void LPSPI3_init(void) {
+  /* Initialize CMSIS SPI */
+  LPSPI3_PERIPHERAL.Initialize(NULL);
+  /* Power control of CMSIS SPI */
+  LPSPI3_PERIPHERAL.PowerControl(ARM_POWER_FULL);
+  /* Control of CMSIS SPI */
+  LPSPI3_PERIPHERAL.Control(ARM_SPI_MODE_MASTER | ARM_SPI_CPOL0_CPHA0 | ARM_SPI_DATA_BITS(8) | ARM_SPI_MSB_LSB | ARM_SPI_SS_MASTER_HW_OUTPUT, 8000000);
+  /* Control of CMSIS SPI */
+  LPSPI3_PERIPHERAL.Control(ARM_SPI_SET_DEFAULT_TX_VALUE, 0);
 }
 
 /***********************************************************************************************************************
  * Initialization functions
  **********************************************************************************************************************/
+static void BOARD_InitPeripherals_CommonPostInit(void)
+{
+  /* Enable interrupt SNVS_LP_WRAPPER_IRQn request in the NVIC. */
+  EnableIRQ(ONOFF_PRESSED_IRQN);
+}
+
 void BOARD_InitPeripherals(void)
 {
+  /* Global initialization */
+  /* GPIO adapter pre-initialization */
+  HAL_GpioPreInit();
+
   /* Initialize components */
-  GPIO2_init();
   PIT_init();
   TMR1_init();
-  GPIO4_init();
+  FLEXIO1_init();
+  LPUART1_init();
+  GPIO7_init();
+  PWM1_init();
+  LPSPI3_init();
+  /* Common post-initialization */
+  BOARD_InitPeripherals_CommonPostInit();
 }
 
 /***********************************************************************************************************************

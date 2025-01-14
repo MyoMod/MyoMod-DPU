@@ -91,8 +91,7 @@ int main()
 	initEmbeddedDevices();
 	init_debug();
 
-	Button<1> button_up(BOARD_INITPINS_SW_UP_PORT, BOARD_INITPINS_SW_UP_PIN, true);
-	Button<1> button_down(BOARD_INITPINS_SW_DOWN_PORT, BOARD_INITPINS_SW_DOWN_PIN, true);
+	//Button<1> button(BOARD_INITPINS_SW_UP_PORT, BOARD_INITPINS_SW_UP_PIN, true);
 
 	/** fill globals **/
 	g_configManager = new ConfigurationManager();
@@ -126,20 +125,20 @@ int main()
 			}
 			currentTime = (currentTime & 0xFFFF0000) | tmrVal;
 
-			if(button_up.update())
-			{
-				if(!button_up.isSet())
-				{
-					incrementConfiguration();
-				}
-			}
-			if(button_down.update())
-			{
-				if(!button_down.isSet())
-				{
-					decrementConfiguration();
-				}
-			}
+			// if(button_up.update())
+			// {
+			// 	if(!button_up.isSet())
+			// 	{
+			// 		incrementConfiguration();
+			// 	}
+			// }
+			// if(button_down.update())
+			// {
+			// 	if(!button_down.isSet())
+			// 	{
+			// 		decrementConfiguration();
+			// 	}
+			// }
 		}
 
 	}
@@ -298,7 +297,7 @@ void installActiveConfiguration()
 	// Update the color	
 	uint32_t color = g_configManager->getActiveConfigurationColor();
 	uint8_t shortColor = !!(color & 0xFF0000) << 2 | !!(color & 0xFF00) << 1 | !!(color & 0xFF);
-	RGB(shortColor);
+	//RGB(shortColor);
 }
 
 /**
@@ -401,12 +400,12 @@ void inputHandlingDone()
 	}
 	g_embeddedDevicesManager.processInData();
 
-	DEBUG_PINS(1);
+	//DEBUG_PINS(1);
 	for (auto&& algorithmicNode : g_algorithmicNodes)
 	{
 		algorithmicNode->process();
 	}
-		DEBUG_PINS(0);
+		//DEBUG_PINS(0);
 
 	g_embeddedDevicesManager.processOutData();
 	for (auto&& deviceNode : g_deviceNodes)
@@ -427,7 +426,7 @@ void PIT_IRQHandler(void)
 
 	static uint32_t i;
     i++;
-    GPIO_PinWrite(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, i & 1);
+    //GPIO_PinWrite(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, i & 1);
 
 
     // start i2c transfer after 100 cycles
@@ -443,11 +442,11 @@ void GPIO4_GPIO_COMB_0_15_IRQHANDLER(void) {
   uint32_t pins_flags = GPIO_GetPinsInterruptFlags(GPIO4); 
 
   /* Place your interrupt code here */ 
-  if (GPIO_PinRead(BOARD_INITPINS_SW_RESET_GPIO, BOARD_INITPINS_SW_RESET_PIN) == 0)
-  {
-	  SEGGER_RTT_printf(0, "Reset button pressed\n");
-	  SRC_DoSoftwareResetARMCore0(SRC);
-  }
+//   if (GPIO_PinRead(BOARD_INITPINS_SW_RESET_GPIO, BOARD_INITPINS_SW_RESET_PIN) == 0)
+//   {
+// 	  SEGGER_RTT_printf(0, "Reset button pressed\n");
+// 	  SRC_DoSoftwareResetARMCore0(SRC);
+//   }
 
   /* Clear ins flags */ 
   GPIO_ClearPinsInterruptFlags(GPIO4, pins_flags); 
@@ -546,6 +545,33 @@ void initEmbeddedDevices()
 	g_embeddedDevicesManager.registerDevice(DeviceIdentifier(idArr("embed' IMU"), idArr("IMU      0")));
 }
 
+/* LPUART1 signal event callback function */
+void LPUART1_SignalEvent(uint32_t event) {
+  /* Send completed (USART may still transmit data) */
+  if (event & ARM_USART_EVENT_SEND_COMPLETE) {
+    /* Place your code here */
+  }
+  /* Receive completed */
+  if (event & ARM_USART_EVENT_RECEIVE_COMPLETE) {
+    /* Place your code here */
+  }
+  /* Receive data overflow */
+  if (event & ARM_USART_EVENT_RX_OVERFLOW) {
+    /* Place your code here */
+  }
+}
+
+/* EXTERNAL_CONNECTIONS_IMU_INT1_handle callback function */
+void EXTERNAL_CONNECTIONS_IMU_INT1_callback(void *param) {
+  /* Place your code here */
+}
+
+/* EXTERNAL_CONNECTIONS_IMU_INT2_handle callback function */
+void EXTERNAL_CONNECTIONS_IMU_INT2_callback(void *param) {
+  /* Place your code here */
+}
+
+
 
 void gpio_init()
 {
@@ -556,10 +582,11 @@ void gpio_init()
     };
 
     /* Init output LED GPIO. */
-    GPIO_PinInit(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, &led_config);
-    GPIO_PinInit(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, &led_config);
+	
+    // GPIO_PinInit(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, &led_config);
+    // GPIO_PinInit(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, &led_config);
 
-	GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, 1);
+	// GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, 1);
 }
 
 void init_debug()

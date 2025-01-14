@@ -38,7 +38,7 @@ void BOARD_InitBootClocks(void);
 /* Clock outputs (values are in Hz): */
 #define BOARD_BOOTCLOCKRUN_AHB_CLK_ROOT               600000000UL    /* Clock consumers of AHB_CLK_ROOT output : AIPSTZ1, AIPSTZ2, AIPSTZ3, AIPSTZ4, ARM, FLEXIO3, FLEXSPI, FLEXSPI2, GPIO6, GPIO7, GPIO8, GPIO9 */
 #define BOARD_BOOTCLOCKRUN_CAN_CLK_ROOT               40000000UL     /* Clock consumers of CAN_CLK_ROOT output : CAN1, CAN2, CAN3 */
-#define BOARD_BOOTCLOCKRUN_CKIL_SYNC_CLK_ROOT         0UL            /* Clock consumers of CKIL_SYNC_CLK_ROOT output : CSU, EWM, GPT1, GPT2, KPP, PIT, RTWDOG, SNVS, SPDIF, TEMPMON, TSC, USB1, USB2, WDOG1, WDOG2 */
+#define BOARD_BOOTCLOCKRUN_CKIL_SYNC_CLK_ROOT         32768UL        /* Clock consumers of CKIL_SYNC_CLK_ROOT output : CSU, EWM, GPT1, GPT2, KPP, PIT, RTWDOG, SNVS, SPDIF, TEMPMON, TSC, USB1, USB2, WDOG1, WDOG2 */
 #define BOARD_BOOTCLOCKRUN_CLKO1_CLK                  0UL            /* Clock consumers of CLKO1_CLK output : N/A */
 #define BOARD_BOOTCLOCKRUN_CLKO2_CLK                  0UL            /* Clock consumers of CLKO2_CLK output : N/A */
 #define BOARD_BOOTCLOCKRUN_CLK_1M                     1000000UL      /* Clock consumers of CLK_1M output : EWM, RTWDOG */
