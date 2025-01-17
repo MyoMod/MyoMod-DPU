@@ -138,6 +138,20 @@ extern "C" {
 #define PWM1_SM2_LED_R kPWM_PwmB
 /* Definition of submodule 2 channel X ID */
 #define PWM1_SM2_X kPWM_PwmX
+/* Definition of submodule 0 ID */
+#define PWM1_SM0 kPWM_Module_0
+/* Definition of clock source of submodule 0 frequency in Hertz */
+#define PWM1_SM0_SM_CLK_SOURCE_FREQ_HZ 150000000U
+/* Definition of submodule 0 counter clock source frequency in Hertz - PWM1_SM0_SM_CLK_SOURCE_FREQ_HZ divided by prescaler */
+#define PWM1_SM0_COUNTER_CLK_SOURCE_FREQ_HZ 150000000U
+/* Definition of submodule 0 counter (PWM) frequency in Hertz */
+#define PWM1_SM0_COUNTER_FREQ_HZ 16000U
+/* Definition of submodule 0 channel A ID */
+#define PWM1_SM0_A kPWM_PwmA
+/* Definition of submodule 0 channel B ID */
+#define PWM1_SM0_B kPWM_PwmB
+/* Definition of submodule 0 channel X ID */
+#define PWM1_SM0_X kPWM_PwmX
 /* Definition of fault Fault0 ID */
 #define PWM1_F0_FAULT0 kPWM_Fault_0
 /* Definition of fault Fault1 ID */
@@ -174,6 +188,8 @@ extern pwm_signal_param_t PWM1_SM1_pwm_function_config[2];
 extern pwm_config_t PWM1_SM2_config;
 
 extern pwm_signal_param_t PWM1_SM2_pwm_function_config[1];
+extern pwm_config_t PWM1_SM0_config;
+
 extern const pwm_fault_input_filter_param_t PWM1_faultInputFilter_config;
 extern const pwm_fault_param_t PWM1_Fault0_fault_config;
 extern const pwm_fault_param_t PWM1_Fault1_fault_config;

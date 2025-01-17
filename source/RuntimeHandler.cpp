@@ -15,6 +15,7 @@
 #include <span>
 #include <array>
 #include <memory>
+#include "math.h"
 
 #include "board.h"
 #include "pin_mux.h"
@@ -24,6 +25,7 @@
 #include "fsl_clock.h"
 #include "fsl_qtmr.h"
 #include "fsl_src.h"
+#include "fsl_pwm.h"
 
 #include "SEGGER_RTT.h"
 
@@ -86,7 +88,35 @@ void init_debug();
 int main()
 {
 	/** Initialization **/
+
 	initHardware();
+	uint32_t currentTime = QTMR_GetCurrentTimerCount(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL);
+	float ledVal = 50;
+	
+	while(1)
+	{
+		uint16_t tmrVal = QTMR_GetCurrentTimerCount(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL);
+		if((currentTime & 0xFFFF) != tmrVal)
+		{
+			// 1ms passed
+			if(tmrVal < (currentTime & 0xFFFF))
+			{
+				// timer overflow -> increment the high word
+				currentTime += 0x10000;
+			}
+			currentTime = (currentTime & 0xFFFF0000) | tmrVal;
+
+
+			ledVal += 0.005f;
+			
+			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_G, kPWM_EdgeAligned, sinf(ledVal) * 50 + 50);
+			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_B, kPWM_EdgeAligned, sinf(ledVal) * 50 + 50);
+			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_EdgeAligned, sinf(ledVal) * 50 + 50);
+			PWM_SetPwmLdok(PWM1, 2 | 4, true);
+
+		}
+	}
+
 	initPerpheralHandler();
 	initEmbeddedDevices();
 	init_debug();
@@ -105,41 +135,55 @@ int main()
 
 	updateConfiguration();
 
-	uint32_t currentTime = QTMR_GetCurrentTimerCount(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL);
+	// uint32_t currentTime = QTMR_GetCurrentTimerCount(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL);
+	// uint32_t ledVal = 50;
+	// bool direction = true;	
+
 	//Main Loop
 	while(1)
 	{
+
+
 		if(!g_isRunning)
 		{
 			SEGGER_RTT_printf(0, "runtime is not running, this shouldn't happen\n");
 		}
 
-		uint16_t tmrVal = QTMR_GetCurrentTimerCount(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL);
-		if((currentTime & 0xFFFF) != tmrVal)
-		{
-			// 1ms passed
-			if(tmrVal < (currentTime & 0xFFFF))
-			{
-				// timer overflow -> increment the high word
-				currentTime += 0x10000;
-			}
-			currentTime = (currentTime & 0xFFFF0000) | tmrVal;
+		// uint16_t tmrVal = QTMR_GetCurrentTimerCount(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL);
+		// if((currentTime & 0xFFFF) != tmrVal)
+		// {
+		// 	// 1ms passed
+		// 	if(tmrVal < (currentTime & 0xFFFF))
+		// 	{
+		// 		// timer overflow -> increment the high word
+		// 		currentTime += 0x10000;
+		// 	}
+		// 	currentTime = (currentTime & 0xFFFF0000) | tmrVal;
 
-			// if(button_up.update())
-			// {
-			// 	if(!button_up.isSet())
-			// 	{
-			// 		incrementConfiguration();
-			// 	}
-			// }
-			// if(button_down.update())
-			// {
-			// 	if(!button_down.isSet())
-			// 	{
-			// 		decrementConfiguration();
-			// 	}
-			// }
-		}
+
+		// 	ledVal += direction? 1 : -1;
+		// 	if (ledVal == 0 || ledVal == 100)
+		// 	{
+		// 		direction = !direction;
+		// 	}
+		// 	PWM_UpdatePwmDutycycle(PWM1_PERIPHERAL, PWM1_SM2, PWM1_SM2_LED_R, kPWM_SignedCenterAligned, ledVal);
+
+
+		// 	// if(button_up.update())
+		// 	// {
+		// 	// 	if(!button_up.isSet())
+		// 	// 	{
+		// 	// 		incrementConfiguration();
+		// 	// 	}
+		// 	// }
+		// 	// if(button_down.update())
+		// 	// {
+		// 	// 	if(!button_down.isSet())
+		// 	// 	{
+		// 	// 		decrementConfiguration();
+		// 	// 	}
+		// 	// }
+		// }
 
 	}
 	return 0;
@@ -531,6 +575,27 @@ void initHardware()
 	QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, kQTMR_PriSrcRiseEdge);
 
     gpio_init();
+
+	// Set LEDs
+	PWM_OutputEnable(PWM1, PWM1_SM2_LED_R, PWM1_SM1);
+	PWM_OutputEnable(PWM1, PWM1_SM1_LED_G, PWM1_SM1);
+	PWM_OutputEnable(PWM1, PWM1_SM1_LED_B, PWM1_SM1);
+	
+	// disable all faults
+	PWM_SetupFaultDisableMap(PWM1, PWM1_SM1, PWM1_SM1_LED_G, kPWM_faultchannel_0, 0);
+	PWM_SetupFaultDisableMap(PWM1, PWM1_SM1, PWM1_SM1_LED_B, kPWM_faultchannel_0, 0);
+	PWM_SetupFaultDisableMap(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_faultchannel_0, 0);
+
+	// Set PWM values
+	PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_G, kPWM_EdgeAligned, 0);
+	PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_B, kPWM_EdgeAligned, 0);
+	PWM_UpdatePwmDutycycle(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_EdgeAligned, 0);
+
+	// Start timers for SM1 and SM2
+	PWM_StartTimer(PWM1, 2 | 4);
+	
+	// Load buffered values 
+	PWM_SetPwmLdok(PWM1, 2 | 4, true);
 }
 
 void initPerpheralHandler()
