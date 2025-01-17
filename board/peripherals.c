@@ -891,6 +891,152 @@ static void LPSPI3_init(void) {
 }
 
 /***********************************************************************************************************************
+ * GPIO1 initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'GPIO1'
+- type: 'igpio_adapter'
+- mode: 'GPIO'
+- custom_name_enabled: 'false'
+- type_id: 'igpio_adapter_5c0a3d4fd4d107e507335b7419af3b4f'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'GPIO1'
+- config_sets:
+  - fsl_adapter_gpio:
+    - signalsFilter: 'default boot'
+    - gpioSignalsParameters:
+      - 0: []
+      - 1: []
+      - 2: []
+      - 3: []
+      - 4: []
+      - 5: []
+      - 6: []
+      - 7: []
+      - 8: []
+      - 9: []
+      - 10: []
+      - 11: []
+      - 12: []
+      - 13: []
+      - 14: []
+      - 15: []
+      - 16: []
+      - 17: []
+      - 18: []
+      - 19: []
+      - 20: []
+      - 21: []
+      - 22: []
+      - 23: []
+    - gpioPinsOverView:
+      - 0: []
+    - gpioPinsConfig: []
+    - globalCfg: []
+    - differentPeripheralsAdd: []
+    - quick_selection: 'QuickSelection1'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_ESP_EN_handle);
+
+static void GPIO1_init(void) {
+  /* GPIO adapter initialization */
+  static hal_gpio_pin_config_t gpioPinConfig;
+  hal_gpio_status_t status;
+  (void)status; // suppress warning in the run configuration
+  /* gpio_io, 00 signal initialization */
+  gpioPinConfig = createAdapterGpioPinConfig(BOARD_INITDEBUG_UART_ESP_EN_PORT, BOARD_INITDEBUG_UART_ESP_EN_PIN, BOARD_INITDEBUG_UART_ESP_EN_PIN_DIRECTION, BOARD_INITDEBUG_UART_ESP_EN_PIN_LEVEL);
+  status = HAL_GpioInit(BOARD_INITDEBUG_UART_ESP_EN_handle, &gpioPinConfig);
+  assert(status == kStatus_HAL_GpioSuccess);
+}
+
+/***********************************************************************************************************************
+ * ADC1 initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'ADC1'
+- type: 'adc_12b1msps_sar'
+- mode: 'ADC_GENERAL'
+- custom_name_enabled: 'false'
+- type_id: 'adc_12b1msps_sar_6a490e886349a7b2b07bed10ce7b299b'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'ADC1'
+- config_sets:
+  - fsl_adc:
+    - clockConfig:
+      - clockSource: 'kADC_ClockSourceAD'
+      - clockSourceFreq: 'custom:10 MHz'
+      - clockDriver: 'kADC_ClockDriver8'
+      - samplePeriodMode: 'kADC_SamplePeriodLong24Clcoks'
+      - enableAsynchronousClockOutput: 'true'
+    - conversionConfig:
+      - resolution: 'kADC_Resolution12Bit'
+      - hardwareAverageMode: 'kADC_HardwareAverageCount32'
+      - enableHardwareTrigger: 'software'
+      - enableHighSpeed: 'false'
+      - enableLowPower: 'false'
+      - enableContinuousConversion: 'true'
+      - enableOverWrite: 'true'
+      - enableDma: 'false'
+    - resultingTime: []
+    - resultCorrection:
+      - doAutoCalibration: 'true'
+      - offset: '0'
+    - hardwareCompareConfiguration:
+      - hardwareCompareMode: 'disabled'
+      - value1: '0'
+      - value2: '0'
+    - enableInterrupt: 'false'
+    - adc_interrupt:
+      - IRQn: 'ADC1_IRQn'
+      - enable_interrrupt: 'enabled'
+      - enable_priority: 'false'
+      - priority: '0'
+      - enable_custom_name: 'false'
+    - adc_channels_config:
+      - 0:
+        - channelNumber: 'IN.14'
+        - channelName: 'V_BAT'
+        - channelGroup: '0'
+        - initializeChannel: 'true'
+        - enableInterruptOnConversionCompleted: 'false'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+const adc_config_t ADC1_config = {
+  .enableOverWrite = true,
+  .enableContinuousConversion = true,
+  .enableHighSpeed = false,
+  .enableLowPower = false,
+  .enableLongSample = true,
+  .enableAsynchronousClockOutput = true,
+  .referenceVoltageSource = kADC_ReferenceVoltageSourceAlt0,
+  .samplePeriodMode = kADC_SamplePeriodLong24Clcoks,
+  .clockSource = kADC_ClockSourceAD,
+  .clockDriver = kADC_ClockDriver8,
+  .resolution = kADC_Resolution12Bit
+};
+const adc_channel_config_t ADC1_channels_config[1] = {
+  {
+    .channelNumber = V_BAT,
+    .enableInterruptOnConversionCompleted = false
+  }
+};
+static void ADC1_init(void) {
+  /* Initialize ADC1 peripheral. */
+  ADC_Init(ADC1_PERIPHERAL, &ADC1_config);
+  /* Configure ADC1 peripheral to average 32 conversions in one measurement. */
+  ADC_SetHardwareAverageConfig(ADC1_PERIPHERAL, kADC_HardwareAverageCount32);
+  /* Perform ADC1 auto calibration. */
+  ADC_DoAutoCalibration(ADC1_PERIPHERAL);
+  /* Initialize ADC1 channel 14. */
+  ADC_SetChannelConfig(ADC1_PERIPHERAL, ADC1_CH0_CONTROL_GROUP, &ADC1_channels_config[0]);
+}
+
+/***********************************************************************************************************************
  * Initialization functions
  **********************************************************************************************************************/
 static void BOARD_InitPeripherals_CommonPostInit(void)
@@ -913,6 +1059,8 @@ void BOARD_InitPeripherals(void)
   GPIO7_init();
   PWM1_init();
   LPSPI3_init();
+  GPIO1_init();
+  ADC1_init();
   /* Common post-initialization */
   BOARD_InitPeripherals_CommonPostInit();
 }

@@ -19,6 +19,7 @@
 #include "pin_mux.h"
 #include "fsl_pwm.h"
 #include "fsl_lpspi_cmsis.h"
+#include "fsl_adc.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -164,6 +165,20 @@ extern "C" {
 #define LPSPI3_PERIPHERAL Driver_SPI3
 /* Definition of the clock source frequency */
 #define LPSPI3_CLOCK_SOURCE_FREQ 132000000UL
+/* gpio_io, 00 signal defines */
+/* Definition of the pin direction */
+#define BOARD_INITDEBUG_UART_ESP_EN_PIN_DIRECTION kHAL_GpioDirectionIn
+/* Definition of the pin level after initialization */
+#define BOARD_INITDEBUG_UART_ESP_EN_PIN_LEVEL 0U
+/* BOARD_InitPeripherals defines for ADC1 */
+/* Definition of peripheral ID */
+#define ADC1_PERIPHERAL ADC1
+/* Definition of special channel interconnected with ADC_ETC which takes real channel to be measured from ADC_ETC. */
+#define ADC1_CHANNEL_DRIVEN_BY_ADC_ETC 16U
+/* Definition of ADC1 channel from configuration #0 14 */
+#define V_BAT 14U
+/* Channel 0 (IN.14) conversion control group. */
+#define ADC1_CH0_CONTROL_GROUP 0U
 
 /***********************************************************************************************************************
  * Global variables
@@ -195,6 +210,9 @@ extern const pwm_fault_param_t PWM1_Fault0_fault_config;
 extern const pwm_fault_param_t PWM1_Fault1_fault_config;
 extern const pwm_fault_param_t PWM1_Fault2_fault_config;
 extern const pwm_fault_param_t PWM1_Fault3_fault_config;
+extern GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_ESP_EN_handle);
+extern const adc_config_t ADC1_config;
+extern const adc_channel_config_t ADC1_channels_config[1];
 
 /***********************************************************************************************************************
  * Global functions

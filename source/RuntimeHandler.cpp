@@ -26,6 +26,7 @@
 #include "fsl_qtmr.h"
 #include "fsl_src.h"
 #include "fsl_pwm.h"
+#include "fsl_adc.h"
 
 #include "SEGGER_RTT.h"
 
@@ -60,6 +61,10 @@ std::vector<std::shared_ptr<EmbeddedDeviceNode>> g_embeddedDeviceNodes;
 std::vector<std::unique_ptr<AlgorithmicNode>> g_algorithmicNodes;
 
 volatile bool g_isRunning = false;
+
+
+			volatile float vBat = 0;
+			volatile uint32_t vBatRaw = 0;
 
 
 uint8_t g_debugBuffer[1024];
@@ -114,6 +119,10 @@ int main()
 			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_EdgeAligned, sinf(ledVal) * 50 + 50);
 			PWM_SetPwmLdok(PWM1, 2 | 4, true);
 
+
+			// read battery voltage
+			vBatRaw = ADC_GetChannelConversionValue(ADC1, 0);
+			vBat = (float)vBatRaw / 4096.0f * 3.3f * 2.0f;
 		}
 	}
 
