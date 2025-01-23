@@ -348,8 +348,8 @@ void installActiveConfiguration()
 	g_embeddedDevicesManager.installDevices(std::move(embeddedDeviceNodes));
 
 	// Update the color	
-	uint32_t color = g_configManager->getActiveConfigurationColor();
-	uint8_t shortColor = !!(color & 0xFF0000) << 2 | !!(color & 0xFF00) << 1 | !!(color & 0xFF);
+	//uint32_t color = g_configManager->getActiveConfigurationColor();
+	//uint8_t shortColor = !!(color & 0xFF0000) << 2 | !!(color & 0xFF00) << 1 | !!(color & 0xFF);
 	//RGB(shortColor);
 }
 
@@ -605,6 +605,87 @@ void initHardware()
 	
 	// Load buffered values 
 	PWM_SetPwmLdok(PWM1, 2 | 4, true);
+
+	// Init Hyperram
+
+	//unlock LUT
+	FLEXSPI_RAM_PERIPHERAL->LUTKEY = 0x5AF05AF0UL;
+	FLEXSPI_RAM_PERIPHERAL->LUTCR = FLEXSPI_LUTCR_UNLOCK_MASK;
+
+	// Write LUT
+	for (size_t i = 0; i < 64; i++)
+	{
+		FLEXSPI_RAM_PERIPHERAL->LUT[i] = FLEXSPI_RAM_LUT[i];
+	}
+	
+
+	//Read LUTs
+	uint32_t lut[64];
+
+    for (int i = 0; i < 64; i++)
+    {
+		lut[i] = FLEXSPI_RAM_PERIPHERAL->LUT[i];
+    }
+
+    FLEXSPI_SoftwareReset(FLEXSPI_RAM_PERIPHERAL);
+	#define TEST_SIZE 1024
+
+	// test if the hyper ram is working
+	volatile uint32_t outData[TEST_SIZE] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
+	volatile uint32_t inData[TEST_SIZE] = {0};
+
+	// flexspi_transfer_t flashXferRead;
+	// flashXferRead.deviceAddress = 0;
+	// flashXferRead.port = kFLEXSPI_PortA1;
+	// flashXferRead.cmdType = kFLEXSPI_Read;
+	// flashXferRead.seqIndex = 1;
+	// flashXferRead.SeqNumber = 1;
+	// flashXferRead.data = inData;
+	// flashXferRead.dataSize = 32 * 4;
+
+	// flexspi_transfer_t flashXferWrite;
+	// flashXferWrite.deviceAddress = 0;
+	// flashXferWrite.port = kFLEXSPI_PortA1;
+	// flashXferWrite.cmdType = kFLEXSPI_Write;
+	// flashXferWrite.seqIndex = 0;
+	// flashXferWrite.SeqNumber = 1;
+	// flashXferWrite.data = outData;
+	// flashXferWrite.dataSize = 32 * 4;
+
+	// FLEXSPI_TransferBlocking(FLEXSPI_RAM_PERIPHERAL, &flashXferWrite);
+
+	// FLEXSPI_TransferBlocking(FLEXSPI_RAM_PERIPHERAL, &flashXferRead);
+	//FLEXSPI_ReadBlocking(FLEXSPI_RAM_PERIPHERAL, inData, 8);
+	//FLEXSPI_WriteBlocking(FLEXSPI_RAM_PERIPHERAL, inData, 8);
+
+	volatile uint32_t* AHBptr = (uint32_t*)0x70000000;
+	for (size_t i = 0; i < TEST_SIZE; i++)
+	{
+		*(AHBptr + i) = outData[i];
+	}
+	for (size_t i = 0; i < TEST_SIZE; i++)
+	{
+		inData[i] = *(AHBptr + i);
+	}
+
+	bool equal = true;
+	for (size_t i = 0; i < TEST_SIZE; i++)
+	{
+		if(inData[i] != outData[i])
+		{
+			equal = false;
+			break;
+		}
+	}
+
+	if(!equal)
+	{
+		SEGGER_RTT_printf(0, "Hyper ram test failed\n");
+	}
+	else
+	{
+		SEGGER_RTT_printf(0, "Hyper ram test passed\n");
+	} 
 }
 
 void initPerpheralHandler()
@@ -644,7 +725,16 @@ void EXTERNAL_CONNECTIONS_IMU_INT1_callback(void *param) {
 void EXTERNAL_CONNECTIONS_IMU_INT2_callback(void *param) {
   /* Place your code here */
 }
+extern "C"
+{
+// Handler for user button
+void ONOFF_PRESSED_IRQHANDLER(void) {
+	// Clear interrupt flag
+	SNVS->LPSR |= SNVS_LPSR_SPOF_MASK;
 
+	SEGGER_RTT_printf(0, "User/ONOFF button pressed\n");
+}
+}
 
 
 void gpio_init()

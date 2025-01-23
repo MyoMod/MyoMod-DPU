@@ -1232,7 +1232,7 @@
                   <clock_output id="ENET_25M_REF_CLK.outFreq" value="1.2 MHz" locked="false" accuracy=""/>
                   <clock_output id="FLEXIO1_CLK_ROOT.outFreq" value="30 MHz" locked="false" accuracy=""/>
                   <clock_output id="FLEXIO2_CLK_ROOT.outFreq" value="30 MHz" locked="false" accuracy=""/>
-                  <clock_output id="FLEXSPI2_CLK_ROOT.outFreq" value="264 MHz" locked="false" accuracy=""/>
+                  <clock_output id="FLEXSPI2_CLK_ROOT.outFreq" value="264 MHz" locked="true" accuracy="0.001"/>
                   <clock_output id="FLEXSPI_CLK_ROOT.outFreq" value="60 MHz" locked="false" accuracy=""/>
                   <clock_output id="GPT1_ipg_clk_highfreq.outFreq" value="75 MHz" locked="false" accuracy=""/>
                   <clock_output id="GPT2_ipg_clk_highfreq.outFreq" value="75 MHz" locked="false" accuracy=""/>
@@ -1649,6 +1649,16 @@
                   <data type="Version">2.0.0</data>
                </feature>
             </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.flexspi" description="FLEXSPI Driver is not found in the toolchain/IDE project. The project will not compile!" problem_level="2" source="Peripherals">
+               <feature name="enabled" evaluation="equal">
+                  <data type="Boolean">true</data>
+               </feature>
+            </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.flexspi" description="An unsupported version of the FLEXSPI Driver in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}. The project might not compile correctly." problem_level="1" source="Peripherals">
+               <feature name="version" evaluation="greaterOrEqual">
+                  <data type="Version" maxValue="2.6.9">2.5.0</data>
+               </feature>
+            </dependency>
             <dependency resourceType="Tool" resourceId="Pins" description="The Pins tool is required by the Peripherals tool, but it is disabled." problem_level="2" source="Peripherals">
                <feature name="enabled" evaluation="equal">
                   <data>true</data>
@@ -1806,6 +1816,51 @@
                   <dependency resourceType="PeripheralUnifiedSignal" resourceId="ADC1.adc_in.14" description="Signal IN, channel 14 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
                      <feature name="routed" evaluation="">
                         <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="FLEXSPI2.flexspi_a_data0" description="Signal FlexSPI A data 0 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="FLEXSPI2.flexspi_a_data1" description="Signal FlexSPI A data 1 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="FLEXSPI2.flexspi_a_data2" description="Signal FlexSPI A data 2 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="FLEXSPI2.flexspi_a_data3" description="Signal FlexSPI A data 3 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="FLEXSPI2.flexspi_a_dqs" description="Signal FlexSPI A DQS is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="FLEXSPI2.flexspi_a_sclk" description="Signal FlexSPI A serial clock is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="FLEXSPI2.flexspi_a_ss0_b" description="Signal FlexSPI A chip select 0 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="ClockOutput" resourceId="FLEXSPI2_CLK_ROOT" description="FLEXSPI2_CLK_ROOT is inactive." problem_level="2" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="frequency" evaluation="greaterThan">
+                        <data type="Frequency" unit="Hz">0</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="ClockOutput" resourceId="AHB_CLK_ROOT" description="AHB_CLK_ROOT is inactive." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="frequency" evaluation="greaterThan">
+                        <data type="Frequency" unit="Hz">0</data>
                      </feature>
                   </dependency>
                </dependencies>
@@ -2418,6 +2473,121 @@
                               <setting name="enableInterruptOnConversionCompleted" value="false"/>
                            </struct>
                         </array>
+                     </config_set>
+                  </instance>
+                  <instance name="FLEXSPI_RAM" uuid="c3482076-242e-4486-95d1-aa3c420402c8" type="flexspi" type_id="flexspi_380e74d39208b17ae8a8dd5f2724ca53" mode="general" peripheral="FLEXSPI2" enabled="true" comment="" custom_name_enabled="true" editing_lock="false">
+                     <config_set name="fsl_flexspi">
+                        <struct name="flexspiConfig">
+                           <setting name="rxSampleClock" value="kFLEXSPI_ReadSampleClkExternalInputFromDqsPad"/>
+                           <setting name="clockSource" value="FlexSpiClock"/>
+                           <setting name="clockSourceFreq" value="ClocksTool_DefaultInit"/>
+                           <setting name="enableSckFreeRunning" value="false"/>
+                           <setting name="enableCombination" value="true"/>
+                           <setting name="enableDoze" value="false"/>
+                           <setting name="enableHalfSpeedAccess" value="true"/>
+                           <setting name="enableSckBDiffOpt" value="true"/>
+                           <setting name="enableSameConfigForAll" value="false"/>
+                           <setting name="seqTimeoutCycleString" value="65535"/>
+                           <setting name="ipGrantTimeoutCycleString" value="255"/>
+                           <setting name="txWatermark" value="0"/>
+                           <setting name="rxWatermark" value="0"/>
+                           <struct name="ahbConfig">
+                              <setting name="enableAHBWriteIpTxFifo" value="false"/>
+                              <setting name="enableAHBWriteIpRxFifo" value="false"/>
+                              <setting name="ahbGrantTimeoutCycleString" value="255"/>
+                              <setting name="ahbBusTimeoutCycleString" value="65535"/>
+                              <setting name="resumeWaitCycleString" value="32"/>
+                              <array name="buffer">
+                                 <struct name="0">
+                                    <setting name="priority" value="0"/>
+                                    <setting name="masterIndex" value="0"/>
+                                    <setting name="bufferSize" value="256"/>
+                                    <setting name="enablePrefetch" value="true"/>
+                                 </struct>
+                                 <struct name="1">
+                                    <setting name="priority" value="1"/>
+                                    <setting name="masterIndex" value="0"/>
+                                    <setting name="bufferSize" value="256"/>
+                                    <setting name="enablePrefetch" value="true"/>
+                                 </struct>
+                                 <struct name="2">
+                                    <setting name="priority" value="2"/>
+                                    <setting name="masterIndex" value="0"/>
+                                    <setting name="bufferSize" value="256"/>
+                                    <setting name="enablePrefetch" value="true"/>
+                                 </struct>
+                                 <struct name="3">
+                                    <setting name="priority" value="3"/>
+                                    <setting name="masterIndex" value="0"/>
+                                    <setting name="bufferSize" value="256"/>
+                                    <setting name="enablePrefetch" value="true"/>
+                                 </struct>
+                              </array>
+                              <setting name="enableClearAHBBufferOpt" value="false"/>
+                              <setting name="enableReadAddressOpt" value="true"/>
+                              <setting name="enableAHBPrefetch" value="true"/>
+                              <setting name="enableAHBBufferable" value="true"/>
+                              <setting name="enableAHBCachable" value="true"/>
+                           </struct>
+                        </struct>
+                        <struct name="flexspiInterrupt">
+                           <set name="interrupt_sel">
+                              <selected/>
+                           </set>
+                           <struct name="interrupt_vectors">
+                              <setting name="enableInterrupt" value="false"/>
+                              <struct name="interrupt">
+                                 <setting name="IRQn" value="FLEXSPI_IRQn"/>
+                                 <setting name="enable_interrrupt" value="enabled"/>
+                                 <setting name="enable_priority" value="false"/>
+                                 <setting name="priority" value="0"/>
+                                 <setting name="enable_custom_name" value="false"/>
+                              </struct>
+                           </struct>
+                        </struct>
+                        <setting name="enableCustomLUT" value="true"/>
+                        <struct name="lutConfig">
+                           <setting name="flash" value="customFlash"/>
+                           <setting name="lutName" value="defaultLUT"/>
+                           <setting name="lutSizeCustom" value="64"/>
+                        </struct>
+                        <array name="devices_configs">
+                           <struct name="0">
+                              <struct name="device_struct">
+                                 <setting name="flexspiDevicePrefixID" value="HYPER_RAM"/>
+                                 <setting name="isSck2Enabled" value="false"/>
+                                 <setting name="flashSize" value="8192"/>
+                                 <setting name="CSIntervalUnit" value="kFLEXSPI_CsIntervalUnit1SckCycle"/>
+                                 <setting name="CSIntervalString" value="8ns"/>
+                                 <setting name="CSHoldTimeString" value="0"/>
+                                 <setting name="CSSetupTimeString" value="6ns"/>
+                                 <setting name="dataValidTimeString" value="3ns"/>
+                                 <setting name="columnspace" value="3"/>
+                                 <setting name="enableWordAddress" value="true"/>
+                                 <setting name="AWRSeqIndex" value="0"/>
+                                 <setting name="AWRSeqNumber" value="1"/>
+                                 <setting name="ARDSeqIndex" value="1"/>
+                                 <setting name="ARDSeqNumber" value="1"/>
+                                 <setting name="AHBWriteWaitUnit" value="kFLEXSPI_AhbWriteWaitUnit2AhbCycle"/>
+                                 <setting name="AHBWriteWaitIntervalString" value="0"/>
+                                 <setting name="enableWriteMask" value="true"/>
+                              </struct>
+                              <struct name="transferConfig">
+                                 <setting name="deviceAddress" value="0"/>
+                                 <setting name="port" value="kFLEXSPI_PortA1"/>
+                                 <setting name="cmdType" value="kFLEXSPI_Write"/>
+                                 <setting name="seqIndex" value="0"/>
+                                 <setting name="SeqNumber" value="0"/>
+                                 <setting name="dataBufferEnable" value="false"/>
+                                 <setting name="dataSizeInt" value="8"/>
+                              </struct>
+                           </struct>
+                        </array>
+                     </config_set>
+                  </instance>
+                  <instance name="MPU" uuid="dc39c8d2-cda2-46f4-ae3a-e1d20acfc5b8" type="mpu_utility" type_id="mpu_utility_bc3ea1f6add76edb6050f698d423d163" mode="MPU" peripheral="MPU" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
+                     <config_set name="mpu_init">
+                        <setting name="mpuInit" value="disabled"/>
                      </config_set>
                   </instance>
                </instances>

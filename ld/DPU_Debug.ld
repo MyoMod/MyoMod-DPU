@@ -56,6 +56,9 @@ SECTIONS
         LONG(LOADADDR(.data_RAM5));
         LONG(    ADDR(.data_RAM5));
         LONG(  SIZEOF(.data_RAM5));
+        LONG(LOADADDR(.data_RAM6));
+        LONG(    ADDR(.data_RAM6));
+        LONG(  SIZEOF(.data_RAM6));
         __data_section_table_end = .;
         __bss_section_table = .;
         LONG(    ADDR(.bss));
@@ -68,6 +71,8 @@ SECTIONS
         LONG(  SIZEOF(.bss_RAM4));
         LONG(    ADDR(.bss_RAM5));
         LONG(  SIZEOF(.bss_RAM5));
+        LONG(    ADDR(.bss_RAM6));
+        LONG(  SIZEOF(.bss_RAM6));
         __bss_section_table_end = .;
         __section_table_end = . ;
         /* End of Global Section Table */
@@ -181,21 +186,39 @@ SECTIONS
         PROVIDE(__end_data_SRAM_OC = .) ;
      } > SRAM_OC AT>BOARD_FLASH
 
-    /* DATA section for NCACHE_REGION */
+    /* DATA section for SRAM_EXT */
 
     .data_RAM5 : ALIGN(4)
     {
         FILL(0xff)
         PROVIDE(__start_data_RAM5 = .) ;
-        PROVIDE(__start_data_NCACHE_REGION = .) ;
+        PROVIDE(__start_data_SRAM_EXT = .) ;
         *(.ramfunc.$RAM5)
-        *(.ramfunc.$NCACHE_REGION)
+        *(.ramfunc.$SRAM_EXT)
         *(.data.$RAM5)
-        *(.data.$NCACHE_REGION)
+        *(.data.$SRAM_EXT)
         *(.data.$RAM5.*)
-        *(.data.$NCACHE_REGION.*)
+        *(.data.$SRAM_EXT.*)
         . = ALIGN(4) ;
         PROVIDE(__end_data_RAM5 = .) ;
+        PROVIDE(__end_data_SRAM_EXT = .) ;
+     } > SRAM_EXT AT>BOARD_FLASH
+
+    /* DATA section for NCACHE_REGION */
+
+    .data_RAM6 : ALIGN(4)
+    {
+        FILL(0xff)
+        PROVIDE(__start_data_RAM6 = .) ;
+        PROVIDE(__start_data_NCACHE_REGION = .) ;
+        *(.ramfunc.$RAM6)
+        *(.ramfunc.$NCACHE_REGION)
+        *(.data.$RAM6)
+        *(.data.$NCACHE_REGION)
+        *(.data.$RAM6.*)
+        *(.data.$NCACHE_REGION.*)
+        . = ALIGN(4) ;
+        PROVIDE(__end_data_RAM6 = .) ;
         PROVIDE(__end_data_NCACHE_REGION = .) ;
      } > NCACHE_REGION AT>BOARD_FLASH
 
@@ -220,6 +243,7 @@ SECTIONS
        KEEP(*(CodeQuickAccess))
        KEEP(*(DataQuickAccess))
        *(RamFunction)
+       *(NonCacheable.init)
        *(.data*)
        . = ALIGN(4) ;
        _edata = . ;
@@ -269,17 +293,31 @@ SECTIONS
        PROVIDE(__end_bss_SRAM_OC = .) ;
     } > SRAM_OC AT> SRAM_OC
 
-    /* BSS section for NCACHE_REGION */
+    /* BSS section for SRAM_EXT */
     .bss_RAM5 (NOLOAD) : ALIGN(4)
     {
        PROVIDE(__start_bss_RAM5 = .) ;
-       PROVIDE(__start_bss_NCACHE_REGION = .) ;
+       PROVIDE(__start_bss_SRAM_EXT = .) ;
        *(.bss.$RAM5)
-       *(.bss.$NCACHE_REGION)
+       *(.bss.$SRAM_EXT)
        *(.bss.$RAM5.*)
-       *(.bss.$NCACHE_REGION.*)
+       *(.bss.$SRAM_EXT.*)
        . = ALIGN (. != 0 ? 4 : 1) ; /* avoid empty segment */
        PROVIDE(__end_bss_RAM5 = .) ;
+       PROVIDE(__end_bss_SRAM_EXT = .) ;
+    } > SRAM_EXT AT> SRAM_EXT
+
+    /* BSS section for NCACHE_REGION */
+    .bss_RAM6 (NOLOAD) : ALIGN(4)
+    {
+       PROVIDE(__start_bss_RAM6 = .) ;
+       PROVIDE(__start_bss_NCACHE_REGION = .) ;
+       *(.bss.$RAM6)
+       *(.bss.$NCACHE_REGION)
+       *(.bss.$RAM6.*)
+       *(.bss.$NCACHE_REGION.*)
+       . = ALIGN (. != 0 ? 4 : 1) ; /* avoid empty segment */
+       PROVIDE(__end_bss_RAM6 = .) ;
        PROVIDE(__end_bss_NCACHE_REGION = .) ;
     } > NCACHE_REGION AT> NCACHE_REGION
 
@@ -289,6 +327,7 @@ SECTIONS
         _bss = .;
         PROVIDE(__start_bss_RAM = .) ;
         PROVIDE(__start_bss_SRAM_DTC = .) ;
+       *(NonCacheable)
         *(.bss*)
         *(COMMON)
         . = ALIGN(4) ;
@@ -340,17 +379,31 @@ SECTIONS
        PROVIDE(__end_noinit_SRAM_OC = .) ;
     } > SRAM_OC AT> SRAM_OC
 
-    /* NOINIT section for NCACHE_REGION */
+    /* NOINIT section for SRAM_EXT */
     .noinit_RAM5 (NOLOAD) : ALIGN(4)
     {
        PROVIDE(__start_noinit_RAM5 = .) ;
-       PROVIDE(__start_noinit_NCACHE_REGION = .) ;
+       PROVIDE(__start_noinit_SRAM_EXT = .) ;
        *(.noinit.$RAM5)
-       *(.noinit.$NCACHE_REGION)
+       *(.noinit.$SRAM_EXT)
        *(.noinit.$RAM5.*)
-       *(.noinit.$NCACHE_REGION.*)
+       *(.noinit.$SRAM_EXT.*)
        . = ALIGN(4) ;
        PROVIDE(__end_noinit_RAM5 = .) ;
+       PROVIDE(__end_noinit_SRAM_EXT = .) ;
+    } > SRAM_EXT AT> SRAM_EXT
+
+    /* NOINIT section for NCACHE_REGION */
+    .noinit_RAM6 (NOLOAD) : ALIGN(4)
+    {
+       PROVIDE(__start_noinit_RAM6 = .) ;
+       PROVIDE(__start_noinit_NCACHE_REGION = .) ;
+       *(.noinit.$RAM6)
+       *(.noinit.$NCACHE_REGION)
+       *(.noinit.$RAM6.*)
+       *(.noinit.$NCACHE_REGION.*)
+       . = ALIGN(4) ;
+       PROVIDE(__end_noinit_RAM6 = .) ;
        PROVIDE(__end_noinit_NCACHE_REGION = .) ;
     } > NCACHE_REGION AT> NCACHE_REGION
 

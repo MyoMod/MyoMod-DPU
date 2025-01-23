@@ -23,9 +23,9 @@ void OnProjectLoad (void) {
   // Dialog-generated settings
   //
   Project.SetDevice ("MIMXRT1062xxx6B");
-  Project.SetHostIF ("USB", "261013890");
-  Project.SetTargetIF ("JTAG");
-  Project.SetTIFSpeed ("4 MHz");
+  Project.SetHostIF ("USB", "");
+  Project.SetTargetIF ("SWD");
+  Project.SetTIFSpeed ("Automatic");
   Project.AddPathSubstitute ("/workspace", "$(ProjectDir)");
   Project.AddPathSubstitute ("/workspace", "$(ProjectDir)");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M7F.svd");
