@@ -59,6 +59,29 @@ component:
  * BOARD_InitPeripherals functional group
  **********************************************************************************************************************/
 /***********************************************************************************************************************
+ * MPU initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'MPU'
+- type: 'mpu_utility'
+- mode: 'MPU'
+- custom_name_enabled: 'false'
+- type_id: 'mpu_utility_bc3ea1f6add76edb6050f698d423d163'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'MPU'
+- config_sets:
+  - mpu_init:
+    - mpuInit: 'disabled'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+
+/* Empty initialization function (commented out)
+static void MPU_init(void) {
+} */
+
+/***********************************************************************************************************************
  * NVIC initialization code
  **********************************************************************************************************************/
 /* clang-format off */
@@ -241,15 +264,15 @@ static void TMR1_init(void) {
 }
 
 /***********************************************************************************************************************
- * FLEXIO1 initialization code
+ * FLEXIO_I2C initialization code
  **********************************************************************************************************************/
 /* clang-format off */
 /* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 instance:
-- name: 'FLEXIO1'
+- name: 'FLEXIO_I2C'
 - type: 'flexio_i2c_master'
 - mode: 'polling'
-- custom_name_enabled: 'false'
+- custom_name_enabled: 'true'
 - type_id: 'flexio_i2c_master_337812fef13382b42ae08a3bbf349c7c'
 - functional_group: 'BOARD_InitPeripherals'
 - peripheral: 'FLEXIO1'
@@ -269,30 +292,30 @@ instance:
       - enableMaster: 'true'
       - enableInDoze: 'false'
       - enableInDebug: 'true'
-      - enableFastAccess: 'false'
+      - enableFastAccess: 'true'
       - baudRate_Bps: '100000'
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
 /* FlexIO peripheral configuration */
-FLEXIO_I2C_Type FLEXIO1_peripheralConfig = {
-  .flexioBase = FLEXIO1_PERIPHERAL,
+FLEXIO_I2C_Type FLEXIO_I2C_peripheralConfig = {
+  .flexioBase = FLEXIO_I2C_PERIPHERAL,
   .SDAPinIndex = 7,
   .SCLPinIndex = 8,
   .shifterIndex = {0, 1},
   .timerIndex = {0, 1, 2}
 };
 /* I2C master configuration */
-flexio_i2c_master_config_t FLEXIO1_config = {
+flexio_i2c_master_config_t FLEXIO_I2C_config = {
   .enableMaster = true,
   .enableInDoze = false,
   .enableInDebug = true,
-  .enableFastAccess = false,
+  .enableFastAccess = true,
   .baudRate_Bps = 100000UL
 };
 
-static void FLEXIO1_init(void) {
+static void FLEXIO_I2C_init(void) {
   /* Master initialization */
-  FLEXIO_I2C_MasterInit(&FLEXIO1_peripheralConfig, &FLEXIO1_config, FLEXIO1_CLK_FREQ);
+  FLEXIO_I2C_MasterInit(&FLEXIO_I2C_peripheralConfig, &FLEXIO_I2C_config, FLEXIO_I2C_CLK_FREQ);
 }
 
 /***********************************************************************************************************************
@@ -431,10 +454,10 @@ hal_gpio_pin_config_t createAdapterGpioPinConfig(GPIO_Type *port, uint8_t pin, h
   
   return temp;
 };
-GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG0_handle);
-GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG1_handle);
-GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG2_handle);
-GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG3_handle);
+GPIO_HANDLE_DEFINE(DEBUG_DEBUG0_handle);
+GPIO_HANDLE_DEFINE(DEBUG_DEBUG1_handle);
+GPIO_HANDLE_DEFINE(DEBUG_DEBUG2_handle);
+GPIO_HANDLE_DEFINE(DEBUG_DEBUG3_handle);
 GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_INT2_handle);
 GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_INT1_handle);
 GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_SYNC_handle);
@@ -445,20 +468,20 @@ static void GPIO7_init(void) {
   hal_gpio_status_t status;
   (void)status; // suppress warning in the run configuration
   /* gpio_io, 16 signal initialization */
-  gpioPinConfig = createAdapterGpioPinConfig(BOARD_INITDEBUG_UART_DEBUG0_PORT, BOARD_INITDEBUG_UART_DEBUG0_PIN, BOARD_INITDEBUG_UART_DEBUG0_PIN_DIRECTION, BOARD_INITDEBUG_UART_DEBUG0_PIN_LEVEL);
-  status = HAL_GpioInit(BOARD_INITDEBUG_UART_DEBUG0_handle, &gpioPinConfig);
+  gpioPinConfig = createAdapterGpioPinConfig(DEBUG_DEBUG0_PORT, DEBUG_DEBUG0_PIN, DEBUG_DEBUG0_PIN_DIRECTION, DEBUG_DEBUG0_PIN_LEVEL);
+  status = HAL_GpioInit(DEBUG_DEBUG0_handle, &gpioPinConfig);
   assert(status == kStatus_HAL_GpioSuccess);
   /* gpio_io, 24 signal initialization */
-  gpioPinConfig = createAdapterGpioPinConfig(BOARD_INITDEBUG_UART_DEBUG1_PORT, BOARD_INITDEBUG_UART_DEBUG1_PIN, BOARD_INITDEBUG_UART_DEBUG1_PIN_DIRECTION, BOARD_INITDEBUG_UART_DEBUG1_PIN_LEVEL);
-  status = HAL_GpioInit(BOARD_INITDEBUG_UART_DEBUG1_handle, &gpioPinConfig);
+  gpioPinConfig = createAdapterGpioPinConfig(DEBUG_DEBUG1_PORT, DEBUG_DEBUG1_PIN, DEBUG_DEBUG1_PIN_DIRECTION, DEBUG_DEBUG1_PIN_LEVEL);
+  status = HAL_GpioInit(DEBUG_DEBUG1_handle, &gpioPinConfig);
   assert(status == kStatus_HAL_GpioSuccess);
   /* gpio_io, 25 signal initialization */
-  gpioPinConfig = createAdapterGpioPinConfig(BOARD_INITDEBUG_UART_DEBUG2_PORT, BOARD_INITDEBUG_UART_DEBUG2_PIN, BOARD_INITDEBUG_UART_DEBUG2_PIN_DIRECTION, BOARD_INITDEBUG_UART_DEBUG2_PIN_LEVEL);
-  status = HAL_GpioInit(BOARD_INITDEBUG_UART_DEBUG2_handle, &gpioPinConfig);
+  gpioPinConfig = createAdapterGpioPinConfig(DEBUG_DEBUG2_PORT, DEBUG_DEBUG2_PIN, DEBUG_DEBUG2_PIN_DIRECTION, DEBUG_DEBUG2_PIN_LEVEL);
+  status = HAL_GpioInit(DEBUG_DEBUG2_handle, &gpioPinConfig);
   assert(status == kStatus_HAL_GpioSuccess);
   /* gpio_io, 26 signal initialization */
-  gpioPinConfig = createAdapterGpioPinConfig(BOARD_INITDEBUG_UART_DEBUG3_PORT, BOARD_INITDEBUG_UART_DEBUG3_PIN, BOARD_INITDEBUG_UART_DEBUG3_PIN_DIRECTION, BOARD_INITDEBUG_UART_DEBUG3_PIN_LEVEL);
-  status = HAL_GpioInit(BOARD_INITDEBUG_UART_DEBUG3_handle, &gpioPinConfig);
+  gpioPinConfig = createAdapterGpioPinConfig(DEBUG_DEBUG3_PORT, DEBUG_DEBUG3_PIN, DEBUG_DEBUG3_PIN_DIRECTION, DEBUG_DEBUG3_PIN_LEVEL);
+  status = HAL_GpioInit(DEBUG_DEBUG3_handle, &gpioPinConfig);
   assert(status == kStatus_HAL_GpioSuccess);
   /* gpio_io, 29 signal initialization */
   gpioPinConfig = createAdapterGpioPinConfig(EXTERNAL_CONNECTIONS_IMU_INT2_PORT, EXTERNAL_CONNECTIONS_IMU_INT2_PIN, EXTERNAL_CONNECTIONS_IMU_INT2_PIN_DIRECTION, EXTERNAL_CONNECTIONS_IMU_INT2_PIN_LEVEL);
@@ -939,7 +962,7 @@ instance:
     - quick_selection: 'QuickSelection1'
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
-GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_ESP_EN_handle);
+GPIO_HANDLE_DEFINE(DEBUG_ESP_EN_handle);
 
 static void GPIO1_init(void) {
   /* GPIO adapter initialization */
@@ -947,8 +970,8 @@ static void GPIO1_init(void) {
   hal_gpio_status_t status;
   (void)status; // suppress warning in the run configuration
   /* gpio_io, 00 signal initialization */
-  gpioPinConfig = createAdapterGpioPinConfig(BOARD_INITDEBUG_UART_ESP_EN_PORT, BOARD_INITDEBUG_UART_ESP_EN_PIN, BOARD_INITDEBUG_UART_ESP_EN_PIN_DIRECTION, BOARD_INITDEBUG_UART_ESP_EN_PIN_LEVEL);
-  status = HAL_GpioInit(BOARD_INITDEBUG_UART_ESP_EN_handle, &gpioPinConfig);
+  gpioPinConfig = createAdapterGpioPinConfig(DEBUG_ESP_EN_PORT, DEBUG_ESP_EN_PIN, DEBUG_ESP_EN_PIN_DIRECTION, DEBUG_ESP_EN_PIN_LEVEL);
+  status = HAL_GpioInit(DEBUG_ESP_EN_handle, &gpioPinConfig);
   assert(status == kStatus_HAL_GpioSuccess);
 }
 
@@ -1243,13 +1266,14 @@ static void BOARD_InitPeripherals_CommonPostInit(void)
 void BOARD_InitPeripherals(void)
 {
   /* Global initialization */
+  ARM_MPU_Disable();
   /* GPIO adapter pre-initialization */
   HAL_GpioPreInit();
 
   /* Initialize components */
   PIT_init();
   TMR1_init();
-  FLEXIO1_init();
+  FLEXIO_I2C_init();
   LPUART1_init();
   GPIO7_init();
   PWM1_init();

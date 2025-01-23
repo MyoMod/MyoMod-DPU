@@ -48,88 +48,102 @@ void BOARD_InitPins(void);
 
 /* GPIO_AD_B0_10 (coord G13), SWO */
 /* Routed pin properties */
-#define BOARD_INITDEBUG_UART_INT1_COMBO_PERIPHERAL                           ARM   /*!< Peripheral name */
-#define BOARD_INITDEBUG_UART_INT1_COMBO_SIGNAL                     arm_trace_swo   /*!< Signal name */
+#define DEBUG_INT1_COMBO_PERIPHERAL                                          ARM   /*!< Peripheral name */
+#define DEBUG_INT1_COMBO_SIGNAL                                    arm_trace_swo   /*!< Signal name */
 
 /* GPIO_AD_B0_13 (coord L14), UART1_RX */
 /* Routed pin properties */
-#define BOARD_INITDEBUG_UART_ASYNC_CTRL_DPU_RX_PERIPHERAL                LPUART1   /*!< Peripheral name */
-#define BOARD_INITDEBUG_UART_ASYNC_CTRL_DPU_RX_SIGNAL                         RX   /*!< Signal name */
+#define DEBUG_ASYNC_CTRL_DPU_RX_PERIPHERAL                               LPUART1   /*!< Peripheral name */
+#define DEBUG_ASYNC_CTRL_DPU_RX_SIGNAL                                        RX   /*!< Signal name */
 
 /* GPIO_AD_B0_12 (coord K14), UART1_TX */
 /* Routed pin properties */
-#define BOARD_INITDEBUG_UART_ASYNC_CTRL_DPU_TX_PERIPHERAL                LPUART1   /*!< Peripheral name */
-#define BOARD_INITDEBUG_UART_ASYNC_CTRL_DPU_TX_SIGNAL                         TX   /*!< Signal name */
+#define DEBUG_ASYNC_CTRL_DPU_TX_PERIPHERAL                               LPUART1   /*!< Peripheral name */
+#define DEBUG_ASYNC_CTRL_DPU_TX_SIGNAL                                        TX   /*!< Signal name */
 
 /* GPIO_AD_B0_00 (coord M14), ESP_EN */
 /* Routed pin properties */
-#define BOARD_INITDEBUG_UART_ESP_EN_PERIPHERAL                             GPIO1   /*!< Peripheral name */
-#define BOARD_INITDEBUG_UART_ESP_EN_SIGNAL                               gpio_io   /*!< Signal name */
-#define BOARD_INITDEBUG_UART_ESP_EN_CHANNEL                                   0U   /*!< Signal channel */
+#define DEBUG_ESP_EN_PERIPHERAL                                            GPIO1   /*!< Peripheral name */
+#define DEBUG_ESP_EN_SIGNAL                                              gpio_io   /*!< Signal name */
+#define DEBUG_ESP_EN_CHANNEL                                                  0U   /*!< Signal channel */
 
 /* Symbols to be used with GPIO driver */
-#define BOARD_INITDEBUG_UART_ESP_EN_GPIO                                   GPIO1   /*!< GPIO peripheral base pointer */
-#define BOARD_INITDEBUG_UART_ESP_EN_GPIO_PIN                                  0U   /*!< GPIO pin number */
-#define BOARD_INITDEBUG_UART_ESP_EN_GPIO_PIN_MASK                     (1U << 0U)   /*!< GPIO pin mask */
-#define BOARD_INITDEBUG_UART_ESP_EN_PORT                                   GPIO1   /*!< PORT peripheral base pointer */
-#define BOARD_INITDEBUG_UART_ESP_EN_PIN                                       0U   /*!< PORT pin number */
-#define BOARD_INITDEBUG_UART_ESP_EN_PIN_MASK                          (1U << 0U)   /*!< PORT pin mask */
+#define DEBUG_ESP_EN_GPIO                                                  GPIO1   /*!< GPIO peripheral base pointer */
+#define DEBUG_ESP_EN_GPIO_PIN                                                 0U   /*!< GPIO pin number */
+#define DEBUG_ESP_EN_GPIO_PIN_MASK                                    (1U << 0U)   /*!< GPIO pin mask */
+#define DEBUG_ESP_EN_PORT                                                  GPIO1   /*!< PORT peripheral base pointer */
+#define DEBUG_ESP_EN_PIN                                                      0U   /*!< PORT pin number */
+#define DEBUG_ESP_EN_PIN_MASK                                         (1U << 0U)   /*!< PORT pin mask */
 
 /* GPIO_B1_09 (coord A13), DEBUG2 */
 /* Routed pin properties */
-#define BOARD_INITDEBUG_UART_DEBUG2_PERIPHERAL                             GPIO7   /*!< Peripheral name */
-#define BOARD_INITDEBUG_UART_DEBUG2_SIGNAL                               gpio_io   /*!< Signal name */
-#define BOARD_INITDEBUG_UART_DEBUG2_CHANNEL                                  25U   /*!< Signal channel */
+#define DEBUG_DEBUG2_PERIPHERAL                                            GPIO7   /*!< Peripheral name */
+#define DEBUG_DEBUG2_SIGNAL                                              gpio_io   /*!< Signal name */
+#define DEBUG_DEBUG2_CHANNEL                                                 25U   /*!< Signal channel */
 
 /* Symbols to be used with GPIO driver */
-#define BOARD_INITDEBUG_UART_DEBUG2_GPIO                                   GPIO7   /*!< GPIO peripheral base pointer */
-#define BOARD_INITDEBUG_UART_DEBUG2_GPIO_PIN                                 25U   /*!< GPIO pin number */
-#define BOARD_INITDEBUG_UART_DEBUG2_GPIO_PIN_MASK                    (1U << 25U)   /*!< GPIO pin mask */
-#define BOARD_INITDEBUG_UART_DEBUG2_PORT                                   GPIO7   /*!< PORT peripheral base pointer */
-#define BOARD_INITDEBUG_UART_DEBUG2_PIN                                      25U   /*!< PORT pin number */
-#define BOARD_INITDEBUG_UART_DEBUG2_PIN_MASK                         (1U << 25U)   /*!< PORT pin mask */
+#define DEBUG_DEBUG2_GPIO                                                  GPIO7   /*!< GPIO peripheral base pointer */
+#define DEBUG_DEBUG2_GPIO_PIN                                                25U   /*!< GPIO pin number */
+#define DEBUG_DEBUG2_GPIO_PIN_MASK                                   (1U << 25U)   /*!< GPIO pin mask */
+#define DEBUG_DEBUG2_PORT                                                  GPIO7   /*!< PORT peripheral base pointer */
+#define DEBUG_DEBUG2_PIN                                                     25U   /*!< PORT pin number */
+#define DEBUG_DEBUG2_PIN_MASK                                        (1U << 25U)   /*!< PORT pin mask */
 
 /* GPIO_B1_10 (coord B13), DEBUG3 */
 /* Routed pin properties */
-#define BOARD_INITDEBUG_UART_DEBUG3_PERIPHERAL                             GPIO7   /*!< Peripheral name */
-#define BOARD_INITDEBUG_UART_DEBUG3_SIGNAL                               gpio_io   /*!< Signal name */
-#define BOARD_INITDEBUG_UART_DEBUG3_CHANNEL                                  26U   /*!< Signal channel */
+#define DEBUG_DEBUG3_PERIPHERAL                                            GPIO7   /*!< Peripheral name */
+#define DEBUG_DEBUG3_SIGNAL                                              gpio_io   /*!< Signal name */
+#define DEBUG_DEBUG3_CHANNEL                                                 26U   /*!< Signal channel */
 
 /* Symbols to be used with GPIO driver */
-#define BOARD_INITDEBUG_UART_DEBUG3_GPIO                                   GPIO7   /*!< GPIO peripheral base pointer */
-#define BOARD_INITDEBUG_UART_DEBUG3_GPIO_PIN                                 26U   /*!< GPIO pin number */
-#define BOARD_INITDEBUG_UART_DEBUG3_GPIO_PIN_MASK                    (1U << 26U)   /*!< GPIO pin mask */
-#define BOARD_INITDEBUG_UART_DEBUG3_PORT                                   GPIO7   /*!< PORT peripheral base pointer */
-#define BOARD_INITDEBUG_UART_DEBUG3_PIN                                      26U   /*!< PORT pin number */
-#define BOARD_INITDEBUG_UART_DEBUG3_PIN_MASK                         (1U << 26U)   /*!< PORT pin mask */
+#define DEBUG_DEBUG3_GPIO                                                  GPIO7   /*!< GPIO peripheral base pointer */
+#define DEBUG_DEBUG3_GPIO_PIN                                                26U   /*!< GPIO pin number */
+#define DEBUG_DEBUG3_GPIO_PIN_MASK                                   (1U << 26U)   /*!< GPIO pin mask */
+#define DEBUG_DEBUG3_PORT                                                  GPIO7   /*!< PORT peripheral base pointer */
+#define DEBUG_DEBUG3_PIN                                                     26U   /*!< PORT pin number */
+#define DEBUG_DEBUG3_PIN_MASK                                        (1U << 26U)   /*!< PORT pin mask */
 
 /* GPIO_B1_08 (coord A12), DEBUG1 */
 /* Routed pin properties */
-#define BOARD_INITDEBUG_UART_DEBUG1_PERIPHERAL                             GPIO7   /*!< Peripheral name */
-#define BOARD_INITDEBUG_UART_DEBUG1_SIGNAL                               gpio_io   /*!< Signal name */
-#define BOARD_INITDEBUG_UART_DEBUG1_CHANNEL                                  24U   /*!< Signal channel */
+#define DEBUG_DEBUG1_PERIPHERAL                                            GPIO7   /*!< Peripheral name */
+#define DEBUG_DEBUG1_SIGNAL                                              gpio_io   /*!< Signal name */
+#define DEBUG_DEBUG1_CHANNEL                                                 24U   /*!< Signal channel */
 
 /* Symbols to be used with GPIO driver */
-#define BOARD_INITDEBUG_UART_DEBUG1_GPIO                                   GPIO7   /*!< GPIO peripheral base pointer */
-#define BOARD_INITDEBUG_UART_DEBUG1_GPIO_PIN                                 24U   /*!< GPIO pin number */
-#define BOARD_INITDEBUG_UART_DEBUG1_GPIO_PIN_MASK                    (1U << 24U)   /*!< GPIO pin mask */
-#define BOARD_INITDEBUG_UART_DEBUG1_PORT                                   GPIO7   /*!< PORT peripheral base pointer */
-#define BOARD_INITDEBUG_UART_DEBUG1_PIN                                      24U   /*!< PORT pin number */
-#define BOARD_INITDEBUG_UART_DEBUG1_PIN_MASK                         (1U << 24U)   /*!< PORT pin mask */
+#define DEBUG_DEBUG1_GPIO                                                  GPIO7   /*!< GPIO peripheral base pointer */
+#define DEBUG_DEBUG1_GPIO_PIN                                                24U   /*!< GPIO pin number */
+#define DEBUG_DEBUG1_GPIO_PIN_MASK                                   (1U << 24U)   /*!< GPIO pin mask */
+#define DEBUG_DEBUG1_PORT                                                  GPIO7   /*!< PORT peripheral base pointer */
+#define DEBUG_DEBUG1_PIN                                                     24U   /*!< PORT pin number */
+#define DEBUG_DEBUG1_PIN_MASK                                        (1U << 24U)   /*!< PORT pin mask */
 
 /* GPIO_B1_00 (coord A11), DEBUG0 */
 /* Routed pin properties */
-#define BOARD_INITDEBUG_UART_DEBUG0_PERIPHERAL                             GPIO7   /*!< Peripheral name */
-#define BOARD_INITDEBUG_UART_DEBUG0_SIGNAL                               gpio_io   /*!< Signal name */
-#define BOARD_INITDEBUG_UART_DEBUG0_CHANNEL                                  16U   /*!< Signal channel */
+#define DEBUG_DEBUG0_PERIPHERAL                                            GPIO7   /*!< Peripheral name */
+#define DEBUG_DEBUG0_SIGNAL                                              gpio_io   /*!< Signal name */
+#define DEBUG_DEBUG0_CHANNEL                                                 16U   /*!< Signal channel */
 
 /* Symbols to be used with GPIO driver */
-#define BOARD_INITDEBUG_UART_DEBUG0_GPIO                                   GPIO7   /*!< GPIO peripheral base pointer */
-#define BOARD_INITDEBUG_UART_DEBUG0_GPIO_PIN                                 16U   /*!< GPIO pin number */
-#define BOARD_INITDEBUG_UART_DEBUG0_GPIO_PIN_MASK                    (1U << 16U)   /*!< GPIO pin mask */
-#define BOARD_INITDEBUG_UART_DEBUG0_PORT                                   GPIO7   /*!< PORT peripheral base pointer */
-#define BOARD_INITDEBUG_UART_DEBUG0_PIN                                      16U   /*!< PORT pin number */
-#define BOARD_INITDEBUG_UART_DEBUG0_PIN_MASK                         (1U << 16U)   /*!< PORT pin mask */
+#define DEBUG_DEBUG0_GPIO                                                  GPIO7   /*!< GPIO peripheral base pointer */
+#define DEBUG_DEBUG0_GPIO_PIN                                                16U   /*!< GPIO pin number */
+#define DEBUG_DEBUG0_GPIO_PIN_MASK                                   (1U << 16U)   /*!< GPIO pin mask */
+#define DEBUG_DEBUG0_PORT                                                  GPIO7   /*!< PORT peripheral base pointer */
+#define DEBUG_DEBUG0_PIN                                                     16U   /*!< PORT pin number */
+#define DEBUG_DEBUG0_PIN_MASK                                        (1U << 16U)   /*!< PORT pin mask */
+
+/* WAKEUP (coord L6), WAKEUP */
+/* Routed pin properties */
+#define DEBUG_WAKEUP_PERIPHERAL                                            GPIO5   /*!< Peripheral name */
+#define DEBUG_WAKEUP_SIGNAL                                              gpio_io   /*!< Signal name */
+#define DEBUG_WAKEUP_CHANNEL                                                  0U   /*!< Signal channel */
+
+/* Symbols to be used with GPIO driver */
+#define DEBUG_WAKEUP_GPIO                                                  GPIO5   /*!< GPIO peripheral base pointer */
+#define DEBUG_WAKEUP_GPIO_PIN                                                 0U   /*!< GPIO pin number */
+#define DEBUG_WAKEUP_GPIO_PIN_MASK                                    (1U << 0U)   /*!< GPIO pin mask */
+#define DEBUG_WAKEUP_PORT                                                  GPIO5   /*!< PORT peripheral base pointer */
+#define DEBUG_WAKEUP_PIN                                                      0U   /*!< PORT pin number */
+#define DEBUG_WAKEUP_PIN_MASK                                         (1U << 0U)   /*!< PORT pin mask */
 
 /*!
  * @brief Configures pin routing and optionally pin electrical features.

@@ -315,7 +315,7 @@ pin_labels:
 - {pin_num: K5, pin_signal: NVCC_SD1, label: FLASH_VCC, identifier: FLASH_VCC}
 - {pin_num: F5, pin_signal: NVCC_EMC0, label: DCDC_3V3}
 - {pin_num: E6, pin_signal: NVCC_EMC1, label: DCDC_3V3}
-- {pin_num: L6, pin_signal: WAKEUP, label: SD_PWREN, identifier: SD_PWREN}
+- {pin_num: L6, pin_signal: WAKEUP, label: WAKEUP, identifier: SD_PWREN;WAKEUP}
 - {pin_num: L1, pin_signal: DCDC_IN0, label: MCU_DCDC_IN_3V3}
 - {pin_num: L2, pin_signal: DCDC_IN1, label: MCU_DCDC_IN_3V3}
 - {pin_num: K4, pin_signal: DCDC_IN_Q, label: MCU_DCDC_IN_3V3}
@@ -382,7 +382,7 @@ void BOARD_InitPins(void) {
 /*
  * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
 BOARD_InitDEBUG_UART:
-- options: {callFromInitBoot: 'true', coreID: core0, enableClock: 'true'}
+- options: {callFromInitBoot: 'true', prefix: DEBUG_, coreID: core0, enableClock: 'true'}
 - pin_list:
   - {pin_num: G13, peripheral: ARM, signal: arm_trace_swo, pin_signal: GPIO_AD_B0_10}
   - {pin_num: E14, peripheral: JTAG, signal: TMS, pin_signal: GPIO_AD_B0_06}
@@ -390,10 +390,11 @@ BOARD_InitDEBUG_UART:
   - {pin_num: L14, peripheral: LPUART1, signal: RX, pin_signal: GPIO_AD_B0_13, identifier: ASYNC_CTRL_DPU_RX}
   - {pin_num: K14, peripheral: LPUART1, signal: TX, pin_signal: GPIO_AD_B0_12, identifier: ASYNC_CTRL_DPU_TX}
   - {pin_num: M14, peripheral: GPIO1, signal: 'gpio_io, 00', pin_signal: GPIO_AD_B0_00}
-  - {pin_num: A13, peripheral: GPIO7, signal: 'gpio_io, 25', pin_signal: GPIO_B1_09, identifier: DEBUG2}
-  - {pin_num: B13, peripheral: GPIO7, signal: 'gpio_io, 26', pin_signal: GPIO_B1_10, identifier: DEBUG3}
-  - {pin_num: A12, peripheral: GPIO7, signal: 'gpio_io, 24', pin_signal: GPIO_B1_08, identifier: DEBUG1}
-  - {pin_num: A11, peripheral: GPIO7, signal: 'gpio_io, 16', pin_signal: GPIO_B1_00, identifier: DEBUG0}
+  - {pin_num: A13, peripheral: GPIO7, signal: 'gpio_io, 25', pin_signal: GPIO_B1_09, identifier: DEBUG2, direction: OUTPUT, slew_rate: Fast}
+  - {pin_num: B13, peripheral: GPIO7, signal: 'gpio_io, 26', pin_signal: GPIO_B1_10, identifier: DEBUG3, direction: OUTPUT, slew_rate: Fast}
+  - {pin_num: A12, peripheral: GPIO7, signal: 'gpio_io, 24', pin_signal: GPIO_B1_08, identifier: DEBUG1, direction: OUTPUT, slew_rate: Fast}
+  - {pin_num: A11, peripheral: GPIO7, signal: 'gpio_io, 16', pin_signal: GPIO_B1_00, identifier: DEBUG0, direction: OUTPUT, slew_rate: Fast}
+  - {pin_num: L6, peripheral: GPIO5, signal: 'gpio_io, 00', pin_signal: WAKEUP, identifier: WAKEUP, direction: INPUT, gpio_interrupt: kGPIO_IntFallingEdge}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -405,6 +406,54 @@ BOARD_InitDEBUG_UART:
  * END ****************************************************************************************************************/
 void BOARD_InitDEBUG_UART(void) {
   CLOCK_EnableClock(kCLOCK_Iomuxc);           
+  CLOCK_EnableClock(kCLOCK_IomuxcSnvs);       
+
+  /* GPIO configuration of WAKEUP on WAKEUP (pin L6) */
+  gpio_pin_config_t WAKEUP_config = {
+      .direction = kGPIO_DigitalInput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_IntFallingEdge
+  };
+  /* Initialize GPIO functionality on WAKEUP (pin L6) */
+  GPIO_PinInit(GPIO5, 0U, &WAKEUP_config);
+  /* Enable GPIO pin interrupt on WAKEUP (pin L6) */
+  GPIO_PortEnableInterrupts(GPIO5, 1U << 0U);
+
+  /* GPIO configuration of DEBUG0 on GPIO_B1_00 (pin A11) */
+  gpio_pin_config_t DEBUG0_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_B1_00 (pin A11) */
+  GPIO_PinInit(GPIO7, 16U, &DEBUG0_config);
+
+  /* GPIO configuration of DEBUG1 on GPIO_B1_08 (pin A12) */
+  gpio_pin_config_t DEBUG1_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_B1_08 (pin A12) */
+  GPIO_PinInit(GPIO7, 24U, &DEBUG1_config);
+
+  /* GPIO configuration of DEBUG2 on GPIO_B1_09 (pin A13) */
+  gpio_pin_config_t DEBUG2_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_B1_09 (pin A13) */
+  GPIO_PinInit(GPIO7, 25U, &DEBUG2_config);
+
+  /* GPIO configuration of DEBUG3 on GPIO_B1_10 (pin B13) */
+  gpio_pin_config_t DEBUG3_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_B1_10 (pin B13) */
+  GPIO_PinInit(GPIO7, 26U, &DEBUG3_config);
 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_00_GPIO1_IO00, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_06_JTAG_TMS, 0U); 
@@ -424,6 +473,11 @@ void BOARD_InitDEBUG_UART(void) {
     (~(BOARD_INITDEBUG_UART_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK))) 
       | IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL(0x07010000U) 
     );
+  IOMUXC_SetPinMux(IOMUXC_SNVS_WAKEUP_GPIO5_IO00, 0U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_B1_00_GPIO2_IO16, 0x10B1U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_B1_08_GPIO2_IO24, 0x10B1U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_B1_09_GPIO2_IO25, 0x10B1U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_B1_10_GPIO2_IO26, 0x10B1U); 
 }
 
 /*

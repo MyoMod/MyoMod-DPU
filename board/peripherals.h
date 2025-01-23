@@ -64,33 +64,33 @@ extern "C" {
 /* Definition of the timer channel ms_Counter clock source frequency. */
 #define TMR1_MS_COUNTER_CLOCK_SOURCE 1000UL
 /* Definition of peripheral ID */
-#define FLEXIO1_PERIPHERAL FLEXIO1
+#define FLEXIO_I2C_PERIPHERAL FLEXIO1
 /* Definition of the clock source frequency */
-#define FLEXIO1_CLK_FREQ 30000000UL
+#define FLEXIO_I2C_CLK_FREQ 30000000UL
 /* Definition of peripheral ID */
 #define LPUART1_PERIPHERAL Driver_USART1
 /* Definition of the clock source frequency */
 #define LPUART1_CLOCK_SOURCE_FREQ 80000000UL
 /* gpio_io, 16 signal defines */
 /* Definition of the pin direction */
-#define BOARD_INITDEBUG_UART_DEBUG0_PIN_DIRECTION kHAL_GpioDirectionIn
+#define DEBUG_DEBUG0_PIN_DIRECTION kHAL_GpioDirectionOut
 /* Definition of the pin level after initialization */
-#define BOARD_INITDEBUG_UART_DEBUG0_PIN_LEVEL 0U
+#define DEBUG_DEBUG0_PIN_LEVEL 0U
 /* gpio_io, 24 signal defines */
 /* Definition of the pin direction */
-#define BOARD_INITDEBUG_UART_DEBUG1_PIN_DIRECTION kHAL_GpioDirectionIn
+#define DEBUG_DEBUG1_PIN_DIRECTION kHAL_GpioDirectionOut
 /* Definition of the pin level after initialization */
-#define BOARD_INITDEBUG_UART_DEBUG1_PIN_LEVEL 0U
+#define DEBUG_DEBUG1_PIN_LEVEL 0U
 /* gpio_io, 25 signal defines */
 /* Definition of the pin direction */
-#define BOARD_INITDEBUG_UART_DEBUG2_PIN_DIRECTION kHAL_GpioDirectionIn
+#define DEBUG_DEBUG2_PIN_DIRECTION kHAL_GpioDirectionOut
 /* Definition of the pin level after initialization */
-#define BOARD_INITDEBUG_UART_DEBUG2_PIN_LEVEL 0U
+#define DEBUG_DEBUG2_PIN_LEVEL 0U
 /* gpio_io, 26 signal defines */
 /* Definition of the pin direction */
-#define BOARD_INITDEBUG_UART_DEBUG3_PIN_DIRECTION kHAL_GpioDirectionIn
+#define DEBUG_DEBUG3_PIN_DIRECTION kHAL_GpioDirectionOut
 /* Definition of the pin level after initialization */
-#define BOARD_INITDEBUG_UART_DEBUG3_PIN_LEVEL 0U
+#define DEBUG_DEBUG3_PIN_LEVEL 0U
 /* gpio_io, 29 signal defines */
 /* Definition of the pin direction */
 #define EXTERNAL_CONNECTIONS_IMU_INT2_PIN_DIRECTION kHAL_GpioDirectionIn
@@ -168,9 +168,9 @@ extern "C" {
 #define LPSPI3_CLOCK_SOURCE_FREQ 132000000UL
 /* gpio_io, 00 signal defines */
 /* Definition of the pin direction */
-#define BOARD_INITDEBUG_UART_ESP_EN_PIN_DIRECTION kHAL_GpioDirectionIn
+#define DEBUG_ESP_EN_PIN_DIRECTION kHAL_GpioDirectionIn
 /* Definition of the pin level after initialization */
-#define BOARD_INITDEBUG_UART_ESP_EN_PIN_LEVEL 0U
+#define DEBUG_ESP_EN_PIN_LEVEL 0U
 /* BOARD_InitPeripherals defines for ADC1 */
 /* Definition of peripheral ID */
 #define ADC1_PERIPHERAL ADC1
@@ -198,13 +198,13 @@ extern const pit_config_t PIT_config;
 extern const qtmr_config_t TMR1_TimePresacler_config;
 extern const qtmr_config_t TMR1_ms_Counter_config;
 /* FlexIO peripheral configuration */
-extern FLEXIO_I2C_Type FLEXIO1_peripheralConfig;
+extern FLEXIO_I2C_Type FLEXIO_I2C_peripheralConfig;
 /* FlexIO I2C master configuration */
-extern flexio_i2c_master_config_t FLEXIO1_config;
-extern GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG0_handle);
-extern GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG1_handle);
-extern GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG2_handle);
-extern GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_DEBUG3_handle);
+extern flexio_i2c_master_config_t FLEXIO_I2C_config;
+extern GPIO_HANDLE_DEFINE(DEBUG_DEBUG0_handle);
+extern GPIO_HANDLE_DEFINE(DEBUG_DEBUG1_handle);
+extern GPIO_HANDLE_DEFINE(DEBUG_DEBUG2_handle);
+extern GPIO_HANDLE_DEFINE(DEBUG_DEBUG3_handle);
 extern GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_INT2_handle);
 extern GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_INT1_handle);
 extern GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_IMU_SYNC_handle);
@@ -221,7 +221,7 @@ extern const pwm_fault_param_t PWM1_Fault0_fault_config;
 extern const pwm_fault_param_t PWM1_Fault1_fault_config;
 extern const pwm_fault_param_t PWM1_Fault2_fault_config;
 extern const pwm_fault_param_t PWM1_Fault3_fault_config;
-extern GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_ESP_EN_handle);
+extern GPIO_HANDLE_DEFINE(DEBUG_ESP_EN_handle);
 extern const adc_config_t ADC1_config;
 extern const adc_channel_config_t ADC1_channels_config[1];
 extern const flexspi_config_t FLEXSPI_RAM_config;

@@ -199,7 +199,7 @@
                <pin_label pin_num="K5" pin_signal="NVCC_SD1" label="FLASH_VCC" identifier="FLASH_VCC"/>
                <pin_label pin_num="F5" pin_signal="NVCC_EMC0" label="DCDC_3V3"/>
                <pin_label pin_num="E6" pin_signal="NVCC_EMC1" label="DCDC_3V3"/>
-               <pin_label pin_num="L6" pin_signal="WAKEUP" label="SD_PWREN" identifier="SD_PWREN"/>
+               <pin_label pin_num="L6" pin_signal="WAKEUP" label="WAKEUP" identifier="SD_PWREN;WAKEUP"/>
                <pin_label pin_num="L1" pin_signal="DCDC_IN0" label="MCU_DCDC_IN_3V3"/>
                <pin_label pin_num="L2" pin_signal="DCDC_IN1" label="MCU_DCDC_IN_3V3"/>
                <pin_label pin_num="K4" pin_signal="DCDC_IN_Q" label="MCU_DCDC_IN_3V3"/>
@@ -683,6 +683,11 @@
                         <data>true</data>
                      </feature>
                   </dependency>
+                  <dependency resourceType="Peripheral" resourceId="GPIO5" description="Peripheral GPIO5 signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitDEBUG_UART">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
                   <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Pins initialization requires the COMMON Driver in the project." problem_level="2" source="Pins:BOARD_InitDEBUG_UART">
                      <feature name="enabled" evaluation="equal" configuration="core0">
                         <data>true</data>
@@ -740,6 +745,13 @@
                         <pin_feature name="identifier" value="DEBUG0"/>
                         <pin_feature name="direction" value="OUTPUT"/>
                         <pin_feature name="slew_rate" value="Fast"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIO5" signal="gpio_io, 00" pin_num="L6" pin_signal="WAKEUP">
+                     <pin_features>
+                        <pin_feature name="identifier" value="WAKEUP"/>
+                        <pin_feature name="direction" value="INPUT"/>
+                        <pin_feature name="gpio_interrupt" value="kGPIO_IntFallingEdge"/>
                      </pin_features>
                   </pin>
                </pins>
@@ -1982,7 +1994,7 @@
                         </struct>
                      </config_set>
                   </instance>
-                  <instance name="FLEXIO1" uuid="3b2807a8-ce72-4312-95b6-47084df554cc" type="flexio_i2c_master" type_id="flexio_i2c_master_337812fef13382b42ae08a3bbf349c7c" mode="polling" peripheral="FLEXIO1" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
+                  <instance name="FLEXIO_I2C" uuid="3b2807a8-ce72-4312-95b6-47084df554cc" type="flexio_i2c_master" type_id="flexio_i2c_master_337812fef13382b42ae08a3bbf349c7c" mode="polling" peripheral="FLEXIO1" enabled="true" comment="" custom_name_enabled="true" editing_lock="false">
                      <config_set name="fsl_flexio_i2c_master">
                         <setting name="clockSource" value="FlexIoClock"/>
                         <setting name="clockSourceFreq" value="ClocksTool_DefaultInit"/>
@@ -1999,7 +2011,7 @@
                            <setting name="enableMaster" value="true"/>
                            <setting name="enableInDoze" value="false"/>
                            <setting name="enableInDebug" value="true"/>
-                           <setting name="enableFastAccess" value="false"/>
+                           <setting name="enableFastAccess" value="true"/>
                            <setting name="baudRate_Bps" value="100000"/>
                         </struct>
                      </config_set>
