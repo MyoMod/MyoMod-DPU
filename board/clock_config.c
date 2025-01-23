@@ -60,7 +60,7 @@ outputs:
 - {id: ENET_25M_REF_CLK.outFreq, value: 1.2 MHz}
 - {id: FLEXIO1_CLK_ROOT.outFreq, value: 30 MHz}
 - {id: FLEXIO2_CLK_ROOT.outFreq, value: 30 MHz}
-- {id: FLEXSPI2_CLK_ROOT.outFreq, value: 264 MHz}
+- {id: FLEXSPI2_CLK_ROOT.outFreq, value: 66 MHz}
 - {id: FLEXSPI_CLK_ROOT.outFreq, value: 60 MHz}
 - {id: GPT1_ipg_clk_highfreq.outFreq, value: 75 MHz}
 - {id: GPT2_ipg_clk_highfreq.outFreq, value: 75 MHz}
@@ -89,6 +89,7 @@ outputs:
 - {id: USDHC1_CLK_ROOT.outFreq, value: 198 MHz}
 - {id: USDHC2_CLK_ROOT.outFreq, value: 198 MHz}
 settings:
+- {id: CCM.FLEXSPI2_PODF.scale, value: '8', locked: true}
 - {id: CCM.PERCLK_PODF.scale, value: '2'}
 - {id: CCM.SEMC_PODF.scale, value: '5'}
 - {id: CCM_ANALOG.PLL1_BYPASS.sel, value: CCM_ANALOG.PLL1}
@@ -231,7 +232,7 @@ void BOARD_BootClockRUN(void)
     /* Disable Flexspi2 clock gate. */
     CLOCK_DisableClock(kCLOCK_FlexSpi2);
     /* Set FLEXSPI2_PODF. */
-    CLOCK_SetDiv(kCLOCK_Flexspi2Div, 1);
+    CLOCK_SetDiv(kCLOCK_Flexspi2Div, 7);
     /* Set Flexspi2 clock source. */
     CLOCK_SetMux(kCLOCK_Flexspi2Mux, 3);
     /* Disable CSI clock gate. */

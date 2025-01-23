@@ -1037,6 +1037,201 @@ static void ADC1_init(void) {
 }
 
 /***********************************************************************************************************************
+ * FLEXSPI_RAM initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'FLEXSPI_RAM'
+- type: 'flexspi'
+- mode: 'general'
+- custom_name_enabled: 'true'
+- type_id: 'flexspi_380e74d39208b17ae8a8dd5f2724ca53'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'FLEXSPI2'
+- config_sets:
+  - fsl_flexspi:
+    - flexspiConfig:
+      - rxSampleClock: 'kFLEXSPI_ReadSampleClkExternalInputFromDqsPad'
+      - clockSource: 'FlexSpiClock'
+      - clockSourceFreq: 'ClocksTool_DefaultInit'
+      - enableSckFreeRunning: 'false'
+      - enableCombination: 'true'
+      - enableDoze: 'false'
+      - enableHalfSpeedAccess: 'false'
+      - enableSckBDiffOpt: 'true'
+      - enableSameConfigForAll: 'true'
+      - seqTimeoutCycleString: '65535'
+      - ipGrantTimeoutCycleString: '255'
+      - txWatermark: '0'
+      - rxWatermark: '0'
+      - ahbConfig:
+        - enableAHBWriteIpTxFifo: 'false'
+        - enableAHBWriteIpRxFifo: 'false'
+        - ahbGrantTimeoutCycleString: '255'
+        - ahbBusTimeoutCycleString: '65535'
+        - resumeWaitCycleString: '32'
+        - buffer:
+          - 0:
+            - priority: '0'
+            - masterIndex: '0'
+            - bufferSize: '256'
+            - enablePrefetch: 'true'
+          - 1:
+            - priority: '1'
+            - masterIndex: '0'
+            - bufferSize: '256'
+            - enablePrefetch: 'true'
+          - 2:
+            - priority: '2'
+            - masterIndex: '0'
+            - bufferSize: '256'
+            - enablePrefetch: 'true'
+          - 3:
+            - priority: '3'
+            - masterIndex: '0'
+            - bufferSize: '256'
+            - enablePrefetch: 'true'
+        - enableClearAHBBufferOpt: 'false'
+        - enableReadAddressOpt: 'true'
+        - enableAHBPrefetch: 'false'
+        - enableAHBBufferable: 'false'
+        - enableAHBCachable: 'false'
+    - flexspiInterrupt:
+      - interrupt_sel: ''
+      - interrupt_vectors:
+        - enableInterrupt: 'false'
+        - interrupt:
+          - IRQn: 'FLEXSPI_IRQn'
+          - enable_interrrupt: 'enabled'
+          - enable_priority: 'false'
+          - priority: '0'
+          - enable_custom_name: 'false'
+    - enableCustomLUT: 'true'
+    - lutConfig:
+      - flash: 'customFlash'
+      - lutName: 'defaultLUT'
+      - lutSizeCustom: '64'
+    - devices_configs:
+      - 0:
+        - device_struct:
+          - flexspiDevicePrefixID: 'HYPER_RAM'
+          - isSck2Enabled: 'false'
+          - flashSize: '8192'
+          - CSIntervalUnit: 'kFLEXSPI_CsIntervalUnit1SckCycle'
+          - CSIntervalString: '8ns'
+          - CSHoldTimeString: '0'
+          - CSSetupTimeString: '6ns'
+          - dataValidTimeString: '3ns'
+          - columnspace: '3'
+          - enableWordAddress: 'true'
+          - AWRSeqIndex: '0'
+          - AWRSeqNumber: '1'
+          - ARDSeqIndex: '1'
+          - ARDSeqNumber: '1'
+          - AHBWriteWaitUnit: 'kFLEXSPI_AhbWriteWaitUnit2AhbCycle'
+          - AHBWriteWaitIntervalString: '0'
+          - enableWriteMask: 'true'
+        - transferConfig:
+          - deviceAddress: '0'
+          - port: 'kFLEXSPI_PortA1'
+          - cmdType: 'kFLEXSPI_Write'
+          - seqIndex: '0'
+          - SeqNumber: '0'
+          - dataBufferEnable: 'false'
+          - dataSizeInt: '8'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+const flexspi_config_t FLEXSPI_RAM_config = {
+  .rxSampleClock = kFLEXSPI_ReadSampleClkExternalInputFromDqsPad,
+  .enableSckFreeRunning = false,
+  .enableCombination = true,
+  .enableDoze = false,
+  .enableHalfSpeedAccess = false,
+  .enableSckBDiffOpt = true,
+  .enableSameConfigForAll = true,
+  .seqTimeoutCycle = 65535,
+  .ipGrantTimeoutCycle = 255,
+  .txWatermark = 0U,
+  .rxWatermark = 0U,
+  .ahbConfig = {
+    .enableAHBWriteIpTxFifo = false,
+    .enableAHBWriteIpRxFifo = false,
+    .ahbGrantTimeoutCycle = 255,
+    .ahbBusTimeoutCycle = 65535,
+    .resumeWaitCycle = 32,
+    .buffer = {
+      {
+        .priority = 0,
+        .masterIndex = 0U,
+        .bufferSize = 256U,
+        .enablePrefetch = true
+      },
+      {
+        .priority = 1,
+        .masterIndex = 0U,
+        .bufferSize = 256U,
+        .enablePrefetch = true
+      },
+      {
+        .priority = 2,
+        .masterIndex = 0U,
+        .bufferSize = 256U,
+        .enablePrefetch = true
+      },
+      {
+        .priority = 3,
+        .masterIndex = 0U,
+        .bufferSize = 256U,
+        .enablePrefetch = true
+      }
+    },
+    .enableClearAHBBufferOpt = false,
+    .enableReadAddressOpt = true,
+    .enableAHBPrefetch = false,
+    .enableAHBBufferable = false,
+    .enableAHBCachable = false
+  }
+};
+flexspi_device_config_t FLEXSPI_RAM_config_HYPER_RAM = {
+  .flexspiRootClk = 66000000UL,
+  .isSck2Enabled = false,
+  .flashSize = 8192UL,
+  .CSIntervalUnit = kFLEXSPI_CsIntervalUnit1SckCycle,
+  .CSInterval = 0,
+  .CSHoldTime = 0,
+  .CSSetupTime = 0,
+  .dataValidTime = 3,
+  .columnspace = 3U,
+  .enableWordAddress = true,
+  .AWRSeqIndex = 0U,
+  .AWRSeqNumber = 1U,
+  .ARDSeqIndex = 1U,
+  .ARDSeqNumber = 1U,
+  .AHBWriteWaitUnit = kFLEXSPI_AhbWriteWaitUnit2AhbCycle,
+  .AHBWriteWaitInterval = 0,
+  .enableWriteMask = true,
+};
+flexspi_transfer_t FLEXSPI_RAM_config_transfer_HYPER_RAM = {
+  .deviceAddress = 0UL,
+  .port = kFLEXSPI_PortA1,
+  .cmdType = kFLEXSPI_Write,
+  .seqIndex = 0U,
+  .SeqNumber = 0U,
+  .data = 0,
+  .dataSize = FLEXSPI_RAM_TRANSFER_BUFFER_SIZE_0
+};
+
+static void FLEXSPI_RAM_init(void) {
+  /* FLEXSPI2 peripheral initialization */
+  FLEXSPI_Init(FLEXSPI_RAM_PERIPHERAL, &FLEXSPI_RAM_config);
+  /* Update LUT table. */
+  FLEXSPI_UpdateLUT(FLEXSPI_RAM_PERIPHERAL, 0, FLEXSPI_RAM_LUT, FLEXSPI_RAM_LUT_LENGTH);
+  /* Configure flash settings according to serial flash feature. */
+  FLEXSPI_SetFlashConfig(FLEXSPI_RAM_PERIPHERAL, &FLEXSPI_RAM_config_HYPER_RAM, kFLEXSPI_PortA1);
+}
+
+/***********************************************************************************************************************
  * Initialization functions
  **********************************************************************************************************************/
 static void BOARD_InitPeripherals_CommonPostInit(void)
@@ -1061,6 +1256,7 @@ void BOARD_InitPeripherals(void)
   LPSPI3_init();
   GPIO1_init();
   ADC1_init();
+  FLEXSPI_RAM_init();
   /* Common post-initialization */
   BOARD_InitPeripherals_CommonPostInit();
 }

@@ -20,6 +20,7 @@
 #include "fsl_pwm.h"
 #include "fsl_lpspi_cmsis.h"
 #include "fsl_adc.h"
+#include "fsl_flexspi.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -179,6 +180,16 @@ extern "C" {
 #define V_BAT 14U
 /* Channel 0 (IN.14) conversion control group. */
 #define ADC1_CH0_CONTROL_GROUP 0U
+/* Definition of peripheral ID */
+#define FLEXSPI_RAM_PERIPHERAL FLEXSPI2
+/* Size of LUT (Look-up Table) */
+#define FLEXSPI_RAM_LUT_LENGTH 64
+/* Transfer buffer size. */
+#define FLEXSPI_RAM_TRANSFER_BUFFER_SIZE_0 8
+/* FLEXSPI_RAM interrupt vector ID (number). */
+#define FLEXSPI_RAM_IRQN FLEXSPI_IRQn
+/* FLEXSPI_RAM interrupt handler identifier. */
+#define FLEXSPI_RAM_IRQHANDLER 
 
 /***********************************************************************************************************************
  * Global variables
@@ -213,6 +224,10 @@ extern const pwm_fault_param_t PWM1_Fault3_fault_config;
 extern GPIO_HANDLE_DEFINE(BOARD_INITDEBUG_UART_ESP_EN_handle);
 extern const adc_config_t ADC1_config;
 extern const adc_channel_config_t ADC1_channels_config[1];
+extern const flexspi_config_t FLEXSPI_RAM_config;
+extern const uint32_t FLEXSPI_RAM_LUT[FLEXSPI_RAM_LUT_LENGTH];
+extern flexspi_device_config_t FLEXSPI_RAM_config_HYPER_RAM;
+extern flexspi_transfer_t FLEXSPI_RAM_config_transfer_HYPER_RAM;
 
 /***********************************************************************************************************************
  * Global functions

@@ -567,6 +567,117 @@ void startCycle()
  * Initialization Functions
  ******************************************************************************/
 
+void writeRAM(uint32_t* ptr, uint32_t* data, uint32_t length)
+{
+	for (size_t i = 0; i < length; i++)
+	{
+		*ptr = data[i];
+		ptr++;
+	}
+}
+
+void readRAM(uint32_t* ptr, uint32_t* data, uint32_t length)
+{
+	for (size_t i = 0; i < length; i++)
+	{
+		data[i] = *ptr;
+		ptr++;
+	}
+}
+
+void initAndTestRAM()
+{
+
+	//unlock LUT
+	FLEXSPI_RAM_PERIPHERAL->LUTKEY = 0x5AF05AF0UL;
+	FLEXSPI_RAM_PERIPHERAL->LUTCR = FLEXSPI_LUTCR_UNLOCK_MASK;
+
+	// Write LUT
+	for (size_t i = 0; i < 64; i++)
+	{
+		FLEXSPI_RAM_PERIPHERAL->LUT[i] = FLEXSPI_RAM_LUT[i];
+	}
+	
+
+	//Read LUTs
+	uint32_t lut[64];
+
+    for (int i = 0; i < 64; i++)
+    {
+		lut[i] = FLEXSPI_RAM_PERIPHERAL->LUT[i];
+    }
+
+    FLEXSPI_SoftwareReset(FLEXSPI_RAM_PERIPHERAL);
+
+	#define TEST_SIZE 1024
+	volatile uint32_t* AHBptr = (uint32_t*)0x70002000;
+
+	// test if the hyper ram is working
+	volatile uint32_t outData[TEST_SIZE] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
+	volatile uint32_t inData[TEST_SIZE] = {5};
+
+
+
+	writeRAM((uint32_t*)AHBptr, (uint32_t*)outData, 1);
+
+	readRAM((uint32_t*)AHBptr, (uint32_t*)inData, 1);
+
+
+	for (size_t i = 10; i < TEST_SIZE; i+=10)
+	{
+		GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 1);
+
+		writeRAM((uint32_t*)AHBptr, (uint32_t*)outData, i);
+
+		readRAM((uint32_t*)AHBptr, (uint32_t*)inData, i);
+
+		GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 0);
+
+		SDK_DelayAtLeastUs(5, CLOCK_GetFreq(kCLOCK_CoreSysClk));
+	}
+
+	// flexspi_transfer_t flashXferRead;
+	// flashXferRead.deviceAddress = 0;
+	// flashXferRead.port = kFLEXSPI_PortA1;
+	// flashXferRead.cmdType = kFLEXSPI_Read;
+	// flashXferRead.seqIndex = 1;
+	// flashXferRead.SeqNumber = 1;
+	// flashXferRead.data = (uint32_t*)inData;
+	// flashXferRead.dataSize = TEST_SIZE * 4;
+
+	// flexspi_transfer_t flashXferWrite;
+	// flashXferWrite.deviceAddress = 0;
+	// flashXferWrite.port = kFLEXSPI_PortA1;
+	// flashXferWrite.cmdType = kFLEXSPI_Write;
+	// flashXferWrite.seqIndex = 0;
+	// flashXferWrite.SeqNumber = 1;
+	// flashXferWrite.data = (uint32_t*)outData;
+	// flashXferWrite.dataSize = TEST_SIZE * 4;
+
+	// FLEXSPI_TransferBlocking(FLEXSPI_RAM_PERIPHERAL, &flashXferWrite);
+
+	// FLEXSPI_TransferBlocking(FLEXSPI_RAM_PERIPHERAL, &flashXferRead);
+	// FLEXSPI_TransferBlocking(FLEXSPI_RAM_PERIPHERAL, &flashXferRead);
+
+	bool equal = true;
+	for (size_t i = 0; i < TEST_SIZE; i++)
+	{
+		if(inData[i] != outData[i])
+		{
+			equal = false;
+			break;
+		}
+	}
+
+	if(!equal)
+	{
+		SEGGER_RTT_printf(0, "Hyper ram test failed\n");
+	}
+	else
+	{
+		SEGGER_RTT_printf(0, "Hyper ram test passed\n");
+	} 
+}
 
 void initHardware()
 {
@@ -608,84 +719,6 @@ void initHardware()
 
 	// Init Hyperram
 
-	//unlock LUT
-	FLEXSPI_RAM_PERIPHERAL->LUTKEY = 0x5AF05AF0UL;
-	FLEXSPI_RAM_PERIPHERAL->LUTCR = FLEXSPI_LUTCR_UNLOCK_MASK;
-
-	// Write LUT
-	for (size_t i = 0; i < 64; i++)
-	{
-		FLEXSPI_RAM_PERIPHERAL->LUT[i] = FLEXSPI_RAM_LUT[i];
-	}
-	
-
-	//Read LUTs
-	uint32_t lut[64];
-
-    for (int i = 0; i < 64; i++)
-    {
-		lut[i] = FLEXSPI_RAM_PERIPHERAL->LUT[i];
-    }
-
-    FLEXSPI_SoftwareReset(FLEXSPI_RAM_PERIPHERAL);
-	#define TEST_SIZE 1024
-
-	// test if the hyper ram is working
-	volatile uint32_t outData[TEST_SIZE] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
-	volatile uint32_t inData[TEST_SIZE] = {0};
-
-	// flexspi_transfer_t flashXferRead;
-	// flashXferRead.deviceAddress = 0;
-	// flashXferRead.port = kFLEXSPI_PortA1;
-	// flashXferRead.cmdType = kFLEXSPI_Read;
-	// flashXferRead.seqIndex = 1;
-	// flashXferRead.SeqNumber = 1;
-	// flashXferRead.data = inData;
-	// flashXferRead.dataSize = 32 * 4;
-
-	// flexspi_transfer_t flashXferWrite;
-	// flashXferWrite.deviceAddress = 0;
-	// flashXferWrite.port = kFLEXSPI_PortA1;
-	// flashXferWrite.cmdType = kFLEXSPI_Write;
-	// flashXferWrite.seqIndex = 0;
-	// flashXferWrite.SeqNumber = 1;
-	// flashXferWrite.data = outData;
-	// flashXferWrite.dataSize = 32 * 4;
-
-	// FLEXSPI_TransferBlocking(FLEXSPI_RAM_PERIPHERAL, &flashXferWrite);
-
-	// FLEXSPI_TransferBlocking(FLEXSPI_RAM_PERIPHERAL, &flashXferRead);
-	//FLEXSPI_ReadBlocking(FLEXSPI_RAM_PERIPHERAL, inData, 8);
-	//FLEXSPI_WriteBlocking(FLEXSPI_RAM_PERIPHERAL, inData, 8);
-
-	volatile uint32_t* AHBptr = (uint32_t*)0x70000000;
-	for (size_t i = 0; i < TEST_SIZE; i++)
-	{
-		*(AHBptr + i) = outData[i];
-	}
-	for (size_t i = 0; i < TEST_SIZE; i++)
-	{
-		inData[i] = *(AHBptr + i);
-	}
-
-	bool equal = true;
-	for (size_t i = 0; i < TEST_SIZE; i++)
-	{
-		if(inData[i] != outData[i])
-		{
-			equal = false;
-			break;
-		}
-	}
-
-	if(!equal)
-	{
-		SEGGER_RTT_printf(0, "Hyper ram test failed\n");
-	}
-	else
-	{
-		SEGGER_RTT_printf(0, "Hyper ram test passed\n");
-	} 
 }
 
 void initPerpheralHandler()
@@ -740,12 +773,22 @@ void ONOFF_PRESSED_IRQHANDLER(void) {
 void gpio_init()
 {
     /* Define the init structure for the output LED pin*/
-    gpio_pin_config_t led_config = {
+    gpio_pin_config_t debug_config = {
         kGPIO_DigitalOutput,
         0,
     };
 
-    /* Init output LED GPIO. */
+    /* Init debug pins. */
+
+	GPIO_PinInit(DEBUG_DEBUG0_GPIO, DEBUG_DEBUG0_PIN, &debug_config);
+	GPIO_PinInit(DEBUG_DEBUG1_GPIO, DEBUG_DEBUG1_PIN, &debug_config);
+	GPIO_PinInit(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, &debug_config);
+	GPIO_PinInit(DEBUG_DEBUG3_GPIO, DEBUG_DEBUG3_PIN, &debug_config);
+
+	GPIO_PinWrite(DEBUG_DEBUG0_GPIO, DEBUG_DEBUG0_PIN, 0);
+	GPIO_PinWrite(DEBUG_DEBUG1_GPIO, DEBUG_DEBUG1_PIN, 0);
+	GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 0);
+	GPIO_PinWrite(DEBUG_DEBUG3_GPIO, DEBUG_DEBUG3_PIN, 0);
 	
     // GPIO_PinInit(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, &led_config);
     // GPIO_PinInit(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, &led_config);

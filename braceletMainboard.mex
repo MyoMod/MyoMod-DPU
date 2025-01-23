@@ -663,6 +663,7 @@
                <description>Configures pin routing and optionally pin electrical features.</description>
                <options>
                   <callFromInitBoot>true</callFromInitBoot>
+                  <prefix>DEBUG_</prefix>
                   <coreID>core0</coreID>
                   <enableClock>true</enableClock>
                </options>
@@ -692,6 +693,11 @@
                         <data>true</data>
                      </feature>
                   </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.igpio" description="Pins initialization requires the IGPIO Driver in the project." problem_level="2" source="Pins:BOARD_InitDEBUG_UART">
+                     <feature name="enabled" evaluation="equal" configuration="core0">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
                </dependencies>
                <pins>
                   <pin peripheral="ARM" signal="arm_trace_swo" pin_num="G13" pin_signal="GPIO_AD_B0_10"/>
@@ -711,21 +717,29 @@
                   <pin peripheral="GPIO7" signal="gpio_io, 25" pin_num="A13" pin_signal="GPIO_B1_09">
                      <pin_features>
                         <pin_feature name="identifier" value="DEBUG2"/>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                        <pin_feature name="slew_rate" value="Fast"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="GPIO7" signal="gpio_io, 26" pin_num="B13" pin_signal="GPIO_B1_10">
                      <pin_features>
                         <pin_feature name="identifier" value="DEBUG3"/>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                        <pin_feature name="slew_rate" value="Fast"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="GPIO7" signal="gpio_io, 24" pin_num="A12" pin_signal="GPIO_B1_08">
                      <pin_features>
                         <pin_feature name="identifier" value="DEBUG1"/>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                        <pin_feature name="slew_rate" value="Fast"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="GPIO7" signal="gpio_io, 16" pin_num="A11" pin_signal="GPIO_B1_00">
                      <pin_features>
                         <pin_feature name="identifier" value="DEBUG0"/>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                        <pin_feature name="slew_rate" value="Fast"/>
                      </pin_features>
                   </pin>
                </pins>
@@ -1232,7 +1246,7 @@
                   <clock_output id="ENET_25M_REF_CLK.outFreq" value="1.2 MHz" locked="false" accuracy=""/>
                   <clock_output id="FLEXIO1_CLK_ROOT.outFreq" value="30 MHz" locked="false" accuracy=""/>
                   <clock_output id="FLEXIO2_CLK_ROOT.outFreq" value="30 MHz" locked="false" accuracy=""/>
-                  <clock_output id="FLEXSPI2_CLK_ROOT.outFreq" value="264 MHz" locked="true" accuracy="0.001"/>
+                  <clock_output id="FLEXSPI2_CLK_ROOT.outFreq" value="66 MHz" locked="false" accuracy=""/>
                   <clock_output id="FLEXSPI_CLK_ROOT.outFreq" value="60 MHz" locked="false" accuracy=""/>
                   <clock_output id="GPT1_ipg_clk_highfreq.outFreq" value="75 MHz" locked="false" accuracy=""/>
                   <clock_output id="GPT2_ipg_clk_highfreq.outFreq" value="75 MHz" locked="false" accuracy=""/>
@@ -1262,6 +1276,7 @@
                   <clock_output id="USDHC2_CLK_ROOT.outFreq" value="198 MHz" locked="false" accuracy=""/>
                </clock_outputs>
                <clock_settings>
+                  <setting id="CCM.FLEXSPI2_PODF.scale" value="8" locked="true"/>
                   <setting id="CCM.PERCLK_PODF.scale" value="2" locked="false"/>
                   <setting id="CCM.SEMC_PODF.scale" value="5" locked="false"/>
                   <setting id="CCM_ANALOG.PLL1_BYPASS.sel" value="CCM_ANALOG.PLL1" locked="false"/>
@@ -2484,9 +2499,9 @@
                            <setting name="enableSckFreeRunning" value="false"/>
                            <setting name="enableCombination" value="true"/>
                            <setting name="enableDoze" value="false"/>
-                           <setting name="enableHalfSpeedAccess" value="true"/>
+                           <setting name="enableHalfSpeedAccess" value="false"/>
                            <setting name="enableSckBDiffOpt" value="true"/>
-                           <setting name="enableSameConfigForAll" value="false"/>
+                           <setting name="enableSameConfigForAll" value="true"/>
                            <setting name="seqTimeoutCycleString" value="65535"/>
                            <setting name="ipGrantTimeoutCycleString" value="255"/>
                            <setting name="txWatermark" value="0"/>
@@ -2525,9 +2540,9 @@
                               </array>
                               <setting name="enableClearAHBBufferOpt" value="false"/>
                               <setting name="enableReadAddressOpt" value="true"/>
-                              <setting name="enableAHBPrefetch" value="true"/>
-                              <setting name="enableAHBBufferable" value="true"/>
-                              <setting name="enableAHBCachable" value="true"/>
+                              <setting name="enableAHBPrefetch" value="false"/>
+                              <setting name="enableAHBBufferable" value="false"/>
+                              <setting name="enableAHBCachable" value="false"/>
                            </struct>
                         </struct>
                         <struct name="flexspiInterrupt">
