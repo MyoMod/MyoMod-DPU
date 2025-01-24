@@ -1,3 +1,6 @@
 [submodule "etl"]
 	path = etl
 	url = https://github.com/ETLCPP/etl.git
+[submodule "source/embeddedDevices/icm42670p"]
+	path = source/embeddedDevices/icm42670p
+	url = https://github.com/MyoMod/motion.arduino.ICM42670P.git
