@@ -30,6 +30,7 @@
             "interface": "swd",
             "serialNumber": "",
             "svdPath": "${workspaceFolder}/.vscode/MIMXRT1062.svd",
+            "definitionPath": "${workspaceFolder}/.vscode/MIMXRT1062.svd",
             "gdbPath": "arm-none-eabi-gdb-py",
             "objdumpPath": "arm-none-eabi-objdump",
             "rttConfig": {

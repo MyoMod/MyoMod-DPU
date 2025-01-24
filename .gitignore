@@ -10,3 +10,5 @@ mcu-boot/
 build/
 
 source/generated/
+
+FreeRTOS/Getting Started with MCUXpressoSDK and FreeRTOS OS.pdf

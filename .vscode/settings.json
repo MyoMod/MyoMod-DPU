@@ -107,5 +107,8 @@
             "label": "$(disassembly-editor-label-icon) Start Ozone",
             "task": "Start Ozone"
         }
-    ]
+    ],
+    "cortex-debug.liveWatchRefreshRate": 500,
+    "cortex-debug.enableTelemetry": false,
+    "cortex-debug.variableUseNaturalFormat": false
 }
