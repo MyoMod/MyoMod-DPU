@@ -745,6 +745,7 @@
                         <pin_feature name="identifier" value="DEBUG0"/>
                         <pin_feature name="direction" value="OUTPUT"/>
                         <pin_feature name="slew_rate" value="Fast"/>
+<<<<<<< HEAD
                      </pin_features>
                   </pin>
                   <pin peripheral="GPIO5" signal="gpio_io, 00" pin_num="L6" pin_signal="WAKEUP">
@@ -752,6 +753,8 @@
                         <pin_feature name="identifier" value="WAKEUP"/>
                         <pin_feature name="direction" value="INPUT"/>
                         <pin_feature name="gpio_interrupt" value="kGPIO_IntFallingEdge"/>
+=======
+>>>>>>> origin/IMU
                      </pin_features>
                   </pin>
                </pins>
