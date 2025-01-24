@@ -121,8 +121,10 @@ int main()
 
 
 			// read battery voltage
+			const float a = 0.13872f;
+			const float b = 0.01362;
 			vBatRaw = ADC_GetChannelConversionValue(ADC1, 0);
-			vBat = (float)vBatRaw / 4096.0f * 3.3f * 2.0f;
+			vBat = (float)vBatRaw * b + a;
 		}
 	}
 
