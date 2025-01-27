@@ -1212,7 +1212,7 @@ instance:
     - clockSource: 'LpspiClock'
     - clockSourceFreq: 'ClocksTool_DefaultInit'
     - master:
-      - baudRate: '500000'
+      - baudRate: '24000000'
       - bitsPerFrame: '8'
       - cpol: 'kLPSPI_ClockPolarityActiveLow'
       - cpha: 'kLPSPI_ClockPhaseSecondEdge'
@@ -1238,7 +1238,7 @@ instance:
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
 const lpspi_master_config_t SPI_IMU_config = {
-  .baudRate = 500000UL,
+  .baudRate = 24000000UL,
   .bitsPerFrame = 8UL,
   .cpol = kLPSPI_ClockPolarityActiveLow,
   .cpha = kLPSPI_ClockPhaseSecondEdge,
