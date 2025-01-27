@@ -38,6 +38,7 @@
 #include "dpu_gpio.h"
 
 #include "ui/button.h"
+#include "ICM42670P.h"
 
 #include "embeddedIMU.h"
 
@@ -61,10 +62,12 @@ std::vector<std::shared_ptr<EmbeddedDeviceNode>> g_embeddedDeviceNodes;
 std::vector<std::unique_ptr<AlgorithmicNode>> g_algorithmicNodes;
 
 volatile bool g_isRunning = false;
+volatile float g_vBat = 0;
+volatile uint32_t g_vBatRaw = 0;
 
+volatile int32_t accelRaw[3] = {0,0,0};
 
-			volatile float vBat = 0;
-			volatile uint32_t vBatRaw = 0;
+ICM42670 g_imu = ICM42670(SPI_IMU_PERIPHERAL);
 
 
 uint8_t g_debugBuffer[1024];
@@ -111,20 +114,39 @@ int main()
 			}
 			currentTime = (currentTime & 0xFFFF0000) | tmrVal;
 
+			// Get latest imu data
+			inv_imu_sensor_event_t imu_event;
+			g_imu.getDataFromRegisters(imu_event);
 
 			ledVal += 0.005f;
+
+			accelRaw[0] = imu_event.accel[0];
+			accelRaw[1] = imu_event.accel[1];
+			accelRaw[2] = imu_event.accel[2];
+
+			// 1g at about 2048
+			float colors[3] = {0,0,0};
+			for (int i = 0; i < 3; i++)
+			{
+				//scale from -2048 to 2048 to -100 to 100
+				colors[i] = (float)accelRaw[i] / 2048.0f *100.0f;
+				 
+				//abs and limit to 100
+				colors[i] = fminf(100.0f, fabsf(colors[i]));
+			}
+
 			
-			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_G, kPWM_EdgeAligned, sinf(ledVal) * 50 + 50);
-			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_B, kPWM_EdgeAligned, sinf(ledVal) * 50 + 50);
-			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_EdgeAligned, sinf(ledVal) * 50 + 50);
+			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_G, kPWM_EdgeAligned, colors[0]);
+			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_B, kPWM_EdgeAligned, colors[1]);
+			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_EdgeAligned, colors[2]);
 			PWM_SetPwmLdok(PWM1, 2 | 4, true);
 
 
 			// read battery voltage
 			const float a = 0.13872f;
 			const float b = 0.01362;
-			vBatRaw = ADC_GetChannelConversionValue(ADC1, 0);
-			vBat = (float)vBatRaw * b + a;
+			g_vBatRaw = ADC_GetChannelConversionValue(ADC1, 0);
+			g_vBat = (float)g_vBatRaw * b + a;
 		}
 	}
 
@@ -719,8 +741,21 @@ void initHardware()
 	// Load buffered values 
 	PWM_SetPwmLdok(PWM1, 2 | 4, true);
 
-	// Init Hyperram
+	// Test SPI
+	LPSPI_Enable(SPI_IMU_PERIPHERAL, true);
 
+
+	// Init IMU (ICM42670P)
+	volatile int returnVal = g_imu.begin();
+	if (returnVal != 0)
+	{
+		SEGGER_RTT_printf(0, "IMU init failed\n");
+	}
+
+	// Accel ODR = 100 Hz and Full Scale Range = 16G
+	g_imu.startAccel(100,16);
+	// Gyro ODR = 100 Hz and Full Scale Range = 2000 dps
+	g_imu.startGyro(100,2000);
 }
 
 void initPerpheralHandler()
@@ -791,7 +826,6 @@ void gpio_init()
 	GPIO_PinWrite(DEBUG_DEBUG1_GPIO, DEBUG_DEBUG1_PIN, 0);
 	GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 0);
 	GPIO_PinWrite(DEBUG_DEBUG3_GPIO, DEBUG_DEBUG3_PIN, 0);
-	
     // GPIO_PinInit(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, &led_config);
     // GPIO_PinInit(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, &led_config);
 

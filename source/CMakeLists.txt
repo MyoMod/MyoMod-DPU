@@ -25,6 +25,8 @@ add_library(source ${FILES})
 
 add_subdirectory(./configurations/lwjson        lwjson)
 
+add_subdirectory(./embeddedDevices/icm42670p    icm42670p)
+
 # target_link_libraries: If you link with other libraries, list them here
 target_link_libraries(
   source 
@@ -35,6 +37,7 @@ target_link_libraries(
   utilities
   lwjson
   etl
+  icm42670p
 )
  
 # target_include_directories: Libraries need to publish their header files 
