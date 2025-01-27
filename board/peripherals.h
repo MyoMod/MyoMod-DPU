@@ -18,9 +18,9 @@
 #include "fsl_adapter_gpio.h"
 #include "pin_mux.h"
 #include "fsl_pwm.h"
-#include "fsl_lpspi_cmsis.h"
 #include "fsl_adc.h"
 #include "fsl_flexspi.h"
+#include "fsl_lpspi.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -162,10 +162,6 @@ extern "C" {
 #define PWM1_F0_FAULT2 kPWM_Fault_2
 /* Definition of fault Fault3 ID */
 #define PWM1_F0_FAULT3 kPWM_Fault_3
-/* Definition of peripheral ID */
-#define LPSPI3_PERIPHERAL Driver_SPI3
-/* Definition of the clock source frequency */
-#define LPSPI3_CLOCK_SOURCE_FREQ 132000000UL
 /* gpio_io, 00 signal defines */
 /* Definition of the pin direction */
 #define DEBUG_ESP_EN_PIN_DIRECTION kHAL_GpioDirectionIn
@@ -190,6 +186,11 @@ extern "C" {
 #define FLEXSPI_RAM_IRQN FLEXSPI_IRQn
 /* FLEXSPI_RAM interrupt handler identifier. */
 #define FLEXSPI_RAM_IRQHANDLER 
+/* BOARD_InitPeripherals defines for LPSPI4 */
+/* Definition of peripheral ID */
+#define SPI_IMU_PERIPHERAL LPSPI4
+/* Definition of clock source */
+#define SPI_IMU_CLOCK_FREQ 132000000UL
 
 /***********************************************************************************************************************
  * Global variables
@@ -228,6 +229,7 @@ extern const flexspi_config_t FLEXSPI_RAM_config;
 extern const uint32_t FLEXSPI_RAM_LUT[FLEXSPI_RAM_LUT_LENGTH];
 extern flexspi_device_config_t FLEXSPI_RAM_config_HYPER_RAM;
 extern flexspi_transfer_t FLEXSPI_RAM_config_transfer_HYPER_RAM;
+extern const lpspi_master_config_t SPI_IMU_config;
 
 /***********************************************************************************************************************
  * Global functions
@@ -238,8 +240,6 @@ extern void LPUART1_SignalEvent(uint32_t event);
 uint32_t LPUART1_GetFreq(void);
 /* Get GPIO pin configuration */
 hal_gpio_pin_config_t createAdapterGpioPinConfig(GPIO_Type *port, uint8_t pin, hal_gpio_direction_t direction, uint8_t level);
-/* Get clock source frequency function for component LPSPI3 */
-uint32_t LPSPI3_GetFreq(void);
 
 /***********************************************************************************************************************
  * Callback functions

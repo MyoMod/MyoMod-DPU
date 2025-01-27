@@ -100,7 +100,6 @@ instance:
       - 0: []
       - 1: []
       - 2: []
-      - 3: []
     - interrupts:
       - 0:
         - channelId: 'OnOff_Pressed'
@@ -854,66 +853,6 @@ static void PWM1_init(void) {
 }
 
 /***********************************************************************************************************************
- * LPSPI3 initialization code
- **********************************************************************************************************************/
-/* clang-format off */
-/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
-instance:
-- name: 'LPSPI3'
-- type: 'lpspi_cmsis'
-- mode: 'interrupt'
-- custom_name_enabled: 'false'
-- type_id: 'lpspi_cmsis_20c8e626b665b1f41c2023229558fbf2'
-- functional_group: 'BOARD_InitPeripherals'
-- peripheral: 'LPSPI3'
-- config_sets:
-  - general:
-    - main_config:
-      - spi_mode_user: 'ARM_SPI_MODE_MASTER'
-      - clockSource: 'LpspiClock'
-      - clockSourceFreq: 'ClocksTool_DefaultInit'
-      - clock_polarity: 'ARM_SPI_CPOL0_CPHA0'
-      - power_state: 'ARM_POWER_FULL'
-      - baudRate_Bps: '8000000'
-      - data_bits: '8'
-      - bit_format: 'ARM_SPI_MSB_LSB'
-      - typeControlMaster: 'ARM_SPI_SS_MASTER_HW_OUTPUT'
-      - defaultValueInt: '0'
-      - spi_chip_select: 'PCS0'
-      - pcsToSckDelayInNanoSec: '0'
-      - lastSckToPcsDelayInNanoSec: '0'
-      - betweenTransferDelayInNanoSec: '0'
-      - signalEventFunctionId: 'NULL'
-      - enableGetFreqFnCustomName: 'false'
-      - getFreqFunctionCustomID: 'LPSPI1_GetFreq'
-      - enableInitPinsFnCustomName: 'false'
-      - initPinFunctionCustomID: 'LPSPI1_InitPins'
-      - enableDeinitPinsFnCustomName: 'false'
-      - deinitPinFunctionCustomID: 'LPSPI1_DeinitPins'
-  - fsl_spi:
-    - interrupt:
-      - IRQn: 'LPSPI3_IRQn'
-      - enable_priority: 'false'
-      - priority: '0'
- * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
-/* clang-format on */
-/* Get clock source frequency */
-uint32_t LPSPI3_GetFreq(void){
-  return LPSPI3_CLOCK_SOURCE_FREQ;
-};
-
-static void LPSPI3_init(void) {
-  /* Initialize CMSIS SPI */
-  LPSPI3_PERIPHERAL.Initialize(NULL);
-  /* Power control of CMSIS SPI */
-  LPSPI3_PERIPHERAL.PowerControl(ARM_POWER_FULL);
-  /* Control of CMSIS SPI */
-  LPSPI3_PERIPHERAL.Control(ARM_SPI_MODE_MASTER | ARM_SPI_CPOL0_CPHA0 | ARM_SPI_DATA_BITS(8) | ARM_SPI_MSB_LSB | ARM_SPI_SS_MASTER_HW_OUTPUT, 8000000);
-  /* Control of CMSIS SPI */
-  LPSPI3_PERIPHERAL.Control(ARM_SPI_SET_DEFAULT_TX_VALUE, 0);
-}
-
-/***********************************************************************************************************************
  * GPIO1 initialization code
  **********************************************************************************************************************/
 /* clang-format off */
@@ -1217,7 +1156,7 @@ const flexspi_config_t FLEXSPI_RAM_config = {
   }
 };
 flexspi_device_config_t FLEXSPI_RAM_config_HYPER_RAM = {
-  .flexspiRootClk = 66000000UL,
+  .flexspiRootClk = 30857100UL,
   .isSck2Enabled = false,
   .flashSize = 8192UL,
   .CSIntervalUnit = kFLEXSPI_CsIntervalUnit1SckCycle,
@@ -1255,6 +1194,71 @@ static void FLEXSPI_RAM_init(void) {
 }
 
 /***********************************************************************************************************************
+ * SPI_IMU initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'SPI_IMU'
+- type: 'lpspi'
+- mode: 'polling'
+- custom_name_enabled: 'true'
+- type_id: 'lpspi_3b8318dca8e0034b76e041f04d445c24'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'LPSPI4'
+- config_sets:
+  - main:
+    - mode: 'kLPSPI_Master'
+    - clockSource: 'LpspiClock'
+    - clockSourceFreq: 'ClocksTool_DefaultInit'
+    - master:
+      - baudRate: '500000'
+      - bitsPerFrame: '8'
+      - cpol: 'kLPSPI_ClockPolarityActiveLow'
+      - cpha: 'kLPSPI_ClockPhaseSecondEdge'
+      - direction: 'kLPSPI_MsbFirst'
+      - pcsToSckDelayInNanoSec: '1000'
+      - lastSckToPcsDelayInNanoSec: '1000'
+      - betweenTransferDelayInNanoSec: '1000'
+      - whichPcs: 'kLPSPI_Pcs0'
+      - pcsActiveHighOrLow: 'kLPSPI_PcsActiveLow'
+      - pinCfg: 'kLPSPI_SdiInSdoOut'
+      - pcsFunc: 'kLPSPI_PcsAsCs'
+      - dataOutConfig: 'kLpspiDataOutRetained'
+      - enableInputDelay: 'false'
+    - set_FifoWaterMarks: 'false'
+    - fifoWaterMarks:
+      - txWatermark: '0'
+      - rxWatermark: '0'
+    - allPcsPolarityEnable: 'false'
+    - allPcsPolarity:
+      - kLPSPI_Pcs1Active: 'kLPSPI_PcsActiveLow'
+      - kLPSPI_Pcs2Active: 'kLPSPI_PcsActiveLow'
+      - kLPSPI_Pcs3Active: 'kLPSPI_PcsActiveLow'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+const lpspi_master_config_t SPI_IMU_config = {
+  .baudRate = 500000UL,
+  .bitsPerFrame = 8UL,
+  .cpol = kLPSPI_ClockPolarityActiveLow,
+  .cpha = kLPSPI_ClockPhaseSecondEdge,
+  .direction = kLPSPI_MsbFirst,
+  .pcsToSckDelayInNanoSec = 1000UL,
+  .lastSckToPcsDelayInNanoSec = 1000UL,
+  .betweenTransferDelayInNanoSec = 1000UL,
+  .whichPcs = kLPSPI_Pcs0,
+  .pcsActiveHighOrLow = kLPSPI_PcsActiveLow,
+  .pinCfg = kLPSPI_SdiInSdoOut,
+  .pcsFunc = kLPSPI_PcsAsCs,
+  .dataOutConfig = kLpspiDataOutRetained,
+  .enableInputDelay = false
+};
+
+static void SPI_IMU_init(void) {
+  LPSPI_MasterInit(SPI_IMU_PERIPHERAL, &SPI_IMU_config, SPI_IMU_CLOCK_FREQ);
+}
+
+/***********************************************************************************************************************
  * Initialization functions
  **********************************************************************************************************************/
 static void BOARD_InitPeripherals_CommonPostInit(void)
@@ -1277,10 +1281,10 @@ void BOARD_InitPeripherals(void)
   LPUART1_init();
   GPIO7_init();
   PWM1_init();
-  LPSPI3_init();
   GPIO1_init();
   ADC1_init();
   FLEXSPI_RAM_init();
+  SPI_IMU_init();
   /* Common post-initialization */
   BOARD_InitPeripherals_CommonPostInit();
 }

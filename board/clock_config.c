@@ -60,12 +60,12 @@ outputs:
 - {id: ENET_25M_REF_CLK.outFreq, value: 1.2 MHz}
 - {id: FLEXIO1_CLK_ROOT.outFreq, value: 30 MHz}
 - {id: FLEXIO2_CLK_ROOT.outFreq, value: 30 MHz}
-- {id: FLEXSPI2_CLK_ROOT.outFreq, value: 66 MHz}
+- {id: FLEXSPI2_CLK_ROOT.outFreq, value: 216/7 MHz}
 - {id: FLEXSPI_CLK_ROOT.outFreq, value: 60 MHz}
 - {id: GPT1_ipg_clk_highfreq.outFreq, value: 75 MHz}
 - {id: GPT2_ipg_clk_highfreq.outFreq, value: 75 MHz}
 - {id: IPG_CLK_ROOT.outFreq, value: 150 MHz}
-- {id: LCDIF_CLK_ROOT.outFreq, value: 67.5 MHz}
+- {id: LCDIF_CLK_ROOT.outFreq, value: 216/7 MHz}
 - {id: LPI2C_CLK_ROOT.outFreq, value: 60 MHz, locked: true, accuracy: '0.001'}
 - {id: LPSPI_CLK_ROOT.outFreq, value: 132 MHz}
 - {id: LVDS1_CLK.outFreq, value: 1.2 GHz}
@@ -90,6 +90,7 @@ outputs:
 - {id: USDHC2_CLK_ROOT.outFreq, value: 198 MHz}
 settings:
 - {id: CCM.FLEXSPI2_PODF.scale, value: '8', locked: true}
+- {id: CCM.FLEXSPI2_SEL.sel, value: CCM_ANALOG.PLL3_PFD1_CLK}
 - {id: CCM.PERCLK_PODF.scale, value: '2'}
 - {id: CCM.SEMC_PODF.scale, value: '5'}
 - {id: CCM_ANALOG.PLL1_BYPASS.sel, value: CCM_ANALOG.PLL1}
@@ -105,6 +106,8 @@ settings:
 - {id: CCM_ANALOG.PLL3_BYPASS.sel, value: CCM_ANALOG.PLL3}
 - {id: CCM_ANALOG.PLL3_PFD0_BYPASS.sel, value: CCM_ANALOG.PLL3_PFD0}
 - {id: CCM_ANALOG.PLL3_PFD1_BYPASS.sel, value: CCM_ANALOG.PLL3_PFD1}
+- {id: CCM_ANALOG.PLL3_PFD1_DIV.scale, value: '35', locked: true}
+- {id: CCM_ANALOG.PLL3_PFD1_MUL.scale, value: '18', locked: true}
 - {id: CCM_ANALOG.PLL3_PFD2_BYPASS.sel, value: CCM_ANALOG.PLL3_PFD2}
 - {id: CCM_ANALOG.PLL3_PFD3_BYPASS.sel, value: CCM_ANALOG.PLL3_PFD3}
 - {id: CCM_ANALOG_PLL_USB1_POWER_CFG, value: 'Yes'}
@@ -234,7 +237,7 @@ void BOARD_BootClockRUN(void)
     /* Set FLEXSPI2_PODF. */
     CLOCK_SetDiv(kCLOCK_Flexspi2Div, 7);
     /* Set Flexspi2 clock source. */
-    CLOCK_SetMux(kCLOCK_Flexspi2Mux, 3);
+    CLOCK_SetMux(kCLOCK_Flexspi2Mux, 2);
     /* Disable CSI clock gate. */
     CLOCK_DisableClock(kCLOCK_Csi);
     /* Set CSI_PODF. */
@@ -375,7 +378,7 @@ void BOARD_BootClockRUN(void)
     /* Init Usb1 pfd0. */
     CLOCK_InitUsb1Pfd(kCLOCK_Pfd0, 12);
     /* Init Usb1 pfd1. */
-    CLOCK_InitUsb1Pfd(kCLOCK_Pfd1, 16);
+    CLOCK_InitUsb1Pfd(kCLOCK_Pfd1, 35);
     /* Init Usb1 pfd2. */
     CLOCK_InitUsb1Pfd(kCLOCK_Pfd2, 17);
     /* Init Usb1 pfd3. */

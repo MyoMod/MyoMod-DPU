@@ -18,8 +18,6 @@
  **********************************************************************************************************************/
 /* Enable peripheral */
 #define RTE_USART1 1
-/* Enable peripheral */
-#define RTE_SPI3 1
 
 /***********************************************************************************************************************
  * Driver configuration
@@ -28,14 +26,6 @@
 #define USART_RX_BUFFER_LEN 64
 /* Enable RX buffer */
 #define USART1_RX_BUFFER_ENABLE 1
-/* PCS to SCK delay. */
-#define RTE_SPI3_PCS_TO_SCK_DELAY 0
-/* SCK to PCS delay. */
-#define RTE_SPI3_SCK_TO_PSC_DELAY 0
-/* Between transfer delay. */
-#define RTE_SPI3_BETWEEN_TRANSFER_DELAY 0
-/* Peripheral chip select. */
-#define RTE_SPI3_MASTER_PCS_PIN_SEL kLPSPI_MasterPcs0
 
 
 #endif /* __RTE_DEVICE_H */
