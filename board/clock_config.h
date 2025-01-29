@@ -53,7 +53,7 @@ void BOARD_InitBootClocks(void);
 #define BOARD_BOOTCLOCKRUN_ENET_TX_CLK                0UL            /* Clock consumers of ENET_TX_CLK output : ENET */
 #define BOARD_BOOTCLOCKRUN_FLEXIO1_CLK_ROOT           30000000UL     /* Clock consumers of FLEXIO1_CLK_ROOT output : FLEXIO1 */
 #define BOARD_BOOTCLOCKRUN_FLEXIO2_CLK_ROOT           30000000UL     /* Clock consumers of FLEXIO2_CLK_ROOT output : FLEXIO2, FLEXIO3 */
-#define BOARD_BOOTCLOCKRUN_FLEXSPI2_CLK_ROOT          30857142UL     /* Clock consumers of FLEXSPI2_CLK_ROOT output : FLEXSPI2 */
+#define BOARD_BOOTCLOCKRUN_FLEXSPI2_CLK_ROOT          264000000UL    /* Clock consumers of FLEXSPI2_CLK_ROOT output : FLEXSPI2 */
 #define BOARD_BOOTCLOCKRUN_FLEXSPI_CLK_ROOT           60000000UL     /* Clock consumers of FLEXSPI_CLK_ROOT output : FLEXSPI */
 #define BOARD_BOOTCLOCKRUN_GPT1_IPG_CLK_HIGHFREQ      75000000UL     /* Clock consumers of GPT1_ipg_clk_highfreq output : GPT1 */
 #define BOARD_BOOTCLOCKRUN_GPT2_IPG_CLK_HIGHFREQ      75000000UL     /* Clock consumers of GPT2_ipg_clk_highfreq output : GPT2 */

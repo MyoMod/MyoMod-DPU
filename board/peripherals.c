@@ -1156,13 +1156,13 @@ const flexspi_config_t FLEXSPI_RAM_config = {
   }
 };
 flexspi_device_config_t FLEXSPI_RAM_config_HYPER_RAM = {
-  .flexspiRootClk = 30857100UL,
+  .flexspiRootClk = 264000000UL,
   .isSck2Enabled = false,
   .flashSize = 8192UL,
   .CSIntervalUnit = kFLEXSPI_CsIntervalUnit1SckCycle,
-  .CSInterval = 0,
+  .CSInterval = 2,
   .CSHoldTime = 0,
-  .CSSetupTime = 0,
+  .CSSetupTime = 1,
   .dataValidTime = 3,
   .columnspace = 3U,
   .enableWordAddress = true,
