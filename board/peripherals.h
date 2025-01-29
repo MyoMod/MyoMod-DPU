@@ -57,12 +57,20 @@ extern "C" {
 #define TMR1_PERIPHERAL TMR1
 /* Definition of the timer channel TimePresacler. */
 #define TMR1_TIMEPRESACLER_CHANNEL kQTMR_Channel_0
-/* Definition of the timer channel ms_Counter. */
-#define TMR1_MS_COUNTER_CHANNEL kQTMR_Channel_1
+/* Definition of the timer channel ms_Counter0. */
+#define TMR1_MS_COUNTER0_CHANNEL kQTMR_Channel_1
+/* Definition of the timer channel ms_Counter1. */
+#define TMR1_MS_COUNTER1_CHANNEL kQTMR_Channel_2
+/* Definition of the timer channel ms_Counter2. */
+#define TMR1_MS_COUNTER2_CHANNEL kQTMR_Channel_3
 /* Definition of the timer channel TimePresacler clock source frequency. */
 #define TMR1_TIMEPRESACLER_CLOCK_SOURCE 18750000UL
-/* Definition of the timer channel ms_Counter clock source frequency. */
-#define TMR1_MS_COUNTER_CLOCK_SOURCE 1000UL
+/* Definition of the timer channel ms_Counter0 clock source frequency. */
+#define TMR1_MS_COUNTER0_CLOCK_SOURCE 1000UL
+/* Definition of the timer channel ms_Counter1 clock source frequency. */
+#define TMR1_MS_COUNTER1_CLOCK_SOURCE 1000UL
+/* Definition of the timer channel ms_Counter2 clock source frequency. */
+#define TMR1_MS_COUNTER2_CLOCK_SOURCE 1000UL
 /* Definition of peripheral ID */
 #define FLEXIO_I2C_PERIPHERAL FLEXIO1
 /* Definition of the clock source frequency */
@@ -197,7 +205,9 @@ extern "C" {
  **********************************************************************************************************************/
 extern const pit_config_t PIT_config;
 extern const qtmr_config_t TMR1_TimePresacler_config;
-extern const qtmr_config_t TMR1_ms_Counter_config;
+extern const qtmr_config_t TMR1_ms_Counter0_config;
+extern const qtmr_config_t TMR1_ms_Counter1_config;
+extern const qtmr_config_t TMR1_ms_Counter2_config;
 /* FlexIO peripheral configuration */
 extern FLEXIO_I2C_Type FLEXIO_I2C_peripheralConfig;
 /* FlexIO I2C master configuration */

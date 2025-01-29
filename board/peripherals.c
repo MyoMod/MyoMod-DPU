@@ -203,10 +203,42 @@ instance:
           - freq_value_str: '1 ms'
         - dmaIntMode: 'polling'
       - 1:
-        - channel_prefix_id: 'ms_Counter'
+        - channel_prefix_id: 'ms_Counter0'
         - channel: 'kQTMR_Channel_1'
         - primarySource: 'kQTMR_ClockCounter0Output'
         - primarySourceFreq: '1 khz'
+        - secondarySource: 'kQTMR_Counter0InputPin'
+        - countingMode: 'kQTMR_CascadeCount'
+        - enableMasterMode: 'true'
+        - enableExternalForce: 'false'
+        - faultFilterCount: '3'
+        - faultFilterPeriod: '0'
+        - debugMode: 'kQTMR_HaltCounter'
+        - timerModeInit: 'timer'
+        - timerMode:
+          - freq_value_str: '65535'
+        - dmaIntMode: 'polling'
+      - 2:
+        - channel_prefix_id: 'ms_Counter1'
+        - channel: 'kQTMR_Channel_2'
+        - primarySource: 'kQTMR_ClockCounter1Output'
+        - primarySourceFreq: '1kHz'
+        - secondarySource: 'kQTMR_Counter0InputPin'
+        - countingMode: 'kQTMR_CascadeCount'
+        - enableMasterMode: 'true'
+        - enableExternalForce: 'false'
+        - faultFilterCount: '3'
+        - faultFilterPeriod: '0'
+        - debugMode: 'kQTMR_HaltCounter'
+        - timerModeInit: 'timer'
+        - timerMode:
+          - freq_value_str: '65535'
+        - dmaIntMode: 'polling'
+      - 3:
+        - channel_prefix_id: 'ms_Counter2'
+        - channel: 'kQTMR_Channel_3'
+        - primarySource: 'kQTMR_ClockCounter2Output'
+        - primarySourceFreq: '1kHz'
         - secondarySource: 'kQTMR_Counter0InputPin'
         - countingMode: 'kQTMR_CascadeCount'
         - enableMasterMode: 'true'
@@ -237,8 +269,26 @@ const qtmr_config_t TMR1_TimePresacler_config = {
   .faultFilterPeriod = 0,
   .debugMode = kQTMR_HaltCounter
 };
-const qtmr_config_t TMR1_ms_Counter_config = {
+const qtmr_config_t TMR1_ms_Counter0_config = {
   .primarySource = kQTMR_ClockCounter0Output,
+  .secondarySource = kQTMR_Counter0InputPin,
+  .enableMasterMode = true,
+  .enableExternalForce = false,
+  .faultFilterCount = 0,
+  .faultFilterPeriod = 0,
+  .debugMode = kQTMR_HaltCounter
+};
+const qtmr_config_t TMR1_ms_Counter1_config = {
+  .primarySource = kQTMR_ClockCounter1Output,
+  .secondarySource = kQTMR_Counter0InputPin,
+  .enableMasterMode = true,
+  .enableExternalForce = false,
+  .faultFilterCount = 0,
+  .faultFilterPeriod = 0,
+  .debugMode = kQTMR_HaltCounter
+};
+const qtmr_config_t TMR1_ms_Counter2_config = {
+  .primarySource = kQTMR_ClockCounter2Output,
   .secondarySource = kQTMR_Counter0InputPin,
   .enableMasterMode = true,
   .enableExternalForce = false,
@@ -252,14 +302,26 @@ static void TMR1_init(void) {
   QTMR_Init(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, &TMR1_TimePresacler_config);
   /* Setup the timer period of the channel */
   QTMR_SetTimerPeriod(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, 18750U);
-  /* Quad timer channel ms_Counter peripheral initialization */
-  QTMR_Init(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, &TMR1_ms_Counter_config);
+  /* Quad timer channel ms_Counter0 peripheral initialization */
+  QTMR_Init(TMR1_PERIPHERAL, TMR1_MS_COUNTER0_CHANNEL, &TMR1_ms_Counter0_config);
   /* Setup the timer period of the channel */
-  QTMR_SetTimerPeriod(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, 65535U);
+  QTMR_SetTimerPeriod(TMR1_PERIPHERAL, TMR1_MS_COUNTER0_CHANNEL, 65535U);
+  /* Quad timer channel ms_Counter1 peripheral initialization */
+  QTMR_Init(TMR1_PERIPHERAL, TMR1_MS_COUNTER1_CHANNEL, &TMR1_ms_Counter1_config);
+  /* Setup the timer period of the channel */
+  QTMR_SetTimerPeriod(TMR1_PERIPHERAL, TMR1_MS_COUNTER1_CHANNEL, 65535U);
+  /* Quad timer channel ms_Counter2 peripheral initialization */
+  QTMR_Init(TMR1_PERIPHERAL, TMR1_MS_COUNTER2_CHANNEL, &TMR1_ms_Counter2_config);
+  /* Setup the timer period of the channel */
+  QTMR_SetTimerPeriod(TMR1_PERIPHERAL, TMR1_MS_COUNTER2_CHANNEL, 65535U);
   /* Start the timer - select the timer counting mode */
   QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, kQTMR_PriSrcRiseEdge);
   /* Start the timer - select the timer counting mode */
-  QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, kQTMR_CascadeCount);
+  QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER0_CHANNEL, kQTMR_CascadeCount);
+  /* Start the timer - select the timer counting mode */
+  QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER1_CHANNEL, kQTMR_CascadeCount);
+  /* Start the timer - select the timer counting mode */
+  QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER2_CHANNEL, kQTMR_CascadeCount);
 }
 
 /***********************************************************************************************************************

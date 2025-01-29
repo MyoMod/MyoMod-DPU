@@ -1,7 +1,6 @@
 file(GLOB FILES
 *.c
 algorithms/*.c
-commonClasses/*.c
 communication/*.c
 configurations/*.c
 devices/*.c
@@ -25,7 +24,9 @@ add_library(source ${FILES})
 
 add_subdirectory(./configurations/lwjson        lwjson)
 
+add_subdirectory(./myoModCommon                 myoModCommon)
 add_subdirectory(./embeddedDevices/icm42670p    icm42670p)
+add_subdirectory(./embeddedDevices/max11254     max11254)
 
 # target_link_libraries: If you link with other libraries, list them here
 target_link_libraries(
@@ -37,7 +38,9 @@ target_link_libraries(
   utilities
   lwjson
   etl
+  myoModCommon
   icm42670p
+  max11254
 )
  
 # target_include_directories: Libraries need to publish their header files 
@@ -48,7 +51,6 @@ target_include_directories(
   PUBLIC
   ./
   ./algorithms
-  ./commonClasses
   ./communication
   ./configurations
   ./devices

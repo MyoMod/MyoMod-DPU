@@ -30,6 +30,7 @@
 
 #include "SEGGER_RTT.h"
 
+#include "myomodCommon.h"
 #include "ConfigurationManager.h"
 #include "Configuration.h"
 #include "PeripheralHandler.h"
@@ -66,6 +67,7 @@ volatile float g_vBat = 0;
 volatile uint32_t g_vBatRaw = 0;
 
 volatile int32_t accelRaw[3] = {0,0,0};
+volatile uint64_t g_time;
 
 ICM42670 g_imu = ICM42670(SPI_IMU_PERIPHERAL);
 
@@ -98,25 +100,23 @@ int main()
 	/** Initialization **/
 
 	initHardware();
-	uint32_t currentTime = QTMR_GetCurrentTimerCount(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL);
+	uint64_t lastTime = time_us_64();
 	float ledVal = 50;
 	
 	while(1)
 	{
-		uint16_t tmrVal = QTMR_GetCurrentTimerCount(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL);
-		if((currentTime & 0xFFFF) != tmrVal)
+		uint64_t now = time_us_64();
+		if(now - lastTime > 1000)
 		{
+			lastTime = now;
 			// 1ms passed
-			if(tmrVal < (currentTime & 0xFFFF))
-			{
-				// timer overflow -> increment the high word
-				currentTime += 0x10000;
-			}
-			currentTime = (currentTime & 0xFFFF0000) | tmrVal;
+			g_time = now;
 
+			GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 1);
 			// Get latest imu data
 			inv_imu_sensor_event_t imu_event;
 			g_imu.getDataFromRegisters(imu_event);
+			GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 0);
 
 			ledVal += 0.005f;
 
@@ -714,8 +714,9 @@ void initHardware()
     PIT_SetTimerPeriod(PIT_PERIPHERAL, PIT_CHANNEL_0, USEC_TO_COUNT(5000, CLOCK_GetFreq(kCLOCK_PerClk)));
 
 	// Start system timer
-	//QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS)
-	QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL, kQTMR_CascadeCount);
+	QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER0_CHANNEL, kQTMR_CascadeCount);
+	QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER1_CHANNEL, kQTMR_CascadeCount);
+	QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER2_CHANNEL, kQTMR_CascadeCount);
 	QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, kQTMR_PriSrcRiseEdge);
 
     gpio_init();
