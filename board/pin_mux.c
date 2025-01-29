@@ -610,10 +610,10 @@ External_Connections:
   - {pin_num: J11, peripheral: LPI2C1, signal: SCL, pin_signal: GPIO_AD_B1_00, identifier: EXT_SCL}
   - {pin_num: J4, peripheral: LPI2C3, signal: SCL, pin_signal: GPIO_SD_B0_00, identifier: ESP_SDA}
   - {pin_num: J3, peripheral: LPI2C3, signal: SDA, pin_signal: GPIO_SD_B0_01, identifier: ESP_SCL}
-  - {pin_num: J14, peripheral: LPSPI3, signal: SCK, pin_signal: GPIO_AD_B1_15, identifier: ADC_SCK, direction: OUTPUT}
-  - {pin_num: H11, peripheral: LPSPI3, signal: SDI, pin_signal: GPIO_AD_B1_13, identifier: ADC_MISO, direction: INPUT}
-  - {pin_num: G12, peripheral: LPSPI3, signal: SDO, pin_signal: GPIO_AD_B1_14, identifier: ADC_MOSI, direction: OUTPUT}
-  - {pin_num: H12, peripheral: LPSPI3, signal: PCS0, pin_signal: GPIO_AD_B1_12, identifier: ADC_CS, direction: OUTPUT}
+  - {pin_num: J14, peripheral: LPSPI3, signal: SCK, pin_signal: GPIO_AD_B1_15, identifier: ADC_SCK}
+  - {pin_num: H11, peripheral: LPSPI3, signal: SDI, pin_signal: GPIO_AD_B1_13, identifier: ADC_MISO}
+  - {pin_num: G12, peripheral: LPSPI3, signal: SDO, pin_signal: GPIO_AD_B1_14, identifier: ADC_MOSI}
+  - {pin_num: H12, peripheral: LPSPI3, signal: PCS0, pin_signal: GPIO_AD_B1_12, identifier: ADC_CS}
   - {pin_num: H4, peripheral: FLEXIO1, signal: 'IO, 07', pin_signal: GPIO_EMC_07, identifier: BAT_SDA}
   - {pin_num: H3, peripheral: FLEXIO1, signal: 'IO, 08', pin_signal: GPIO_EMC_08, identifier: BAT_SCL}
   - {pin_num: E12, peripheral: LPSPI4, signal: PCS0, pin_signal: GPIO_B1_04, identifier: IMU_CS}
