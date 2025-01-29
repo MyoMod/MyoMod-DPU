@@ -1321,6 +1321,72 @@ static void SPI_IMU_init(void) {
 }
 
 /***********************************************************************************************************************
+ * SPI_ADC initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'SPI_ADC'
+- type: 'lpspi'
+- mode: 'polling'
+- custom_name_enabled: 'true'
+- type_id: 'lpspi_3b8318dca8e0034b76e041f04d445c24'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'LPSPI3'
+- config_sets:
+  - main:
+    - mode: 'kLPSPI_Master'
+    - clockSource: 'LpspiClock'
+    - clockSourceFreq: 'ClocksTool_DefaultInit'
+    - master:
+      - baudRate: '500000'
+      - bitsPerFrame: '8'
+      - cpol: 'kLPSPI_ClockPolarityActiveHigh'
+      - cpha: 'kLPSPI_ClockPhaseFirstEdge'
+      - direction: 'kLPSPI_MsbFirst'
+      - pcsToSckDelayInNanoSec: '1000'
+      - lastSckToPcsDelayInNanoSec: '1000'
+      - betweenTransferDelayInNanoSec: '1000'
+      - whichPcs: 'kLPSPI_Pcs0'
+      - pcsActiveHighOrLow: 'kLPSPI_PcsActiveLow'
+      - pinCfg: 'kLPSPI_SdiInSdoOut'
+      - pcsFunc: 'kLPSPI_PcsAsCs'
+      - dataOutConfig: 'kLpspiDataOutRetained'
+      - enableInputDelay: 'false'
+    - set_FifoWaterMarks: 'false'
+    - fifoWaterMarks:
+      - txWatermark: '0'
+      - rxWatermark: '0'
+    - allPcsPolarityEnable: 'false'
+    - allPcsPolarity:
+      - kLPSPI_Pcs1Active: 'kLPSPI_PcsActiveLow'
+      - kLPSPI_Pcs2Active: 'kLPSPI_PcsActiveLow'
+      - kLPSPI_Pcs3Active: 'kLPSPI_PcsActiveLow'
+    - quick_selection: 'qs_master'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+const lpspi_master_config_t SPI_ADC_config = {
+  .baudRate = 500000UL,
+  .bitsPerFrame = 8UL,
+  .cpol = kLPSPI_ClockPolarityActiveHigh,
+  .cpha = kLPSPI_ClockPhaseFirstEdge,
+  .direction = kLPSPI_MsbFirst,
+  .pcsToSckDelayInNanoSec = 1000UL,
+  .lastSckToPcsDelayInNanoSec = 1000UL,
+  .betweenTransferDelayInNanoSec = 1000UL,
+  .whichPcs = kLPSPI_Pcs0,
+  .pcsActiveHighOrLow = kLPSPI_PcsActiveLow,
+  .pinCfg = kLPSPI_SdiInSdoOut,
+  .pcsFunc = kLPSPI_PcsAsCs,
+  .dataOutConfig = kLpspiDataOutRetained,
+  .enableInputDelay = false
+};
+
+static void SPI_ADC_init(void) {
+  LPSPI_MasterInit(SPI_ADC_PERIPHERAL, &SPI_ADC_config, SPI_ADC_CLOCK_FREQ);
+}
+
+/***********************************************************************************************************************
  * Initialization functions
  **********************************************************************************************************************/
 static void BOARD_InitPeripherals_CommonPostInit(void)
@@ -1347,6 +1413,7 @@ void BOARD_InitPeripherals(void)
   ADC1_init();
   FLEXSPI_RAM_init();
   SPI_IMU_init();
+  SPI_ADC_init();
   /* Common post-initialization */
   BOARD_InitPeripherals_CommonPostInit();
 }

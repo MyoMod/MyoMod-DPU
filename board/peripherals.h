@@ -199,6 +199,11 @@ extern "C" {
 #define SPI_IMU_PERIPHERAL LPSPI4
 /* Definition of clock source */
 #define SPI_IMU_CLOCK_FREQ 132000000UL
+/* BOARD_InitPeripherals defines for LPSPI3 */
+/* Definition of peripheral ID */
+#define SPI_ADC_PERIPHERAL LPSPI3
+/* Definition of clock source */
+#define SPI_ADC_CLOCK_FREQ 132000000UL
 
 /***********************************************************************************************************************
  * Global variables
@@ -240,6 +245,7 @@ extern const uint32_t FLEXSPI_RAM_LUT[FLEXSPI_RAM_LUT_LENGTH];
 extern flexspi_device_config_t FLEXSPI_RAM_config_HYPER_RAM;
 extern flexspi_transfer_t FLEXSPI_RAM_config_transfer_HYPER_RAM;
 extern const lpspi_master_config_t SPI_IMU_config;
+extern const lpspi_master_config_t SPI_ADC_config;
 
 /***********************************************************************************************************************
  * Global functions

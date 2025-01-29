@@ -621,15 +621,6 @@ void initAndTestRAM()
 	{
 		FLEXSPI_RAM_PERIPHERAL->LUT[i] = FLEXSPI_RAM_LUT[i];
 	}
-	
-
-	//Read LUTs
-	uint32_t lut[64];
-
-    for (int i = 0; i < 64; i++)
-    {
-		lut[i] = FLEXSPI_RAM_PERIPHERAL->LUT[i];
-    }
 
     FLEXSPI_SoftwareReset(FLEXSPI_RAM_PERIPHERAL);
 
@@ -757,6 +748,25 @@ void initHardware()
 	g_imu.startAccel(100,16);
 	// Gyro ODR = 100 Hz and Full Scale Range = 2000 dps
 	g_imu.startGyro(100,2000);
+
+	// Init MAX11254
+	LPSPI_Enable(SPI_ADC_PERIPHERAL, true);
+
+	// Read Status Register
+	lpspi_transfer_t adcTransfer;
+	uint8_t adcData[2] = {0b11000011,0};
+
+	adcTransfer.txData = adcData;
+	adcTransfer.rxData = adcData;
+	adcTransfer.dataSize = 2;
+	adcTransfer.configFlags = kLPSPI_MasterPcs0 | kLPSPI_MasterPcsContinuous;
+
+	LPSPI_MasterTransferBlocking(SPI_ADC_PERIPHERAL, &adcTransfer);
+
+	if (adcData[1] != 0x2)
+	{
+		SEGGER_RTT_printf(0, "ADC init failed\n");
+	}
 }
 
 void initPerpheralHandler()
