@@ -14,25 +14,32 @@ template <typename T>
 uint32_t getNearestIndex(T value, const T *array, uint32_t arrayLength);
 
 
-MAX11254::MAX11254(LPSPI_Type *spi, uint8_t rdybPin, void (*callback)(int32_t measurement, uint8_t channel, bool clipped, bool rangeExceeded, bool error))
+MAX11254::MAX11254(LPSPI_Type *spi, MAX11254_Callback callback)
 {
-    this->_rdybPin = rdybPin;
     this->_spi = spi;
     this->_callback = callback;
+}
+
+MAX11254::~MAX11254()
+{
+}
+
+bool MAX11254::begin()
+{
 
     // Initialize member variables
     this->_rate = MAX11254_Rate::SINGLE_12800_SPS;
     this->_mode = MAX11254_Seq_Mode::SEQ_MODE_3;
-    this->_pga_gain = 1;
-    this->_channels = 0b111111;
-    this->_singleCycle = true;
+    this->_pga_gain = 1; // gain 1
+    this->_channels = 0b111111; // enable all channels
+    this->_singleCycle = true; // single-cycle mode
     this->_is2sComplement = true;
 
-    #ifdef MAX11254_SIMULATED
-        this->_lastIndex = 0;
-        this->_nextUpdate = 0;
-        return;
-    #endif
+#ifdef MAX11254_SIMULATED
+    this->_lastIndex = 0;
+    this->_nextUpdate = 0;
+    return;
+#endif
 
     // init hal
     max11254_hal_init(this->_spi);
@@ -42,12 +49,7 @@ MAX11254::MAX11254(LPSPI_Type *spi, uint8_t rdybPin, void (*callback)(int32_t me
 
 
     // setup ADC
-    this->setupADC();
-
-}
-
-MAX11254::~MAX11254()
-{
+    return this->setupADC();
 }
 
 /**
@@ -63,20 +65,21 @@ float MAX11254::setSampleRate(float sample_rate)
 
     // get current single-cycle state
     MAX11254_CTRL1 ctrl1_reg;
-    #ifndef MAX11254_SIMULATED
-        max11254_hal_read_reg(MAX11254_CTRL1_OFFSET, &ctrl1_reg);
-    bool singleCycle = ctrl1_reg.SCYCLE;
-    #else
+#ifdef MAX11254_SIMULATED
     bool singleCycle = _singleCycle;
+#else
+    max11254_hal_read_reg(MAX11254_CTRL1_OFFSET, &ctrl1_reg);
+    bool singleCycle = ctrl1_reg.SCYCLE;
 #endif
     newRate = this->sampleRate2Rate(sample_rate, singleCycle, &selectedSampleRate);
 
     bool rateChanged = _rate != newRate;
     _rate = newRate;
     
-    #ifndef MAX11254_SIMULATED
+#ifdef MAX11254_SIMULATED
+#else
     // if sample rate was changed and continuous mode is active, 
-        // restart it with the new sample rate
+    //  restart it with the new sample rate
     if(rateChanged && !_singleCycle)
     {
         stopConversion(0);
@@ -84,7 +87,7 @@ float MAX11254::setSampleRate(float sample_rate)
         //start with new sample rate
         startConversion(false);
     }
-    #endif
+#endif
     
     // feed the selected sample rate into the average as starting value
     _actualSampleRate = selectedSampleRate;
@@ -105,7 +108,8 @@ uint8_t MAX11254::setGain(uint8_t gain)
     bool gainChanged = this->_pga_gain != selectedGain;
     this->_pga_gain = selectedGain;
 
-    #ifndef MAX11254_SIMULATED
+#ifdef MAX11254_SIMULATED
+#else
     if(gainChanged)
     {
         stopConversion(0);
@@ -119,7 +123,7 @@ uint8_t MAX11254::setGain(uint8_t gain)
 
         startConversion(false);
     }
-    #endif
+#endif
 
     return selectedGain;
 }
@@ -137,7 +141,8 @@ void MAX11254::setChannels(uint8_t channels)
 
     _channels = channels;
 
-    #ifndef MAX11254_SIMULATED    
+#ifdef MAX11254_SIMULATED    
+#else
     // get MUX
     uint8_t mux = firstSetBit(channels);
 
@@ -150,7 +155,7 @@ void MAX11254::setChannels(uint8_t channels)
     max11254_hal_write_reg(MAX11254_SEQ_OFFSET, &seq_ctrl_reg);
 
     startConversion(false);
-    #endif
+#endif
 }
 
 /**
@@ -198,9 +203,10 @@ uint8_t MAX11254::getChannels()
 MAX11254_STAT MAX11254::getStatus()
 {
     MAX11254_STAT stat_reg;
-    #ifndef MAX11254_SIMULATED
+#ifdef MAX11254_SIMULATED
+#else
     max11254_hal_read_reg(MAX11254_STAT_OFFSET, &stat_reg);
-    #endif
+#endif
     return stat_reg;
 }
 
@@ -215,7 +221,7 @@ MAX11254_STAT MAX11254::getStatus()
 void MAX11254::IRQ_handler()
 {
     // IMPORTANT: Take care that the read of the first channel data is finished before it is overwritten by the next measurement.
-    // restart conversion if in single-cycle mode
+    // restart conversion if in single-cycle or sequnce 2/3 mode
     if(_singleCycle)
     {
         startConversion(false);
@@ -223,40 +229,43 @@ void MAX11254::IRQ_handler()
     _irqCalled = true;
 }
 
+/**
+ * @brief This method shall be called as often as possible to handle incoming data
+ *          from the ADC. It reads the data from the ADC if there are new measurements 
+ *          availiable and calls the callback function.
+ * 
+ * @note As the ADC typically oversamples (i.e. it takes multiple samples per cycle),
+ *          this method has to be called more often than the main cycle of the DPU.
+ * 
+ */
 void MAX11254::async_handler()
 {
+    if (!_irqCalled)
+    {
+        return;
+    }
+
     uint64_t currentTime = time_us_64();
     _irqCalled = false;
 
     // Read Status register and check if there was an error
     MAX11254_STAT stat_reg;
-    #ifndef MAX11254_SIMULATED
+#ifdef MAX11254_SIMULATED
+    bool error = false;
+#else
     // flush rx fifo if necessary
     if(_rxFifoMustBeFlushed)
     {
-        // TODO: Implement this
-        // // Drain RX FIFO, then wait for shifting to finish (which may be *after*
-        // // TX FIFO drains), then drain RX FIFO again
-        // while (spi_is_readable(this->_spi))
-        //     (void)spi_get_hw(this->_spi)->dr;
-        // while (spi_get_hw(this->_spi)->sr & SPI_SSPSR_BSY_BITS)
-        //     tight_loop_contents();
-        // while (spi_is_readable(this->_spi))
-        //     (void)spi_get_hw(this->_spi)->dr;
-
-        // // Don't leave overrun flag set
-        // spi_get_hw(this->_spi)->icr = SPI_SSPICR_RORIC_BITS;
+        max11254_hal_flush_fifo();
+        _rxFifoMustBeFlushed = false;
     }
 
     max11254_hal_read_reg(MAX11254_STAT_OFFSET, &stat_reg);
     bool error = stat_reg.ERROR || stat_reg.GPOERR || stat_reg.ORDERR || stat_reg.SCANERR;
-
-    #else
-    bool error = false;
-    #endif
+#endif
 
     // read measurement
-    int32_t measurements[MAX11254_NUM_CHANNELS];
+    std::array<int32_t , MAX11254_NUM_CHANNELS> measurements;
     for (size_t i = 0; i < MAX11254_NUM_CHANNELS; i++)
     {
         measurements[i] = this->readMeasurement(i);
@@ -271,11 +280,8 @@ void MAX11254::async_handler()
     }
     _lastConversionTime = currentTime;
 
-    // call callback function
-    for (size_t i = 0; i < MAX11254_NUM_CHANNELS; i++)
-    {
-        this->_callback(measurements[i], i, stat_reg.DOR, stat_reg.AOR, error);
-    }
+    // call callback function    
+    this->_callback(measurements, stat_reg.DOR, stat_reg.AOR, error);
 }
 
 /**
@@ -286,13 +292,13 @@ void MAX11254::async_handler()
  * 
  * @param fast  True: Start conversion immediately and don't wait for rx-byte, False: Start conversion after current conversion is finished
  */
-void MAX11254::startConversion(bool fast)
+void MAX11254::startConversion(bool ignoreState)
 {
-    #ifdef MAX11254_SIMULATED
-        return;
-    #endif
+#ifdef MAX11254_SIMULATED
+    return;
+#endif
 
-    if (!fast)
+    if (!ignoreState)
     {
         // get STAT register
         MAX11254_STAT stat_reg;
@@ -317,6 +323,9 @@ void MAX11254::startConversion(bool fast)
     else
     {
         max11254_hal_send_command(MAX11254_Command_Mode::SEQUENCER, _rate, false);
+
+        // When a new conversion is started without checking if the previous one is finished,
+        //  there may be data left in the rx fifo, to not unsync DMA this data must be flushed.
         _rxFifoMustBeFlushed = true;
     }
 
@@ -331,9 +340,9 @@ void MAX11254::startConversion(bool fast)
  */
 bool MAX11254::stopConversion(uint32_t timeout)
 {
-    #ifdef MAX11254_SIMULATED
-        return true;
-    #endif
+#ifdef MAX11254_SIMULATED
+    return true;
+#endif
     max11254_hal_send_command(MAX11254_Command_Mode::POWER_DOWN, _rate);
 
     // wait until adc is in power-down mode
@@ -428,7 +437,7 @@ int32_t MAX11254::readMeasurement(uint32_t channel)
 {
     assert(channel < 6); // check if channel is valid (0-5)
 
-    #ifdef MAX11254_SIMULATED
+#ifdef MAX11254_SIMULATED
     // simulate measurement
     int32_t measurement;
     if(_nextUpdate < time_us_64())
@@ -443,7 +452,7 @@ int32_t MAX11254::readMeasurement(uint32_t channel)
     measurement = (measurement << 8) >> 8; 
 
     return measurement;
-    #else
+#else
 
     int32_t measurement = max11254_hal_read_reg(MAX11254_DATA0_OFFSET + channel, NULL);
 
@@ -454,7 +463,7 @@ int32_t MAX11254::readMeasurement(uint32_t channel)
     }
 
     return measurement;
-    #endif
+#endif
 }
 
 /**
@@ -466,9 +475,15 @@ int32_t MAX11254::readMeasurement(uint32_t channel)
  */
 bool MAX11254::resetADC(uint32_t timeout)
 {
-    #ifdef MAX11254_SIMULATED
-        return true;
-    #endif
+#ifdef MAX11254_SIMULATED
+    return true;
+#endif
+
+    // Trigger software reset
+    MAX11254_CTRL1 ctrl1_reg;
+	ctrl1_reg.PD = MAX11254_PowerDown::RESET;
+	max11254_hal_write_reg(MAX11254_CTRL1_OFFSET, &ctrl1_reg);
+    max11254_hal_send_command(MAX11254_Command_Mode::POWER_DOWN, _rate);
 
     // wait until ADC is ready
     uint32_t endTime = time_us_64() + timeout;
@@ -563,9 +578,6 @@ bool MAX11254::setupADC()
 
     getStatus();
 
-
-	max11254_hal_send_command(MAX11254_Command_Mode::SEQUENCER, _rate);
-
     return true;
 }
 
@@ -594,12 +606,13 @@ uint32_t firstSetBit(uint32_t value)
  */
 bool MAX11254::dataAvailable()
 {
-    #ifdef MAX11254_SIMULATED
-        return _nextUpdate < time_us_64() && _irqCalled;
-    #else
-        //TODO: Implement this function
-        return false;
-    #endif
+#ifdef MAX11254_SIMULATED
+    return _nextUpdate < time_us_64() && _irqCalled;
+#else
+    MAX11254_STAT stat_reg;
+    max11254_hal_read_reg(MAX11254_STAT_OFFSET, &stat_reg);
+    return stat_reg.SRDY;
+#endif
 }
 
 /**

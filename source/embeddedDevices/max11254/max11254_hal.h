@@ -337,5 +337,6 @@ uint8_t max11254_hal_meas_status(void);
 uint32_t max11254_hal_read_reg(uint8_t reg, void *data = NULL);
 void max11254_hal_send_command(MAX11254_Command_Mode mode, MAX11254_Rate rate, bool blocking = true);
 void max11254_hal_write_reg(uint8_t reg, void *value);
+void max11254_hal_flush_fifo(void);
 
 /*****	END OF FILE	****/

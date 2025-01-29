@@ -1,30 +1,36 @@
 #pragma once
 /**
-  ******************************************************************************
-  * @file    MAX11254.h 
-  * @author  Domen Jurkovic
-  * @version V1.0
-  * @date    18-Nov-2015
-  * @brief   Header for MAX11254.c module
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    MAX11254.h
+ * @author  Domen Jurkovic
+ * @version V1.0
+ * @date    18-Nov-2015
+ * @brief   Header for MAX11254.c module
+ ******************************************************************************
+ */
 
-/* Includes ------------------------------------------------------------------*/  
+/* Includes ------------------------------------------------------------------*/
 
 #include <stdio.h>
-#include "max11254_hal.h"
 #include "math.h"
+#include <array>
+
+#include "max11254_hal.h"
 
 /* Defines -------------------------------------------------------------------*/
-//#define MAX11254_SIMULATED
+// #define MAX11254_SIMULATED
 #ifdef MAX11254_SIMULATED
-  #define MAX11254_SIM_FUNC(x)    (sin(2 * 3.14 * ((float)x)) * ((float)(1<<20)))
-  //#define MAX11254_SIM_FUNC(x)    (x)
-  #define MAX11254_SIM_STEP_SIZE (1)
-  #define MAX11254_SIM_CHN_OFFSET (300)
+#define MAX11254_SIM_FUNC(x) (sin(2 * 3.14 * ((float)x)) * ((float)(1 << 20)))
+// #define MAX11254_SIM_FUNC(x)    (x)
+#define MAX11254_SIM_STEP_SIZE (1)
+#define MAX11254_SIM_CHN_OFFSET (300)
 #endif
 #define MAX11254_NUM_CHANNELS (6)
 #define MAX11254_SAMPLE_RATE_ALPHA (0.01f)
+
+/* ---------------------------- type definitions ---------------------------- */
+// callback function for new data arrival
+typedef void (*MAX11254_Callback)(std::array<int32_t, MAX11254_NUM_CHANNELS> &measurements, bool clipped, bool rangeExceeded, bool error);
 
 /* Exported functions ------------------------------------------------------- */
 
@@ -32,62 +38,60 @@ class MAX11254
 {
 private:
 #ifdef MAX11254_SIMULATED
-    uint32_t    _lastIndex;
-    uint64_t     _nextUpdate;
+    uint32_t _lastIndex;
+    uint64_t _nextUpdate;
 #endif
 
+    MAX11254_Rate _rate;
+    MAX11254_Seq_Mode _mode;
+    uint8_t _pga_gain;
+    uint8_t _channels;
+    bool _singleCycle;
+    bool _is2sComplement;
 
-    MAX11254_Rate       _rate;
-    MAX11254_Seq_Mode   _mode;
-    uint8_t     _pga_gain;
-    uint8_t     _channels;
-    bool        _singleCycle;
-    bool        _is2sComplement;
+    LPSPI_Type *_spi;
+    bool _rxFifoMustBeFlushed;
 
-    uint32_t    _rdybPin;
-
-    LPSPI_Type  *_spi;
-    bool        _rxFifoMustBeFlushed;
-
-    uint64_t    _lastConversionTime;
-    float       _actualSampleRate;
+    uint64_t _lastConversionTime;
+    float _actualSampleRate;
     volatile bool _irqCalled = false;
 
+    MAX11254_Callback _callback;
 
-    void        (*_callback)(int32_t measurement, uint8_t channel, bool clipped, bool rangeExceeded, bool error);
+    MAX11254_Rate sampleRate2Rate(float sample_rate, bool singleCycle, float *actualSampleRate = NULL);
+    float rate2SampleRate(MAX11254_Rate rate, bool singleCycle);
+    MAX11254_Gain interger2PGA(uint8_t integer, uint8_t *actualGain = NULL);
+    uint8_t PGA2Integer(MAX11254_Gain pga);
 
-    MAX11254_Rate       sampleRate2Rate(float sample_rate, bool singleCycle, float *actualSampleRate = NULL);
-    float               rate2SampleRate(MAX11254_Rate rate, bool singleCycle);
-    MAX11254_Gain       interger2PGA(uint8_t integer, uint8_t *actualGain = NULL);
-    uint8_t             PGA2Integer(MAX11254_Gain pga);
+    void setMode(MAX11254_Seq_Mode mode);
+    MAX11254_Seq_Mode getMode(void);
 
-    void                setMode(MAX11254_Seq_Mode mode);
-    MAX11254_Seq_Mode   getMode(void);
+    int32_t readMeasurement(uint32_t channel);
 
-    int32_t             readMeasurement(uint32_t channel);
+    bool resetADC(uint32_t timeout);
+    bool setupADC(void);
 
-    bool                resetADC(uint32_t timeout);
-    bool                setupADC(void);
 public:
-    MAX11254(){};
-    MAX11254(LPSPI_Type *spi, uint8_t rdybPin, void (*callback)(int32_t measurement, uint8_t channel, bool clipped, bool rangeExceeded, bool error));
+    MAX11254(LPSPI_Type *spi, MAX11254_Callback callback);
     ~MAX11254();
 
-    float               setSampleRate(float sample_rate);
-    uint8_t             setGain(uint8_t gain);
-    void                setChannels(uint8_t channel);
+    bool begin(void);
 
-    float               getSampleRate(bool getActual = true);
-    uint8_t             getGain(void);
-    uint8_t             getChannels(void);
+    float setSampleRate(float sample_rate);
+    uint8_t setGain(uint8_t gain);
+    void setChannels(uint8_t channel);
 
-    MAX11254_STAT       getStatus(void);
-    bool                dataAvailable(void);
+    float getSampleRate(bool getActual = true);
+    uint8_t getGain(void);
+    uint8_t getChannels(void);
 
-    void                IRQ_handler(void);
-    void                async_handler(void);
-    void                startConversion(bool checkIfRunning);
-    bool                stopConversion(uint32_t timeout);
+    MAX11254_STAT getStatus(void);
+    bool dataAvailable(void);
+
+    void IRQ_handler(void);
+    void async_handler(void);
+    void startConversion(bool ignoreState = false);
+    bool stopConversion(uint32_t timeout);
 };
 
 /*****	END OF FILE	****/

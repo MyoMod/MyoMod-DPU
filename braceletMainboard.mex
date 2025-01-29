@@ -1067,25 +1067,21 @@
                   <pin peripheral="LPSPI3" signal="SCK" pin_num="J14" pin_signal="GPIO_AD_B1_15">
                      <pin_features>
                         <pin_feature name="identifier" value="ADC_SCK"/>
-                        <pin_feature name="direction" value="OUTPUT"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="LPSPI3" signal="SDI" pin_num="H11" pin_signal="GPIO_AD_B1_13">
                      <pin_features>
                         <pin_feature name="identifier" value="ADC_MISO"/>
-                        <pin_feature name="direction" value="INPUT"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="LPSPI3" signal="SDO" pin_num="G12" pin_signal="GPIO_AD_B1_14">
                      <pin_features>
                         <pin_feature name="identifier" value="ADC_MOSI"/>
-                        <pin_feature name="direction" value="OUTPUT"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="LPSPI3" signal="PCS0" pin_num="H12" pin_signal="GPIO_AD_B1_12">
                      <pin_features>
                         <pin_feature name="identifier" value="ADC_CS"/>
-                        <pin_feature name="direction" value="OUTPUT"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="FLEXIO1" signal="IO, 07" pin_num="H4" pin_signal="GPIO_EMC_07">
@@ -2698,7 +2694,7 @@
                      </config_set>
                   </instance>
                   <instance name="SPI_ADC" uuid="5935406c-b318-4f0c-be57-5e8059186350" type="lpspi" type_id="lpspi_3b8318dca8e0034b76e041f04d445c24" mode="polling" peripheral="LPSPI3" enabled="true" comment="" custom_name_enabled="true" editing_lock="false">
-                     <config_set name="main" quick_selection="qs_master">
+                     <config_set name="main">
                         <setting name="mode" value="kLPSPI_Master"/>
                         <setting name="clockSource" value="LpspiClock"/>
                         <setting name="clockSourceFreq" value="ClocksTool_DefaultInit"/>

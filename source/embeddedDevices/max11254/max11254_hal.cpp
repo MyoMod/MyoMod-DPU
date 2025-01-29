@@ -7,6 +7,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdio.h>
 #include <string.h>
+#include <bit>
 #include "max11254_hal.h"
 
 // Defines
@@ -40,12 +41,20 @@ uint32_t max11254_hal_read_reg(uint8_t reg, void *data)
 	transfer.txData = (uint8_t*) &buffer;
 	transfer.rxData = (uint8_t*) &buffer;
 	transfer.dataSize = byteLength; // registerlength + command byte
+	transfer.configFlags = kLPSPI_MasterPcs0 | kLPSPI_MasterPcsContinuous;
 
 	LPSPI_MasterTransferBlocking(g_spi, &transfer);
 	
 	// TODO: Check if byte swap is needed
 
 	buffer >>= 8; // remove command byte
+	
+	if(byteLength == 4)
+	{
+		uint8_t temp = ((uint8_t*)&buffer)[0];
+		((uint8_t*)&buffer)[0] = ((uint8_t*)&buffer)[2];
+		((uint8_t*)&buffer)[2] = temp;
+	}
 
 	// return data if pointer is not NULL
 	if (data != NULL)
@@ -63,14 +72,23 @@ uint32_t max11254_hal_read_reg(uint8_t reg, void *data)
 */
 void max11254_hal_write_reg(uint8_t reg, void *value)
 {
-	uint32_t buffer = *(uint32_t *)value << 8; // dataa without cmd
+	uint32_t buffer = (*(uint32_t *)value) << 8; // data without cmd
 	buffer |= 0xC0 | (reg << 1); // add cmd
 	uint32_t length = getRegLength(reg);
 
+	//byte swapping
+	if (length == 4)
+	{
+		uint8_t temp = ((uint8_t*)&buffer)[1];
+		((uint8_t*)&buffer)[1] = ((uint8_t*)&buffer)[3];
+		((uint8_t*)&buffer)[3] = temp;
+	}
+
 	lpspi_transfer_t transfer;
 	transfer.txData = (uint8_t*) &buffer;
-	transfer.rxData = NULL;
+	transfer.rxData = (uint8_t*) &buffer;
 	transfer.dataSize = length; // registerlength
+	transfer.configFlags = kLPSPI_MasterPcs0 | kLPSPI_MasterPcsContinuous;
 
 	LPSPI_MasterTransferBlocking(g_spi, &transfer);
 }
@@ -88,8 +106,9 @@ void max11254_hal_send_command(MAX11254_Command_Mode mode, MAX11254_Rate rate, b
 
 	lpspi_transfer_t transfer;
 	transfer.txData = &value;
-	transfer.rxData = NULL;
+	transfer.rxData = &value;
 	transfer.dataSize = 1;
+	transfer.configFlags = kLPSPI_MasterPcs0 | kLPSPI_MasterPcsContinuous;
 
 	//TODO: Check if non-blocking is needed
 	LPSPI_MasterTransferBlocking(g_spi, &transfer);
@@ -183,11 +202,17 @@ uint8_t max11254_hal_meas_status(void)
 	return max11254_hal_read_reg(MAX11254_STAT_OFFSET) & 0x000C;
 }
 
+void max11254_hal_flush_fifo(void)
+{
+	LPSPI_FlushFifo(g_spi, true, true);
+}
+
 /* Private functions ---------------------------------------------------------*/
 static inline uint32_t getRegLength(uint8_t reg)
 {
 	bool is8bit = ((MAX11254_CTRL1_OFFSET <= reg && reg <= MAX11254_CTRL3_OFFSET) || 
-					reg == MAX11254_GPO_DIR_OFFSET || reg == MAX11254_SEQ_OFFSET);
+					reg == MAX11254_GPO_DIR_OFFSET || reg == MAX11254_SEQ_OFFSET ||
+					reg == MAX11254_GPIO_CTRL_OFFSET);
 	return (is8bit) ? 2 : 4;
 }
 

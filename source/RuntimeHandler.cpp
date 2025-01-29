@@ -40,6 +40,7 @@
 
 #include "ui/button.h"
 #include "ICM42670P.h"
+#include "max11254.h"
 
 #include "embeddedIMU.h"
 
@@ -85,6 +86,7 @@ void start();
 void stop();
 void inputHandlingDone();
 void startCycle();
+void newAdcData(std::array<int32_t, MAX11254_NUM_CHANNELS> &measurements, bool clipped, bool rangeExceeded, bool error);
 
 // init
 void initHardware();
@@ -694,6 +696,11 @@ void initAndTestRAM()
 	} 
 }
 
+void newAdcData(std::array<int32_t, MAX11254_NUM_CHANNELS> &measurements, bool clipped, bool rangeExceeded, bool error)
+{
+	SEGGER_RTT_printf(0, "New ADC data: %d\n", measurements[0]);
+}
+
 void initHardware()
 {
     /* Init board hardware. */
@@ -750,22 +757,22 @@ void initHardware()
 	g_imu.startGyro(100,2000);
 
 	// Init MAX11254
-	LPSPI_Enable(SPI_ADC_PERIPHERAL, true);
-
-	// Read Status Register
-	lpspi_transfer_t adcTransfer;
-	uint8_t adcData[2] = {0b11000011,0};
-
-	adcTransfer.txData = adcData;
-	adcTransfer.rxData = adcData;
-	adcTransfer.dataSize = 2;
-	adcTransfer.configFlags = kLPSPI_MasterPcs0 | kLPSPI_MasterPcsContinuous;
-
-	LPSPI_MasterTransferBlocking(SPI_ADC_PERIPHERAL, &adcTransfer);
-
-	if (adcData[1] != 0x2)
+	MAX11254 max11254 = MAX11254(SPI_ADC_PERIPHERAL, newAdcData);
+	bool success = max11254.begin();
+	if (!success)
 	{
-		SEGGER_RTT_printf(0, "ADC init failed\n");
+		SEGGER_RTT_printf(0, "MAX11254 init failed\n");
+	}
+	else
+	{
+		max11254.startConversion();
+	}
+
+	SDK_DelayAtLeastUs(100000, CLOCK_GetFreq(kCLOCK_CoreSysClk));
+	auto status = max11254.getStatus();
+	if (status.SRDY == 0)
+	{
+		SEGGER_RTT_printf(0, "MAX11254 not ready\n");
 	}
 }
 
