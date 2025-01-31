@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <bit>
+#include <vector>
 #include "max11254_hal.h"
 
 // Defines
@@ -205,6 +206,61 @@ uint8_t max11254_hal_meas_status(void)
 void max11254_hal_flush_fifo(void)
 {
 	LPSPI_FlushFifo(g_spi, true, true);
+}
+
+/**
+ * @brief Configures the SPI peripheral so that it handles the cyclic
+ * 			conversions and data read-out without CPU intervention.
+ * 
+ * 			The only thing that is needed is to handle the irq when 
+ * 			data is received.
+ * 
+ */
+void max11254_hal_startCyclicConversion()
+{
+	// Prepare commands
+	// for the conversion we don't want the received (dummy) data to end up in out rx fifo
+	const uint32_t startConversionCmd = LPSPI_TCR_RXMSK_MASK | LPSPI_TCR_FRAMESZ(7); // 8bit
+	const uint32_t startConversionData = 0xBF;
+
+	const uint32_t readDataCmd = LPSPI_TCR_FRAMESZ(31); // 32bit
+	const uint32_t readData[6] = {	0xC1000000 | ((MAX11254_DATA0_OFFSET + (0)) << (1+24)), 0xC1000000 | ((MAX11254_DATA0_OFFSET + 1) << (1+24)), 
+									0xC1000000 | ((MAX11254_DATA0_OFFSET + (2)) << (1+24)), 0xC1000000 | ((MAX11254_DATA0_OFFSET + 3) << (1+24)), 
+									0xC1000000 | ((MAX11254_DATA0_OFFSET + (4)) << (1+24)), 0xC1000000 | ((MAX11254_DATA0_OFFSET + 5) << (1+24))};
+
+	// Prepare the transfer
+	g_spi->TCR = startConversionCmd;
+	g_spi->TDR = startConversionData;
+
+	g_spi->TCR = readDataCmd;
+	for (size_t i = 0; i < 6; i++)
+	{
+		g_spi->TDR = readData[i];
+	}
+}
+
+void max11254_hal_readCyclicData(int32_t *data, uint32_t length)
+{
+	// Read the data
+	for (size_t i = 0; i < length; i++)
+	{
+		int32_t rawVal = g_spi->RDR;
+		data[i] = (rawVal << 8) >> 8; // sign extend 24bit value to 32bit
+	}
+}
+
+void max11254_hal_stopCyclicConversion()
+{
+	LPSPI_Enable(g_spi, false);
+
+	LPSPI_FlushFifo(g_spi, true, true);
+    LPSPI_ClearStatusFlags(g_spi, (uint32_t)kLPSPI_AllStatusFlag);
+
+	g_spi->CFGR0 = 0;
+
+	// TODO: Disable interrupts
+
+	LPSPI_Enable(g_spi, true);
 }
 
 /* Private functions ---------------------------------------------------------*/

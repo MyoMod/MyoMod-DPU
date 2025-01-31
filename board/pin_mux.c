@@ -343,7 +343,6 @@ power_domains: {DCDC_IN: '3.3', DCDC_IN_Q: '3.3', DCDC_LP: '1.1', DCDC_PSWITCH: 
  */
 
 #include "fsl_common.h"
-#include "fsl_xbara.h"
 #include "fsl_iomuxc.h"
 #include "fsl_gpio.h"
 #include "pin_mux.h"
@@ -628,8 +627,8 @@ External_Connections:
   - {pin_num: J1, peripheral: PWM1, signal: 'A, 1', pin_signal: GPIO_SD_B0_02, identifier: RGB_G, direction: OUTPUT}
   - {pin_num: J2, peripheral: PWM1, signal: 'B, 2', pin_signal: GPIO_SD_B0_05, identifier: RGB_R, direction: OUTPUT}
   - {pin_num: H2, peripheral: GPIO8, signal: 'gpio_io, 16', pin_signal: GPIO_SD_B0_04, identifier: V_MYOMOD_EN, direction: OUTPUT}
-  - {pin_num: H14, peripheral: LPSPI3, signal: TRG, pin_signal: GPIO_AD_B0_14, identifier: ADC_RDY}
   - {pin_num: M13, peripheral: ADC1, signal: 'IN, 14', pin_signal: GPIO_AD_B1_09, identifier: V_BAT}
+  - {pin_num: H14, peripheral: GPIO1, signal: 'gpio_io, 14', pin_signal: GPIO_AD_B0_14}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -641,7 +640,6 @@ External_Connections:
  * END ****************************************************************************************************************/
 void External_Connections(void) {
   CLOCK_EnableClock(kCLOCK_Iomuxc);           
-  CLOCK_EnableClock(kCLOCK_Xbar1);            
 
   /* GPIO configuration of IMU_INT2 on GPIO_B1_13 (pin D14) */
   gpio_pin_config_t IMU_INT2_config = {
@@ -694,7 +692,7 @@ void External_Connections(void) {
   /* Enable GPIO pin interrupt on GPIO_EMC_06 (pin H5) */
   GPIO_PortEnableInterrupts(GPIO9, 1U << 6U);
 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_14_XBAR1_IN24, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_14_GPIO1_IO14, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_09_GPIO1_IO25, 0U); 
@@ -720,6 +718,10 @@ void External_Connections(void) {
   IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_03_FLEXPWM1_PWMB01, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_04_GPIO3_IO16, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_05_FLEXPWM1_PWMB02, 0U); 
+  IOMUXC_GPR->GPR26 = ((IOMUXC_GPR->GPR26 &
+    (~(EXTERNAL_CONNECTIONS_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK))) 
+      | IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL(0x00U) 
+    );
   IOMUXC_GPR->GPR27 = ((IOMUXC_GPR->GPR27 &
     (~(EXTERNAL_CONNECTIONS_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK))) 
       | IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL(0xE0000000U) 
@@ -732,7 +734,6 @@ void External_Connections(void) {
     (~(EXTERNAL_CONNECTIONS_IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL_MASK))) 
       | IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL(0x40U) 
     );
-  XBARA_SetSignalsConnection(XBARA1, kXBARA1_InputIomuxXbarIn24, kXBARA1_OutputLpspi3TrgInput); 
 }
 /***********************************************************************************************************************
  * EOF

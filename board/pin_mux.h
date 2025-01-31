@@ -199,6 +199,7 @@ void RAM(void);
  */
 void Boot_Config(void);
 
+#define EXTERNAL_CONNECTIONS_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK 0x4000U /*!< GPIO1 and GPIO6 share same IO MUX function, GPIO_MUX1 selects one GPIO function: affected bits mask */
 #define EXTERNAL_CONNECTIONS_IOMUXC_GPR_GPR27_GPIO_MUX2_GPIO_SEL_MASK 0xE0000000U /*!< GPIO2 and GPIO7 share same IO MUX function, GPIO_MUX2 selects one GPIO function: affected bits mask */
 #define EXTERNAL_CONNECTIONS_IOMUXC_GPR_GPR28_GPIO_MUX3_GPIO_SEL_MASK 0x010000U /*!< GPIO3 and GPIO8 share same IO MUX function, GPIO_MUX3 selects one GPIO function: affected bits mask */
 #define EXTERNAL_CONNECTIONS_IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL_MASK 0x40U /*!< GPIO4 and GPIO9 share same IO MUX function, GPIO_MUX4 selects one GPIO function: affected bits mask */
@@ -362,11 +363,6 @@ void Boot_Config(void);
 #define EXTERNAL_CONNECTIONS_V_MYOMOD_EN_PORT                              GPIO8   /*!< PORT peripheral base pointer */
 #define EXTERNAL_CONNECTIONS_V_MYOMOD_EN_PIN                                 16U   /*!< PORT pin number */
 #define EXTERNAL_CONNECTIONS_V_MYOMOD_EN_PIN_MASK                    (1U << 16U)   /*!< PORT pin mask */
-
-/* GPIO_AD_B0_14 (coord H14), ADC_RDY */
-/* Routed pin properties */
-#define EXTERNAL_CONNECTIONS_ADC_RDY_PERIPHERAL                           LPSPI3   /*!< Peripheral name */
-#define EXTERNAL_CONNECTIONS_ADC_RDY_SIGNAL                                  TRG   /*!< Signal name */
 
 /* GPIO_AD_B1_09 (coord M13), V_BAT */
 /* Routed pin properties */

@@ -1037,11 +1037,6 @@
                         <data>true</data>
                      </feature>
                   </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.xbara" description="Pins initialization requires the XBARA Driver in the project." problem_level="2" source="Pins:External_Connections">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
                </dependencies>
                <pins>
                   <pin peripheral="LPI2C1" signal="SDA" pin_num="K11" pin_signal="GPIO_AD_B1_01">
@@ -1166,16 +1161,12 @@
                         <pin_feature name="direction" value="OUTPUT"/>
                      </pin_features>
                   </pin>
-                  <pin peripheral="LPSPI3" signal="TRG" pin_num="H14" pin_signal="GPIO_AD_B0_14">
-                     <pin_features>
-                        <pin_feature name="identifier" value="ADC_RDY"/>
-                     </pin_features>
-                  </pin>
                   <pin peripheral="ADC1" signal="IN, 14" pin_num="M13" pin_signal="GPIO_AD_B1_09">
                      <pin_features>
                         <pin_feature name="identifier" value="V_BAT"/>
                      </pin_features>
                   </pin>
+                  <pin peripheral="GPIO1" signal="gpio_io, 14" pin_num="H14" pin_signal="GPIO_AD_B0_14"/>
                </pins>
             </function>
          </functions_list>
@@ -1687,6 +1678,16 @@
                   <data type="Version">2.6.0</data>
                </feature>
             </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.aoi" description="AOI Driver is not found in the toolchain/IDE project. The project will not compile!" problem_level="2" source="Peripherals">
+               <feature name="enabled" evaluation="equal">
+                  <data type="Boolean">true</data>
+               </feature>
+            </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.aoi" description="An unsupported version of the AOI Driver in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}. The project might not compile correctly." problem_level="1" source="Peripherals">
+               <feature name="version" evaluation="equivalent">
+                  <data type="Version">2.0.0</data>
+               </feature>
+            </dependency>
             <dependency resourceType="Tool" resourceId="Pins" description="The Pins tool is required by the Peripherals tool, but it is disabled." problem_level="2" source="Peripherals">
                <feature name="enabled" evaluation="equal">
                   <data>true</data>
@@ -1828,6 +1829,11 @@
                   </dependency>
                   <dependency resourceType="PeripheralUnifiedSignal" resourceId="PWM1.pwm_fault.3" description="PWM1.FAULT, 3 pin needs to be routed" problem_level="1" source="Peripherals:BOARD_InitPeripherals">
                      <feature name="routed" evaluation="equal">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PinSignal" resourceId="GPIO1.gpio_io.14" description="Signal gpio_io, 14 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
                         <data type="Boolean">true</data>
                      </feature>
                   </dependency>
@@ -2455,7 +2461,7 @@
                      </config_set>
                   </instance>
                   <instance name="GPIO1" uuid="1f05a384-1d1d-4493-bc98-e52e484840cc" type="igpio_adapter" type_id="igpio_adapter_5c0a3d4fd4d107e507335b7419af3b4f" mode="GPIO" peripheral="GPIO1" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
-                     <config_set name="fsl_adapter_gpio" quick_selection="QuickSelection1">
+                     <config_set name="fsl_adapter_gpio">
                         <set name="signalsFilter">
                            <selected>
                               <id>default</id>
@@ -2490,8 +2496,22 @@
                         </array>
                         <array name="gpioPinsOverView">
                            <struct name="0"/>
+                           <struct name="1"/>
                         </array>
-                        <array name="gpioPinsConfig"/>
+                        <array name="gpioPinsConfig">
+                           <struct name="0">
+                              <setting name="pin_selection" value="gpio_io.14"/>
+                              <setting name="userPinId" value=""/>
+                              <setting name="funtionalGroupEnum" value="External_Connections"/>
+                              <setting name="direction" value="kHAL_GpioDirectionIn"/>
+                              <setting name="triggerMode" value="kHAL_GpioInterruptFallingEdge"/>
+                              <setting name="setCallbackFnc" value="true"/>
+                              <struct name="callbackFncCfg">
+                                 <setting name="functionName" value="defaultFunctionName"/>
+                                 <setting name="userData" value=""/>
+                              </struct>
+                           </struct>
+                        </array>
                         <struct name="globalCfg"/>
                         <array name="differentPeripheralsAdd"/>
                      </config_set>
@@ -2699,7 +2719,7 @@
                         <setting name="clockSource" value="LpspiClock"/>
                         <setting name="clockSourceFreq" value="ClocksTool_DefaultInit"/>
                         <struct name="master">
-                           <setting name="baudRate" value="500000"/>
+                           <setting name="baudRate" value="8000000"/>
                            <setting name="bitsPerFrame" value="8"/>
                            <setting name="cpol" value="kLPSPI_ClockPolarityActiveHigh"/>
                            <setting name="cpha" value="kLPSPI_ClockPhaseFirstEdge"/>
@@ -2725,6 +2745,132 @@
                            <setting name="kLPSPI_Pcs2Active" value="kLPSPI_PcsActiveLow"/>
                            <setting name="kLPSPI_Pcs3Active" value="kLPSPI_PcsActiveLow"/>
                         </struct>
+                     </config_set>
+                  </instance>
+                  <instance name="AOI1" uuid="4e579c67-42d3-421e-9b2b-a1b77512188a" type="aoi" type_id="aoi_5a2efbfd7a8a5208f8f552077e2b4ded" mode="AOI" peripheral="AOI1" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
+                     <config_set name="fsl_aoi" quick_selection="QS_AOI_1">
+                        <array name="events">
+                           <struct name="0">
+                              <array name="product_terms">
+                                 <struct name="0">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="1">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="2">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="3">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                              </array>
+                              <setting name="define" value="false"/>
+                              <setting name="initialize" value="false"/>
+                           </struct>
+                           <struct name="1">
+                              <array name="product_terms">
+                                 <struct name="0">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="1">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="2">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="3">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                              </array>
+                              <setting name="define" value="false"/>
+                              <setting name="initialize" value="false"/>
+                           </struct>
+                           <struct name="2">
+                              <array name="product_terms">
+                                 <struct name="0">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="1">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="2">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="3">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                              </array>
+                              <setting name="define" value="false"/>
+                              <setting name="initialize" value="false"/>
+                           </struct>
+                           <struct name="3">
+                              <array name="product_terms">
+                                 <struct name="0">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="1">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="2">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                                 <struct name="3">
+                                    <setting name="input0" value="kAOI_LogicZero"/>
+                                    <setting name="input1" value="kAOI_LogicZero"/>
+                                    <setting name="input2" value="kAOI_LogicZero"/>
+                                    <setting name="input3" value="kAOI_LogicZero"/>
+                                 </struct>
+                              </array>
+                              <setting name="define" value="false"/>
+                              <setting name="initialize" value="false"/>
+                           </struct>
+                        </array>
                      </config_set>
                   </instance>
                </instances>

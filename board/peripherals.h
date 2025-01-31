@@ -21,6 +21,7 @@
 #include "fsl_adc.h"
 #include "fsl_flexspi.h"
 #include "fsl_lpspi.h"
+#include "fsl_aoi.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -175,6 +176,17 @@ extern "C" {
 #define DEBUG_ESP_EN_PIN_DIRECTION kHAL_GpioDirectionIn
 /* Definition of the pin level after initialization */
 #define DEBUG_ESP_EN_PIN_LEVEL 0U
+/* gpio_io, 14 signal defines */
+/* Definition of the pin port */
+#define EXTERNAL_CONNECTIONS_GPIO1_14_PORT GPIO1
+/* Definition of the pin number */
+#define EXTERNAL_CONNECTIONS_GPIO1_14_PIN 14U
+/* Definition of the pin direction */
+#define EXTERNAL_CONNECTIONS_GPIO1_14_PIN_DIRECTION kHAL_GpioDirectionIn
+/* Definition of the pin level after initialization */
+#define EXTERNAL_CONNECTIONS_GPIO1_14_PIN_LEVEL 0U
+/* Definition of the pin trigger mode */
+#define EXTERNAL_CONNECTIONS_GPIO1_14_TRIGGER_MODE kHAL_GpioInterruptFallingEdge
 /* BOARD_InitPeripherals defines for ADC1 */
 /* Definition of peripheral ID */
 #define ADC1_PERIPHERAL ADC1
@@ -204,6 +216,8 @@ extern "C" {
 #define SPI_ADC_PERIPHERAL LPSPI3
 /* Definition of clock source */
 #define SPI_ADC_CLOCK_FREQ 132000000UL
+/* Alias for AOI1 peripheral */
+#define AOI1_PERIPHERAL AOI1
 
 /***********************************************************************************************************************
  * Global variables
@@ -238,6 +252,7 @@ extern const pwm_fault_param_t PWM1_Fault1_fault_config;
 extern const pwm_fault_param_t PWM1_Fault2_fault_config;
 extern const pwm_fault_param_t PWM1_Fault3_fault_config;
 extern GPIO_HANDLE_DEFINE(DEBUG_ESP_EN_handle);
+extern GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_GPIO1_14_handle);
 extern const adc_config_t ADC1_config;
 extern const adc_channel_config_t ADC1_channels_config[1];
 extern const flexspi_config_t FLEXSPI_RAM_config;
@@ -264,6 +279,8 @@ hal_gpio_pin_config_t createAdapterGpioPinConfig(GPIO_Type *port, uint8_t pin, h
 extern void EXTERNAL_CONNECTIONS_IMU_INT2_callback(void *param);
 /* Callback function for the EXTERNAL_CONNECTIONS_IMU_INT1_handle*/
 extern void EXTERNAL_CONNECTIONS_IMU_INT1_callback(void *param);
+/* Callback function for the EXTERNAL_CONNECTIONS_GPIO1_14_handle*/
+extern void EXTERNAL_CONNECTIONS_GPIO1_14_callback(void *param);
 
 /***********************************************************************************************************************
  * Initialization functions

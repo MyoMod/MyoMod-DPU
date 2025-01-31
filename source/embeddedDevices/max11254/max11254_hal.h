@@ -339,4 +339,8 @@ void max11254_hal_send_command(MAX11254_Command_Mode mode, MAX11254_Rate rate, b
 void max11254_hal_write_reg(uint8_t reg, void *value);
 void max11254_hal_flush_fifo(void);
 
+void max11254_hal_startCyclicConversion(void);
+void max11254_hal_readCyclicData(int32_t *data, uint32_t length);
+void max11254_hal_stopCyclicConversion(void);
+
 /*****	END OF FILE	****/

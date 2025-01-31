@@ -48,6 +48,7 @@ private:
     uint8_t _channels;
     bool _singleCycle;
     bool _is2sComplement;
+    bool _inCyclicMode;
 
     LPSPI_Type *_spi;
     bool _rxFifoMustBeFlushed;
@@ -65,8 +66,6 @@ private:
 
     void setMode(MAX11254_Seq_Mode mode);
     MAX11254_Seq_Mode getMode(void);
-
-    int32_t readMeasurement(uint32_t channel);
 
     bool resetADC(uint32_t timeout);
     bool setupADC(void);
@@ -87,11 +86,15 @@ public:
 
     MAX11254_STAT getStatus(void);
     bool dataAvailable(void);
+    int32_t readMeasurement(uint32_t channel);
 
     void IRQ_handler(void);
     void async_handler(void);
     void startConversion(bool ignoreState = false);
     bool stopConversion(uint32_t timeout);
+
+    void startCyclicConversion();
+    void stopCyclicConversion();
 };
 
 /*****	END OF FILE	****/

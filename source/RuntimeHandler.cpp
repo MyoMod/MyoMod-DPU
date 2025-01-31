@@ -68,10 +68,11 @@ volatile float g_vBat = 0;
 volatile uint32_t g_vBatRaw = 0;
 
 volatile int32_t accelRaw[3] = {0,0,0};
+volatile int32_t adcRaw[6] = {0,0,0,0,0,0};
 volatile uint64_t g_time;
 
 ICM42670 g_imu = ICM42670(SPI_IMU_PERIPHERAL);
-
+MAX11254 *g_max11254 = nullptr;
 
 uint8_t g_debugBuffer[1024];
 /*******************************************************************************
@@ -108,7 +109,7 @@ int main()
 	while(1)
 	{
 		uint64_t now = time_us_64();
-		if(now - lastTime > 1000)
+		if(now - lastTime > 10000)
 		{
 			lastTime = now;
 			// 1ms passed
@@ -143,6 +144,8 @@ int main()
 			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_EdgeAligned, colors[2]);
 			PWM_SetPwmLdok(PWM1, 2 | 4, true);
 
+			
+			//g_max11254->startConversion(false);
 
 			// read battery voltage
 			const float a = 0.13872f;
@@ -150,6 +153,8 @@ int main()
 			g_vBatRaw = ADC_GetChannelConversionValue(ADC1, 0);
 			g_vBat = (float)g_vBatRaw * b + a;
 		}
+
+		g_max11254->async_handler();
 	}
 
 	initPerpheralHandler();
@@ -531,6 +536,11 @@ void GPIO4_GPIO_COMB_0_15_IRQHANDLER(void) {
   GPIO_ClearPinsInterruptFlags(GPIO4, pins_flags); 
 }
 
+/* EXTERNAL_CONNECTIONS_GPIO1_14_handle callback function */
+void EXTERNAL_CONNECTIONS_GPIO1_14_callback(void *param) {
+  /* Place your code here */
+  g_max11254->IRQ_handler();
+}
 }
 
 
@@ -698,7 +708,11 @@ void initAndTestRAM()
 
 void newAdcData(std::array<int32_t, MAX11254_NUM_CHANNELS> &measurements, bool clipped, bool rangeExceeded, bool error)
 {
-	SEGGER_RTT_printf(0, "New ADC data: %d\n", measurements[0]);
+	//SEGGER_RTT_printf(0, "New ADC data: %d\n", measurements[0]);
+	for (size_t i = 0; i < 6; i++)
+	{
+		adcRaw[i] = measurements[i];
+	}
 }
 
 void initHardware()
@@ -757,23 +771,14 @@ void initHardware()
 	g_imu.startGyro(100,2000);
 
 	// Init MAX11254
-	MAX11254 max11254 = MAX11254(SPI_ADC_PERIPHERAL, newAdcData);
-	bool success = max11254.begin();
+	g_max11254 = new MAX11254(SPI_ADC_PERIPHERAL, newAdcData);
+	bool success = g_max11254->begin();
 	if (!success)
 	{
 		SEGGER_RTT_printf(0, "MAX11254 init failed\n");
 	}
-	else
-	{
-		max11254.startConversion();
-	}
 
-	SDK_DelayAtLeastUs(100000, CLOCK_GetFreq(kCLOCK_CoreSysClk));
-	auto status = max11254.getStatus();
-	if (status.SRDY == 0)
-	{
-		SEGGER_RTT_printf(0, "MAX11254 not ready\n");
-	}
+	g_max11254->startCyclicConversion();
 }
 
 void initPerpheralHandler()

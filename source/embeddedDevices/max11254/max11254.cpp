@@ -224,7 +224,13 @@ void MAX11254::IRQ_handler()
     // restart conversion if in single-cycle or sequnce 2/3 mode
     if(_singleCycle)
     {
-        startConversion(false);
+        if(_inCyclicMode)
+        {
+            max11254_hal_startCyclicConversion();
+        }
+        else{
+            startConversion(false);
+        }
     }
     _irqCalled = true;
 }
@@ -240,6 +246,7 @@ void MAX11254::IRQ_handler()
  */
 void MAX11254::async_handler()
 {
+    // TODO: Check status in cyclic mode as welll
     if (!_irqCalled)
     {
         return;
@@ -249,26 +256,39 @@ void MAX11254::async_handler()
     _irqCalled = false;
 
     // Read Status register and check if there was an error
-    MAX11254_STAT stat_reg;
-#ifdef MAX11254_SIMULATED
     bool error = false;
+#ifdef MAX11254_SIMULATED
 #else
-    // flush rx fifo if necessary
-    if(_rxFifoMustBeFlushed)
+    // if we are in cyclic mode we take low-level control of the SPI
+    // therefore HAL SPI transactions are not allowed
+    if(!_inCyclicMode)
     {
-        max11254_hal_flush_fifo();
-        _rxFifoMustBeFlushed = false;
-    }
+        // flush rx fifo if necessary
+        if(_rxFifoMustBeFlushed)
+        {
+            max11254_hal_flush_fifo();
+            _rxFifoMustBeFlushed = false;
+        }
 
-    max11254_hal_read_reg(MAX11254_STAT_OFFSET, &stat_reg);
-    bool error = stat_reg.ERROR || stat_reg.GPOERR || stat_reg.ORDERR || stat_reg.SCANERR;
+        MAX11254_STAT stat_reg;
+        max11254_hal_read_reg(MAX11254_STAT_OFFSET, &stat_reg);
+        error = stat_reg.ERROR || stat_reg.GPOERR || stat_reg.ORDERR || stat_reg.SCANERR;
+    }
 #endif
+
 
     // read measurement
     std::array<int32_t , MAX11254_NUM_CHANNELS> measurements;
-    for (size_t i = 0; i < MAX11254_NUM_CHANNELS; i++)
+    if(_inCyclicMode)
     {
-        measurements[i] = this->readMeasurement(i);
+        max11254_hal_readCyclicData(measurements.data(), MAX11254_NUM_CHANNELS);
+    }
+    else
+    {
+        for (size_t i = 0; i < MAX11254_NUM_CHANNELS; i++)
+        {
+            measurements[i] = this->readMeasurement(i);
+        }
     }
 
 
@@ -281,7 +301,7 @@ void MAX11254::async_handler()
     _lastConversionTime = currentTime;
 
     // call callback function    
-    this->_callback(measurements, stat_reg.DOR, stat_reg.AOR, error);
+    this->_callback(measurements, 0, 0, error);
 }
 
 /**
@@ -356,6 +376,25 @@ bool MAX11254::stopConversion(uint32_t timeout)
         inPD = stat_reg.PDSTAT != MAX11254_PowerDown::CONVERSION;
     } while (!inPD && (timeout == 0 || (time_us_64() < endTime)));
     return inPD;
+}
+
+/**
+ * @brief Starts the cyclic conversion of the ADC.
+ *          The ADC will continuously sample the channels and call the callback function
+ *          when a new measurement is available.
+ * 
+ */
+
+void MAX11254::startCyclicConversion()
+{
+     // Before the beginning of the cyclic conversion, the first conversion must 
+     //  be started manually, as the cyclic conversion waits for the RDYB pin to be 
+     //  pulled low before it retriggers the conversion.
+    startConversion(false);
+
+    _inCyclicMode = true;
+
+    max11254_hal_startCyclicConversion();
 }
 
 /**

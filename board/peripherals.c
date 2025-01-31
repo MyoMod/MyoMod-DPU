@@ -957,13 +957,24 @@ instance:
       - 23: []
     - gpioPinsOverView:
       - 0: []
-    - gpioPinsConfig: []
+      - 1: []
+    - gpioPinsConfig:
+      - 0:
+        - pin_selection: 'gpio_io.14'
+        - userPinId: ''
+        - funtionalGroupEnum: 'External_Connections'
+        - direction: 'kHAL_GpioDirectionIn'
+        - triggerMode: 'kHAL_GpioInterruptFallingEdge'
+        - setCallbackFnc: 'true'
+        - callbackFncCfg:
+          - functionName: 'defaultFunctionName'
+          - userData: ''
     - globalCfg: []
     - differentPeripheralsAdd: []
-    - quick_selection: 'QuickSelection1'
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
 GPIO_HANDLE_DEFINE(DEBUG_ESP_EN_handle);
+GPIO_HANDLE_DEFINE(EXTERNAL_CONNECTIONS_GPIO1_14_handle);
 
 static void GPIO1_init(void) {
   /* GPIO adapter initialization */
@@ -973,6 +984,14 @@ static void GPIO1_init(void) {
   /* gpio_io, 00 signal initialization */
   gpioPinConfig = createAdapterGpioPinConfig(DEBUG_ESP_EN_PORT, DEBUG_ESP_EN_PIN, DEBUG_ESP_EN_PIN_DIRECTION, DEBUG_ESP_EN_PIN_LEVEL);
   status = HAL_GpioInit(DEBUG_ESP_EN_handle, &gpioPinConfig);
+  assert(status == kStatus_HAL_GpioSuccess);
+  /* gpio_io, 14 signal initialization */
+  gpioPinConfig = createAdapterGpioPinConfig(EXTERNAL_CONNECTIONS_GPIO1_14_PORT, EXTERNAL_CONNECTIONS_GPIO1_14_PIN, EXTERNAL_CONNECTIONS_GPIO1_14_PIN_DIRECTION, EXTERNAL_CONNECTIONS_GPIO1_14_PIN_LEVEL);
+  status = HAL_GpioInit(EXTERNAL_CONNECTIONS_GPIO1_14_handle, &gpioPinConfig);
+  assert(status == kStatus_HAL_GpioSuccess);
+  status = HAL_GpioInstallCallback(EXTERNAL_CONNECTIONS_GPIO1_14_handle, EXTERNAL_CONNECTIONS_GPIO1_14_callback, NULL);
+  assert(status == kStatus_HAL_GpioSuccess);
+  status = HAL_GpioSetTriggerMode(EXTERNAL_CONNECTIONS_GPIO1_14_handle, EXTERNAL_CONNECTIONS_GPIO1_14_TRIGGER_MODE);
   assert(status == kStatus_HAL_GpioSuccess);
 }
 
@@ -1386,6 +1405,127 @@ static void SPI_ADC_init(void) {
 }
 
 /***********************************************************************************************************************
+ * AOI1 initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'AOI1'
+- type: 'aoi'
+- mode: 'AOI'
+- custom_name_enabled: 'false'
+- type_id: 'aoi_5a2efbfd7a8a5208f8f552077e2b4ded'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'AOI1'
+- config_sets:
+  - fsl_aoi:
+    - events:
+      - 0:
+        - product_terms:
+          - 0:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 1:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 2:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 3:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+        - define: 'false'
+        - initialize: 'false'
+      - 1:
+        - product_terms:
+          - 0:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 1:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 2:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 3:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+        - define: 'false'
+        - initialize: 'false'
+      - 2:
+        - product_terms:
+          - 0:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 1:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 2:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 3:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+        - define: 'false'
+        - initialize: 'false'
+      - 3:
+        - product_terms:
+          - 0:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 1:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 2:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+          - 3:
+            - input0: 'kAOI_LogicZero'
+            - input1: 'kAOI_LogicZero'
+            - input2: 'kAOI_LogicZero'
+            - input3: 'kAOI_LogicZero'
+        - define: 'false'
+        - initialize: 'false'
+    - quick_selection: 'QS_AOI_1'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+
+static void AOI1_init(void) {
+  /* Initialize AOI1 peripheral. */
+  AOI_Init(AOI1_PERIPHERAL);
+}
+
+/***********************************************************************************************************************
  * Initialization functions
  **********************************************************************************************************************/
 static void BOARD_InitPeripherals_CommonPostInit(void)
@@ -1413,6 +1553,7 @@ void BOARD_InitPeripherals(void)
   FLEXSPI_RAM_init();
   SPI_IMU_init();
   SPI_ADC_init();
+  AOI1_init();
   /* Common post-initialization */
   BOARD_InitPeripherals_CommonPostInit();
 }
