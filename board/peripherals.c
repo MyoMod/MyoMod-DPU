@@ -1358,7 +1358,7 @@ instance:
     - clockSource: 'LpspiClock'
     - clockSourceFreq: 'ClocksTool_DefaultInit'
     - master:
-      - baudRate: '8000000'
+      - baudRate: '4000000'
       - bitsPerFrame: '8'
       - cpol: 'kLPSPI_ClockPolarityActiveHigh'
       - cpha: 'kLPSPI_ClockPhaseFirstEdge'
@@ -1384,7 +1384,7 @@ instance:
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
 const lpspi_master_config_t SPI_ADC_config = {
-  .baudRate = 8000000UL,
+  .baudRate = 4000000UL,
   .bitsPerFrame = 8UL,
   .cpol = kLPSPI_ClockPolarityActiveHigh,
   .cpha = kLPSPI_ClockPhaseFirstEdge,
