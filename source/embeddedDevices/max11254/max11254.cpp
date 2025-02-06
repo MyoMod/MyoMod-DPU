@@ -551,7 +551,7 @@ bool MAX11254::setupADC()
 	ctrl1_reg.FORMAT = 0;
 	ctrl1_reg.SCYCLE = _singleCycle;
 	ctrl1_reg.CONTSC = 0;
-	max11254_hal_write_reg(MAX11254_CTRL1_OFFSET, &ctrl1_reg);
+	assert(max11254_hal_write_reg(MAX11254_CTRL1_OFFSET, &ctrl1_reg, true));
 
 	MAX11254_CTRL2 ctrl2_reg;
 	ctrl2_reg.CCSEN = 0;
@@ -560,7 +560,7 @@ bool MAX11254::setupADC()
 	ctrl2_reg.LPMODE = 0;
 	ctrl2_reg.PGAEN = _pga_gain > 1; // enable PGA if gain is > 1
 	ctrl2_reg.PGAG = interger2PGA(_pga_gain);
-	max11254_hal_write_reg(MAX11254_CTRL2_OFFSET, &ctrl2_reg);
+	assert(max11254_hal_write_reg(MAX11254_CTRL2_OFFSET, &ctrl2_reg, true));
 
 	MAX11254_CTRL3 ctrl3_reg;
 	ctrl3_reg.GPO_MODE = 1;
@@ -570,7 +570,7 @@ bool MAX11254::setupADC()
 	ctrl3_reg.NOSYSO = 1;
 	ctrl3_reg.NOSCG = 1;
 	ctrl3_reg.NOSCO = 1;
-	max11254_hal_write_reg(MAX11254_CTRL3_OFFSET, &ctrl3_reg);
+	assert(max11254_hal_write_reg(MAX11254_CTRL3_OFFSET, &ctrl3_reg, true));
 
 	// Disable sync Input
 	MAX11254_GPIO_CTRL gpio_ctrl_reg;
@@ -580,7 +580,7 @@ bool MAX11254::setupADC()
 	gpio_ctrl_reg.DIR1 = 0;
 	gpio_ctrl_reg.GPIO0_EN = 1; //disable external clock input
 	gpio_ctrl_reg.GPIO1_EN = 1; //disable sync input
-	max11254_hal_write_reg(MAX11254_GPIO_CTRL_OFFSET, &gpio_ctrl_reg);
+	max11254_hal_write_reg(MAX11254_GPIO_CTRL_OFFSET, &gpio_ctrl_reg, false);
 
 	MAX11254_SEQ seq_reg;
 	seq_reg.MODE = _mode;
@@ -588,7 +588,7 @@ bool MAX11254::setupADC()
 	seq_reg.GPODREN = 0;
 	seq_reg.RDYBEN = 1;
 	seq_reg.MUX = firstSetBit(_channels); // only used in SEQ_MODE_1
-	max11254_hal_write_reg(MAX11254_SEQ_OFFSET, &seq_reg);	
+	assert(max11254_hal_write_reg(MAX11254_SEQ_OFFSET, &seq_reg, true));	
 
     MAX11254_CHMAP0 chmap0_reg;
     chmap0_reg.CH0_EN = _channels & 0x01;
@@ -597,7 +597,7 @@ bool MAX11254::setupADC()
     chmap0_reg.CH1_ORD = 2;
     chmap0_reg.CH2_EN = (_channels >> 2) & 0x01;
     chmap0_reg.CH2_ORD = 3;
-    max11254_hal_write_reg(MAX11254_CHMAP0_OFFSET, &chmap0_reg);
+    assert(max11254_hal_write_reg(MAX11254_CHMAP0_OFFSET, &chmap0_reg, true));
 
     MAX11254_CHMAP1 chmap1_reg;
     chmap1_reg.CH3_EN = (_channels >> 3) & 0x01;
@@ -608,12 +608,12 @@ bool MAX11254::setupADC()
     chmap1_reg.CH4_ORD = 5;
     chmap1_reg.CH5_EN = (_channels >> 5) & 0x01;
     chmap1_reg.CH5_ORD = 6;
-    max11254_hal_write_reg(MAX11254_CHMAP1_OFFSET, &chmap1_reg);
+    assert(max11254_hal_write_reg(MAX11254_CHMAP1_OFFSET, &chmap1_reg, true));
 
     MAX11254_DELAY delay_reg;
     delay_reg.MUX = 1;
     delay_reg.GPO = 0;
-    max11254_hal_write_reg(MAX11254_DELAY_OFFSET, &delay_reg);
+    assert(max11254_hal_write_reg(MAX11254_DELAY_OFFSET, &delay_reg, true));
 
     getStatus();
 

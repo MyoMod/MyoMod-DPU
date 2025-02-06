@@ -66,12 +66,18 @@ uint32_t max11254_hal_read_reg(uint8_t reg, void *data)
 	return buffer;
 }
 
-/*
-	Write 8 or 24 bit register.
-	8bit reg: 	CTRL1, CTRL2, CTRL3
-	24bit reg:	SOC, SGC, SCOC, SCGC
-*/
-void max11254_hal_write_reg(uint8_t reg, void *value)
+/**
+ * @brief Writes a register to the MAX11254. If validate is true, the value is read back and compared.
+ * 
+ * @note The length of the register is determined by the register address.
+ * 
+ * @param reg 			Register address
+ * @param value 		Value to write
+ * @param validate 		Validate the written value
+ * @return true 		If the value was written successfully
+ * @return false 		If the value was not written successfully or not validated
+ */
+bool max11254_hal_write_reg(uint8_t reg, void *value, bool validate)
 {
 	uint32_t buffer = (*(uint32_t *)value) << 8; // data without cmd
 	buffer |= 0xC0 | (reg << 1); // add cmd
@@ -92,6 +98,20 @@ void max11254_hal_write_reg(uint8_t reg, void *value)
 	transfer.configFlags = kLPSPI_MasterPcs0 | kLPSPI_MasterPcsContinuous;
 
 	LPSPI_MasterTransferBlocking(g_spi, &transfer);
+
+	if (validate)
+	{
+		SDK_DelayAtLeastUs(100, CLOCK_GetFreq(kCLOCK_CoreSysClk));
+
+		volatile uint32_t readValue = max11254_hal_read_reg(reg, NULL);
+		// As the value can be 8 or 24 bit the upper bits need to be cleared
+		uint32_t clearedValue = *(uint32_t *)value & (0xFFFFFFFF >> (32 - (length-1) * 8));
+		return readValue == clearedValue;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 /*
