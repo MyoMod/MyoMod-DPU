@@ -593,7 +593,7 @@ std::unique_ptr<EmbeddedDeviceNode> ConfigParser::createEmbeddedDeviceNode(const
     {
         return nullptr;
     }
-    if (nodeData.type == "EmbeddedIMU")
+    if (nodeData.type == "Embed' IMU")
     {
         return std::make_unique<EmbeddedIMU>(ID);
     }

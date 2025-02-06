@@ -13,6 +13,7 @@
 
 /* -------------------------------- includes -------------------------------- */
 // System includes
+#include <array>
 
 // Includes from project
 #include "charArray.h"
@@ -38,4 +39,8 @@ public:
     void sync() override;
     void enterRealTimeMode() override;
     void exitRealTimeMode() override;
+
+private:
+    std::array<std::shared_ptr<OutputPort<float>>, 3> m_accelPorts;
+    std::array<std::shared_ptr<OutputPort<float>>, 3> m_gyroPorts;
 };
