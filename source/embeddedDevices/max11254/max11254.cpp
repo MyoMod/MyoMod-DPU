@@ -533,6 +533,7 @@ bool MAX11254::resetADC(uint32_t timeout)
         MAX11254_STAT stat_reg;
         max11254_hal_read_reg(MAX11254_STAT_OFFSET, &stat_reg);
         ready = stat_reg.PDSTAT != MAX11254_PowerDown::STANDBY;
+        ready &= !stat_reg.INRESET;
     } while (!ready && (timeout == 0 || (time_us_64() < endTime)));
     return ready;
 }
