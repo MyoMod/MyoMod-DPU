@@ -2719,7 +2719,7 @@
                         <setting name="clockSource" value="LpspiClock"/>
                         <setting name="clockSourceFreq" value="ClocksTool_DefaultInit"/>
                         <struct name="master">
-                           <setting name="baudRate" value="8000000"/>
+                           <setting name="baudRate" value="4000000"/>
                            <setting name="bitsPerFrame" value="8"/>
                            <setting name="cpol" value="kLPSPI_ClockPolarityActiveHigh"/>
                            <setting name="cpha" value="kLPSPI_ClockPhaseFirstEdge"/>
