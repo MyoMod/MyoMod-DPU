@@ -237,7 +237,7 @@ void MAX11254::IRQ_handler()
 
 /**
  * @brief This method shall be called as often as possible to handle incoming data
- *          from the ADC. It reads the data from the ADC if there are new measurements 
+ *          from the ADC. It reads the data from the SPI-Fifo if there are new measurements 
  *          availiable and calls the callback function.
  * 
  * @note As the ADC typically oversamples (i.e. it takes multiple samples per cycle),

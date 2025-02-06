@@ -29,6 +29,7 @@
 #include "fsl_adc.h"
 
 #include "SEGGER_RTT.h"
+#include "etl/queue_spsc_atomic.h"
 
 #include "myomodCommon.h"
 #include "ConfigurationManager.h"
@@ -70,6 +71,8 @@ volatile uint32_t g_vBatRaw = 0;
 volatile int32_t accelRaw[3] = {0,0,0};
 volatile int32_t adcRaw[6] = {0,0,0,0,0,0};
 volatile uint64_t g_time;
+etl::queue_spsc_atomic<std::array<int32_t, 6>, 20> g_adcQueue;
+volatile uint32_t g_adcCounter = 0;
 
 ICM42670 g_imu = ICM42670(SPI_IMU_PERIPHERAL);
 MAX11254 *g_max11254 = nullptr;
@@ -145,7 +148,17 @@ int main()
 			PWM_SetPwmLdok(PWM1, 2 | 4, true);
 
 			
-			//g_max11254->startConversion(false);
+			//retrieve adc data
+			std::array<std::array<int32_t, 6>, 15> adcData;
+			for (size_t i = 0; i < 15; i++)
+			{
+				if(!g_adcQueue.pop(adcData[i]))
+				{
+					// queue is empty
+					break;
+				}
+			}
+			g_adcCounter = g_adcQueue.size();
 
 			// read battery voltage
 			const float a = 0.13872f;
@@ -153,8 +166,6 @@ int main()
 			g_vBatRaw = ADC_GetChannelConversionValue(ADC1, 0);
 			g_vBat = (float)g_vBatRaw * b + a;
 		}
-
-		g_max11254->async_handler();
 	}
 
 	initPerpheralHandler();
@@ -540,6 +551,7 @@ void GPIO4_GPIO_COMB_0_15_IRQHANDLER(void) {
 void EXTERNAL_CONNECTIONS_GPIO1_14_callback(void *param) {
   /* Place your code here */
   g_max11254->IRQ_handler();
+  g_max11254->async_handler();
 }
 }
 
@@ -713,6 +725,8 @@ void newAdcData(std::array<int32_t, MAX11254_NUM_CHANNELS> &measurements, bool c
 	{
 		adcRaw[i] = measurements[i];
 	}
+	g_adcQueue.push(measurements);
+	g_adcCounter = g_adcQueue.size();
 }
 
 void initHardware()
@@ -754,11 +768,9 @@ void initHardware()
 	// Load buffered values 
 	PWM_SetPwmLdok(PWM1, 2 | 4, true);
 
-	// Test SPI
+	// Init IMU (ICM42670P)
 	LPSPI_Enable(SPI_IMU_PERIPHERAL, true);
 
-
-	// Init IMU (ICM42670P)
 	volatile int returnVal = g_imu.begin();
 	if (returnVal != 0)
 	{
@@ -770,7 +782,7 @@ void initHardware()
 	// Gyro ODR = 100 Hz and Full Scale Range = 2000 dps
 	g_imu.startGyro(100,2000);
 
-	// Init MAX11254
+	// Init ADC (MAX11254)
 	g_max11254 = new MAX11254(SPI_ADC_PERIPHERAL, newAdcData);
 	bool success = g_max11254->begin();
 	if (!success)
