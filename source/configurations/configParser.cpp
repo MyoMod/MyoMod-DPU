@@ -27,6 +27,7 @@
 #include "testAlgorithm.h"
 #include "logNode.h"
 #include "linearFuncNode.h"
+#include "counterNode.h"
 #include "handAnimationNode.h"
 
 // Data structures
@@ -603,7 +604,7 @@ std::unique_ptr<EmbeddedDeviceNode> ConfigParser::createEmbeddedDeviceNode(const
 }
 
 template <typename T>
-std::unique_ptr<LinearFunctionNode<T>> createLinearFunctionNode(const NodeData& nodeData)
+std::unique_ptr<LinearCounterNode<T>> createCounterNode(const NodeData& nodeData)
 {
     T slope;
     T offset;
@@ -611,7 +612,19 @@ std::unique_ptr<LinearFunctionNode<T>> createLinearFunctionNode(const NodeData& 
     {
         return nullptr;
     }
-    return std::make_unique<LinearFunctionNode<T>>(slope, offset);
+    return std::make_unique<LinearCounterNode<T>>(slope, offset);
+}
+
+template <typename T>
+std::unique_ptr<LinearFunctionNode<T>> createLinearFunctionNode(const NodeData& nodeData)
+{
+    T a;
+    T b;
+    if (!parseParameter("a", nodeData, a) || !parseParameter("b", nodeData, b))
+    {
+        return nullptr;
+    }
+    return std::make_unique<LinearFunctionNode<T>>(a, b);
 }
 
 std::unique_ptr<AlgorithmicNode> ConfigParser::createAlgorithmicNode(const NodeData& nodeData)
@@ -671,6 +684,41 @@ std::unique_ptr<AlgorithmicNode> ConfigParser::createAlgorithmicNode(const NodeD
         else if (type == "uint8")
         {
             return createLinearFunctionNode<uint8_t>(nodeData);
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+    else if (nodeData.type == "CounterNode")
+    {
+        // First get type
+        std::string type;
+        if (nodeData.scalarParams.find("dataType") == nodeData.scalarParams.end())
+        {
+            return nullptr;
+        }
+        type = nodeData.scalarParams.at("dataType");
+        
+        if (type == "float")
+        {
+            return createCounterNode<float>(nodeData);
+        }
+        else if (type == "int32")
+        {
+            return createCounterNode<int32_t>(nodeData);
+        }
+        else if (type == "uint32")
+        {
+            return createCounterNode<uint32_t>(nodeData);
+        }
+        else if (type == "int8")
+        {
+            return createCounterNode<int8_t>(nodeData);
+        }
+        else if (type == "uint8")
+        {
+            return createCounterNode<uint8_t>(nodeData);
         }
         else
         {
