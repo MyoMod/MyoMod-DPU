@@ -614,7 +614,7 @@ bool MAX11254::setupADC()
     MAX11254_DELAY delay_reg;
     delay_reg.MUX = 1;
     delay_reg.GPO = 0;
-    assert(max11254_hal_write_reg(MAX11254_DELAY_OFFSET, &delay_reg, true));
+    max11254_hal_write_reg(MAX11254_DELAY_OFFSET, &delay_reg, true);
 
     getStatus();
 
