@@ -3,153 +3,45 @@
 		"name": "Config 1",
 		"color": 0xff0000,
 		"deviceNodes": [
-			{
-				"type": "BarDisp7Ch",
-				"ID" : "BarDisplay",
-				"barColors": [0x00ff00, 0xffff00,0xffff00,0xff00ff,0x0000ff,0x00ffff,0xffff00]
-			},
-			{
-				"type": "Servo Hand",
-				"ID" : "ServoHand1"
-			}
 			],
 		"embeddedDeviceNodes": [
 			{
-				"type": "embed' IMU",
-				"ID" : "IMU0      "
+				"type": "Embed' IMU",
+				"ID" : "OnboardIMU"
+			},
+			{
+				"type": "Embed' LED",
+				"ID" : "OnboardLED"
 			}
 		],
 		"algorithmicNodes": [
 			{
-				"type": "TestAlgorithm"
+				"type": "LinearFuncNode",
+				"dataType": "float",
+				"a": 0.1,
+				"b": 0
 			},
 			{
 				"type": "LinearFuncNode",
 				"dataType": "float",
-				"slope": 0.1,
-				"offset": 0
+				"a": 0.1,
+				"b": 0
 			},
 			{
 				"type": "LinearFuncNode",
-				"dataType": "uint8",
-				"slope": 1,
-				"offset": 128
-			},
-			{
-				"type": "LogNode",
-				"longId": "buttonStates",
-				"shortId": "bS"
-			},
-			{
-				"type": "LogNode",
-				"longId": "ledStates",
-				"shortId": "lS"
-			},
-			{
-				"type": "LogNode",
-				"longId": "floatFunctions",
-				"shortId": "fF"
-			},
-			{
-				"type": "LogNode",
-				"longId": "intFunctions",
-				"shortId": "iF"
+				"dataType": "float",
+				"a": 0.1,
+				"b": 0
 			}
 			],
 		"links": {
-			"a0:0": "d0:0",
-			"a0:1": "d0:1",
-			"a0:2": "d0:2",
-			"a0:3": "d0:3",
+			"a0:0": "e0:0",
+			"a1:0": "e0:1",
+			"a2:0": "e0:2",
 
-			"a3:0": "d0:0",
-			"a3:1": "d0:1",
-			"a3:2": "d0:2",
-			"a3:3": "d0:3",
-
-			"a4:0": "a0:0",
-			"a4:1": "a0:1",
-			"a4:2": "a0:2",
-			"a4:3": "a0:3",
-			"a4:4": "a0:4",
-			"a4:5": "a0:5",
-			"a4:6": "a0:6",
-			"a4:7": "a0:0",
-			"a4:8": "a0:1",
-			"a4:9": "a0:2",
-			"a4:10": "a0:3",
-			"a4:11": "a0:4",
-			"a4:12": "a0:5",
-
-			"a5:0": "a1:0",
-
-			"d1:0": "a2:0",
-
-			"d0:0": "a0:0",
-			"d0:1": "a0:1",
-			"d0:2": "a0:2",
-			"d0:3": "a0:3",
-			"d0:4": "a0:4",
-			"d0:5": "a0:5",
-			"d0:6": "a0:6"
-			}
-	},
-	{
-		"name": "Config 2",
-		"color": 0x00ff00,
-		"deviceNodes": [
-			{
-				"type": "BarDisp7Ch",
-				"ID" :  "BarDisplay",
-				"barColors": [0x00ff00, 0xffff00,0xffffff,0xff0000,0xffffff,0x00ffff,0xffff00]
-			},
-			{
-				"type": "EMGSens6Ch",
-				"ID" :  "EMG Sensor"
-			},
-			{
-				"type": "BLE Bridge",
-				"ID" : "Bridge 001"
-			}
-			],
-		"embeddedDeviceNodes": [
-			{
-				"type": "embed' IMU",
-				"ID" : "IMU0      "
-			}
-		],
-		"algorithmicNodes": [
-			
-			{
-				"type": "TestAlgorithm"
-			},
-			{
-				"type": "HandAnimation"
-			}
-			],
-		"links": {
-			"a0:0": "d0:0",
-			"a0:1": "d0:1",
-			"a0:2": "d0:2",
-			"a0:3": "d0:3",
-
-			"d0:0": "a1:0",
-			"d0:1": "a1:1",
-			"d0:2": "a1:2",
-			"d0:3": "a1:3",
-			"d0:4": "a1:4",
-			"d0:5": "a1:6",
-			"d0:6": "a1:7",
-
-			"d2:0": "a1:0",
-			"d2:1": "a1:1",
-			"d2:2": "a1:2",
-			"d2:3": "a1:3",
-			"d2:4": "a1:4",
-			"d2:5": "a1:5",
-			"d2:6": "a1:6",
-			"d2:7": "a1:7"
-			}
-		
+			"e1:0": "a0:0",
+			"e1:1": "a0:1",
+			"e1:2": "a0:2"
+		}		
 	}
 ]

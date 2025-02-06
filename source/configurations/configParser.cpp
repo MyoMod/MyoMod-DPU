@@ -22,6 +22,7 @@
 
 // Virtual devices
 #include "embeddedIMU.h"
+#include "embeddedLED.h"
 
 // Algorithms
 #include "testAlgorithm.h"
@@ -596,6 +597,10 @@ std::unique_ptr<EmbeddedDeviceNode> ConfigParser::createEmbeddedDeviceNode(const
     if (nodeData.type == "Embed' IMU")
     {
         return std::make_unique<EmbeddedIMU>(ID);
+    }
+    else if (nodeData.type == "Embed' LED")
+    {
+        return std::make_unique<EmbeddedLED>(ID);
     }
     else
     {
