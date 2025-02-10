@@ -41,6 +41,7 @@ public:
     ~LinearFunctionNode() = default;
 
     void process() override{
-        m_y->setValue(m_x->getValue() * m_a + m_b);
+        T y = m_x->getValue() * m_a + m_b;
+        m_y->setValue(y);
     }
 };

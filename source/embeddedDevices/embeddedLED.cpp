@@ -20,6 +20,7 @@
 
 /* --------------------------------- Globals -------------------------------- */
 int32_t g_activeInstances = 0;
+volatile float g_ledValues[3] = {0,0,0};
 
 
 /* ----------------------------- Implementation ----------------------------- */
@@ -56,6 +57,7 @@ void EmbeddedLED::processOutData()
     for (size_t i = 0; i < m_colorPorts.size(); i++)
     {
         colors[i] = abs(m_colorPorts[i]->getValue());
+        g_ledValues[i] = colors[i];
         colors[i] = MIN(1.0f, colors[i]);
     }
 

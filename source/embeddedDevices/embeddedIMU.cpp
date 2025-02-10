@@ -15,6 +15,7 @@
 #include "etl/singleton.h"
 
 #include "peripherals.h"
+#include "dpu_gpio.h"
 
 #include "ICM42670P.h"
 /* ---------------------------- Private typedefs ---------------------------- */
@@ -22,7 +23,7 @@ using ImuSingleton = etl::singleton<ICM42670>;
 
 
 /* --------------------------------- Globals -------------------------------- */
-
+volatile int32_t accelRaw[3] = {0,0,0};
 
 /* ----------------------------- Implementation ----------------------------- */
 
@@ -63,11 +64,22 @@ void EmbeddedIMU::processInData()
 
     imu.getDataFromRegisters(imu_event);
 
+    bool error = imu_event.accel[0] > 4096 || imu_event.accel[1] > 4096 || imu_event.accel[2] > 4096;
+
+    DEBUG_PIN_1(error);
+    if(error)
+    {
+        SEGGER_RTT_printf(0, "Accel error: %d %d %d\n", imu_event.accel[0], imu_event.accel[1], imu_event.accel[2]);
+        return;
+    }
+
     // Write the data to the output Port
     for (size_t i = 0; i < 3; i++)
     {
         //transform to m/s^2
-        m_accelPorts[i]->setValue((float)imu_event.accel[i] / 2048.0f * 9.81f);
+        accelRaw[i] = imu_event.accel[i];
+        float outVal = (float)imu_event.accel[i] / 2048.0f * 9.81f;
+        m_accelPorts[i]->setValue(outVal);
         m_accelPorts[i]->setValid(true);
     }
     for (size_t i = 0; i < 3; i++)
