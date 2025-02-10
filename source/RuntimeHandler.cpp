@@ -58,19 +58,19 @@
  * ****************************************************************************/
 
 ConfigurationManager* g_configManager = nullptr;
-std::array<PeripheralHandler*, 3> g_peripheralHandlers;
+std::array<PeripheralHandler*, 2> g_peripheralHandlers;
 EmbeddedDevicesManager g_embeddedDevicesManager;
 std::vector<std::unique_ptr<DeviceNode>> g_deviceNodes;
 std::vector<std::shared_ptr<EmbeddedDeviceNode>> g_embeddedDeviceNodes;
 std::vector<std::unique_ptr<AlgorithmicNode>> g_algorithmicNodes;
 
 volatile bool g_isRunning = false;
-volatile float g_vBat = 0;
-volatile uint32_t g_vBatRaw = 0;
+// volatile float g_vBat = 0;
+// volatile uint32_t g_vBatRaw = 0;
 
-volatile int32_t accelRaw[3] = {0,0,0};
+// static volatile int32_t accelRaw[3] = {0,0,0};
 volatile int32_t adcRaw[6] = {0,0,0,0,0,0};
-volatile uint64_t g_time;
+// volatile uint64_t g_time;
 etl::queue_spsc_atomic<std::array<int32_t, 6>, 20> g_adcQueue;
 volatile uint32_t g_adcCounter = 0;
 
@@ -88,13 +88,13 @@ void decrementConfiguration();
 void installActiveConfiguration();
 void start();
 void stop();
-void inputHandlingDone();
+void handleNodes();
 void startCycle();
 void newAdcData(std::array<int32_t, MAX11254_NUM_CHANNELS> &measurements, bool clipped, bool rangeExceeded, bool error);
 
 // init
 void initHardware();
-void initPerpheralHandler();
+void initPeripheralHandler();
 void initEmbeddedDevices();
 void gpio_init();
 void init_debug();
@@ -106,69 +106,69 @@ int main()
 	/** Initialization **/
 
 	initHardware();
-	uint64_t lastTime = time_us_64();
-	float ledVal = 50;
+	// uint64_t lastTime = time_us_64();
+	// float ledVal = 50;
 	
-	while(1)
-	{
-		uint64_t now = time_us_64();
-		if(now - lastTime > 10000)
-		{
-			lastTime = now;
-			// 1ms passed
-			g_time = now;
+	// while(0)
+	// {
+	// 	uint64_t now = time_us_64();
+	// 	if(now - lastTime > 10000)
+	// 	{
+	// 		lastTime = now;
+	// 		// 1ms passed
+	// 		g_time = now;
 
-			GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 1);
-			// Get latest imu data
-			inv_imu_sensor_event_t imu_event;
-			g_imu.getDataFromRegisters(imu_event);
-			GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 0);
+	// 		GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 1);
+	// 		// Get latest imu data
+	// 		inv_imu_sensor_event_t imu_event;
+	// 		g_imu.getDataFromRegisters(imu_event);
+	// 		GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 0);
 
-			ledVal += 0.005f;
+	// 		ledVal += 0.005f;
 
-			accelRaw[0] = imu_event.accel[0];
-			accelRaw[1] = imu_event.accel[1];
-			accelRaw[2] = imu_event.accel[2];
+	// 		accelRaw[0] = imu_event.accel[0];
+	// 		accelRaw[1] = imu_event.accel[1];
+	// 		accelRaw[2] = imu_event.accel[2];
 
-			// 1g at about 2048
-			float colors[3] = {0,0,0};
-			for (int i = 0; i < 3; i++)
-			{
-				//scale from -2048 to 2048 to -100 to 100
-				colors[i] = (float)accelRaw[i] / 2048.0f *100.0f;
+	// 		// 1g at about 2048
+	// 		float colors[3] = {0,0,0};
+	// 		for (int i = 0; i < 3; i++)
+	// 		{
+	// 			//scale from -2048 to 2048 to -100 to 100
+	// 			colors[i] = (float)accelRaw[i] / 2048.0f *100.0f;
 				 
-				//abs and limit to 100
-				colors[i] = fminf(100.0f, fabsf(colors[i]));
-			}
+	// 			//abs and limit to 100
+	// 			colors[i] = fminf(100.0f, fabsf(colors[i]));
+	// 		}
 
 			
-			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_G, kPWM_EdgeAligned, colors[0]);
-			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_B, kPWM_EdgeAligned, colors[1]);
-			PWM_UpdatePwmDutycycle(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_EdgeAligned, colors[2]);
-			PWM_SetPwmLdok(PWM1, 2 | 4, true);
+	// 		PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_G, kPWM_EdgeAligned, colors[0]);
+	// 		PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_B, kPWM_EdgeAligned, colors[1]);
+	// 		PWM_UpdatePwmDutycycle(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_EdgeAligned, colors[2]);
+	// 		PWM_SetPwmLdok(PWM1, 2 | 4, true);
 
 			
-			//retrieve adc data
-			std::array<std::array<int32_t, 6>, 15> adcData;
-			for (size_t i = 0; i < 15; i++)
-			{
-				if(!g_adcQueue.pop(adcData[i]))
-				{
-					// queue is empty
-					break;
-				}
-			}
-			g_adcCounter = g_adcQueue.size();
+	// 		//retrieve adc data
+	// 		std::array<std::array<int32_t, 6>, 15> adcData;
+	// 		for (size_t i = 0; i < 15; i++)
+	// 		{
+	// 			if(!g_adcQueue.pop(adcData[i]))
+	// 			{
+	// 				// queue is empty
+	// 				break;
+	// 			}
+	// 		}
+	// 		g_adcCounter = g_adcQueue.size();
 
-			// read battery voltage
-			const float a = 0.13872f;
-			const float b = 0.01362;
-			g_vBatRaw = ADC_GetChannelConversionValue(ADC1, 0);
-			g_vBat = (float)g_vBatRaw * b + a;
-		}
-	}
+	// 		// read battery voltage
+	// 		const float a = 0.13872f;
+	// 		const float b = 0.01362;
+	// 		g_vBatRaw = ADC_GetChannelConversionValue(ADC1, 0);
+	// 		g_vBat = (float)g_vBatRaw * b + a;
+	// 	}
+	// }
 
-	initPerpheralHandler();
+	initPeripheralHandler();
 	initEmbeddedDevices();
 	init_debug();
 
@@ -459,7 +459,7 @@ void stop()
 
 void peripheralHandlerCallback(uint32_t index)
 {
-	static std::array<bool, 3> dataAvailable = {false, false, false};
+	static std::array<bool, 2> dataAvailable = {false, false};
 
 	dataAvailable[index] = true;
 
@@ -476,9 +476,9 @@ void peripheralHandlerCallback(uint32_t index)
 		{
 			// All peripherals have data available and the system is running
 			// -> Start the input handling
-			inputHandlingDone();
+			handleNodes();
 		}
-		dataAvailable = {false, false, false};
+		dataAvailable = {false, false};
 	}
 }
 
@@ -487,7 +487,7 @@ void peripheralHandlerCallback(uint32_t index)
  * 			and the data should be processed
  * 
  */
-void inputHandlingDone()
+void handleNodes()
 {
 	for (auto&& deviceNode : g_deviceNodes)
 	{
@@ -495,12 +495,12 @@ void inputHandlingDone()
 	}
 	g_embeddedDevicesManager.processInData();
 
-	//DEBUG_PINS(1);
+	DEBUG_PIN_0(1);
 	for (auto&& algorithmicNode : g_algorithmicNodes)
 	{
 		algorithmicNode->process();
 	}
-		//DEBUG_PINS(0);
+	DEBUG_PIN_0(0);
 
 	g_embeddedDevicesManager.processOutData();
 	for (auto&& deviceNode : g_deviceNodes)
@@ -519,16 +519,18 @@ void PIT_IRQHandler(void)
 	/* Clear interrupt flag.*/
 	PIT_ClearStatusFlags(PIT_PERIPHERAL, PIT_CHANNEL_0, kPIT_TimerFlag);
 
-	static uint32_t i;
-    i++;
+	static uint32_t cycle_index;
+    cycle_index++;
     //GPIO_PinWrite(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, i & 1);
 
 
     // start i2c transfer after 100 cycles
-    if (i & 1 && i > 100 && g_isRunning)
+    if (cycle_index & 1 && cycle_index > 100 && g_isRunning)
 	{
+		
 		startCycle();
 	}
+	DEBUG_PIN_2(cycle_index & 1);
 }
 
 /* GPIO4_Combined_0_15_IRQn interrupt handler */
@@ -591,6 +593,7 @@ void startCycle()
 	}
 
 	// Start the cycles
+	bool deviceInstalled = false;
 	for (auto& peripheralHandler : g_peripheralHandlers)
 	{
 		if (!peripheralHandler->hasInstalledDevices())
@@ -599,6 +602,7 @@ void startCycle()
 			// -> Skip this peripheral handler
 			continue;
 		}
+		deviceInstalled = true;
 		status = peripheralHandler->startCycle();
 		if (status != Status::Ok)
 		{
@@ -608,6 +612,14 @@ void startCycle()
 			SEGGER_RTT_printf(0, "Error starting cycle\n");
 			return;
 		}
+	}
+
+	// Call handleNodes directly if no devices are installed (this may be the case
+	//  for systems with embedded devices only), as the peripheral handler callback
+	//  will not be called in this case	
+	if (!deviceInstalled)
+	{
+		handleNodes();
 	}
 }
 
@@ -664,13 +676,9 @@ void initAndTestRAM()
 
 	for (size_t i = 10; i < TEST_SIZE; i+=10)
 	{
-		GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 1);
-
 		writeRAM((uint32_t*)AHBptr, (uint32_t*)outData, i);
 
 		readRAM((uint32_t*)AHBptr, (uint32_t*)inData, i);
-
-		GPIO_PinWrite(DEBUG_DEBUG2_GPIO, DEBUG_DEBUG2_PIN, 0);
 
 		SDK_DelayAtLeastUs(5, CLOCK_GetFreq(kCLOCK_CoreSysClk));
 	}
@@ -747,6 +755,7 @@ void initHardware()
 
     gpio_init();
 
+	/*
 	// Set LEDs
 	PWM_OutputEnable(PWM1, PWM1_SM2_LED_R, PWM1_SM1);
 	PWM_OutputEnable(PWM1, PWM1_SM1_LED_G, PWM1_SM1);
@@ -781,6 +790,7 @@ void initHardware()
 	g_imu.startAccel(100,16);
 	// Gyro ODR = 100 Hz and Full Scale Range = 2000 dps
 	g_imu.startGyro(100,2000);
+	*/
 
 	// Init ADC (MAX11254)
 	g_max11254 = new MAX11254(SPI_ADC_PERIPHERAL, newAdcData);
@@ -791,18 +801,65 @@ void initHardware()
 	}
 
 	g_max11254->startCyclicConversion();
+
+	// Init i2c
+	// LPI2C_MasterEnable(I2C_EXT_PERIPHERAL, false);
+	// LPI2C_MasterReset(I2C_EXT_PERIPHERAL);
+	// I2C_EXT_PERIPHERAL->MCR |= LPI2C_MCR_DBGEN(1);
+	// // I2C_EXT_PERIPHERAL->MCFGR1 = LPI2C_MCFGR1_PRESCALE(1); // 0 for everyting else is wanted
+	// // I2C_EXT_PERIPHERAL->MCFGR2 = LPI2C_MCFGR2_FILTSCL(2); // 0 for everyting else is wanted
+	// // I2C_EXT_PERIPHERAL->MCFGR2 |= LPI2C_MCFGR2_FILTSDA(2);
+	// // I2C_EXT_PERIPHERAL->MCFGR2 |= LPI2C_MCFGR2_BUSIDLE((0x28+0x11+2) * 2);
+	// // I2C_EXT_PERIPHERAL->MCCR0 = LPI2C_MCCR0_SETHOLD(0x11); // 0 for everyting else is wanted
+	// // I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_CLKLO(0x28);
+	// // I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_CLKHI(0x1F);
+	// // I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_DATAVD(8);
+	// I2C_EXT_PERIPHERAL->MCFGR1 = LPI2C_MCFGR1_PRESCALE(1); // 0 for everyting else is wanted
+	// I2C_EXT_PERIPHERAL->MCFGR2 = LPI2C_MCFGR2_FILTSCL(2); // 0 for everyting else is wanted
+	// I2C_EXT_PERIPHERAL->MCFGR2 |= LPI2C_MCFGR2_FILTSDA(2);
+	// I2C_EXT_PERIPHERAL->MCCR0 = LPI2C_MCCR0_SETHOLD(0x07); // 0 for everyting else is wanted
+	// I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_CLKLO(0x0F);
+	// I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_CLKHI(0x0B);
+	// I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_DATAVD(1);
+	LPI2C_MasterEnable(I2C_EXT_PERIPHERAL, true);
+
+	// uint8_t data[2] = {0x12, 0x34};
+	// volatile auto status = LPI2C_MasterStart(I2C_EXT_PERIPHERAL, 0x1F, kLPI2C_Write);
+
+	// // wait for tx fifo empty
+	// while(!(I2C_EXT_PERIPHERAL->MSR & LPI2C_MSR_TDF_MASK));
+
+	// //status = LPI2C_MasterSend(I2C_EXT_PERIPHERAL, data, 2);
+	// I2C_EXT_PERIPHERAL->MTDR = LPI2C_MTDR_CMD(0x2);
+	// status = LPI2C_MasterStop(I2C_EXT_PERIPHERAL);
+
+	// uint32_t sendData = 0x40404040;
+	// lpi2c_master_transfer_t masterXfer;
+	// masterXfer.slaveAddress = 0x10;
+	// masterXfer.data = (uint8_t*)&sendData;
+	// masterXfer.dataSize = 1;
+	// masterXfer.direction = kLPI2C_Write;
+	// masterXfer.flags = kLPI2C_TransferDefaultFlag;
+	// masterXfer.subaddressSize = 1;
+	// masterXfer.subaddress = 0x00;
+
+	// auto status = LPI2C_MasterTransferBlocking(I2C_EXT_PERIPHERAL, &masterXfer);
+	// if (status != kStatus_Success)
+	// {
+	// 	SEGGER_RTT_printf(0, "I2C init failed\n");
+	// }
 }
 
-void initPerpheralHandler()
+void initPeripheralHandler()
 {
-	g_peripheralHandlers[0] = new PeripheralHandler(DMA0, 1, [](){peripheralHandlerCallback(0);}, true);
-	g_peripheralHandlers[1] = new PeripheralHandler(DMA0, 3, [](){peripheralHandlerCallback(1);}, true);
-	g_peripheralHandlers[2] = new PeripheralHandler(DMA0, 4, [](){peripheralHandlerCallback(2);}, false);
+	g_peripheralHandlers[0] = new PeripheralHandler(DMA0, 1, [](){peripheralHandlerCallback(0);}, true); // MM_EXT
+	g_peripheralHandlers[1] = new PeripheralHandler(DMA0, 3, [](){peripheralHandlerCallback(1);}, false); // MM_ESP
 }
 
 void initEmbeddedDevices()
 {
-	g_embeddedDevicesManager.registerDevice(DeviceIdentifier(idArr("embed' IMU"), idArr("IMU      0")));
+	g_embeddedDevicesManager.registerDevice(DeviceIdentifier(idArr("Embed' IMU"), idArr("OnboardIMU")));
+	g_embeddedDevicesManager.registerDevice(DeviceIdentifier(idArr("Embed' LED"), idArr("OnboardLED")));
 }
 
 /* LPUART1 signal event callback function */
@@ -865,6 +922,14 @@ void gpio_init()
     // GPIO_PinInit(BOARD_INITPINS_Sync_GPIO, BOARD_INITPINS_Sync_GPIO_PIN, &led_config);
 
 	// GPIO_PinWrite(BOARD_INITPINS_USR_LED_GPIO, BOARD_INITPINS_USR_LED_GPIO_PIN, 1);
+	// debug_config.outputLogic = 1;
+	// GPIO_PinInit(EXTERNAL_CONNECTIONS_EXT_SDA_GPIO, EXTERNAL_CONNECTIONS_EXT_SDA_PIN, &debug_config);
+	// // GPIO_PinInit(EXTERNAL_CONNECTIONS_EXT_SCL_GPIO, EXTERNAL_CONNECTIONS_EXT_SCL_PIN, &debug_config);
+
+	// GPIO_PinWrite(EXTERNAL_CONNECTIONS_EXT_SDA_GPIO, EXTERNAL_CONNECTIONS_EXT_SDA_PIN, 0);
+	// SDK_DelayAtLeastUs(10000, CLOCK_GetFreq(kCLOCK_CoreSysClk));
+	// GPIO_PinWrite(EXTERNAL_CONNECTIONS_EXT_SDA_GPIO, EXTERNAL_CONNECTIONS_EXT_SDA_PIN, 1);
+
 }
 
 void init_debug()
