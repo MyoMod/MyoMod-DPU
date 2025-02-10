@@ -22,6 +22,7 @@
 #include "fsl_flexspi.h"
 #include "fsl_lpspi.h"
 #include "fsl_aoi.h"
+#include "fsl_lpi2c.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -218,6 +219,20 @@ extern "C" {
 #define SPI_ADC_CLOCK_FREQ 132000000UL
 /* Alias for AOI1 peripheral */
 #define AOI1_PERIPHERAL AOI1
+/* BOARD_InitPeripherals defines for LPI2C1 */
+/* Definition of peripheral ID */
+#define I2C_EXT_PERIPHERAL LPI2C1
+/* Definition of clock source */
+#define I2C_EXT_CLOCK_FREQ 60000000UL
+/* Definition of slave address */
+#define I2C_EXT_MASTER_SLAVE_ADDRESS 0
+/* BOARD_InitPeripherals defines for LPI2C3 */
+/* Definition of peripheral ID */
+#define I2C_ESP_PERIPHERAL LPI2C3
+/* Definition of clock source */
+#define I2C_ESP_CLOCK_FREQ 60000000UL
+/* Definition of slave address */
+#define I2C_ESP_MASTER_SLAVE_ADDRESS 0
 
 /***********************************************************************************************************************
  * Global variables
@@ -261,6 +276,8 @@ extern flexspi_device_config_t FLEXSPI_RAM_config_HYPER_RAM;
 extern flexspi_transfer_t FLEXSPI_RAM_config_transfer_HYPER_RAM;
 extern const lpspi_master_config_t SPI_IMU_config;
 extern const lpspi_master_config_t SPI_ADC_config;
+extern const lpi2c_master_config_t I2C_EXT_masterConfig;
+extern const lpi2c_master_config_t I2C_ESP_masterConfig;
 
 /***********************************************************************************************************************
  * Global functions

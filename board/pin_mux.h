@@ -204,11 +204,6 @@ void Boot_Config(void);
 #define EXTERNAL_CONNECTIONS_IOMUXC_GPR_GPR28_GPIO_MUX3_GPIO_SEL_MASK 0x010000U /*!< GPIO3 and GPIO8 share same IO MUX function, GPIO_MUX3 selects one GPIO function: affected bits mask */
 #define EXTERNAL_CONNECTIONS_IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL_MASK 0x40U /*!< GPIO4 and GPIO9 share same IO MUX function, GPIO_MUX4 selects one GPIO function: affected bits mask */
 
-/* GPIO_AD_B1_01 (coord K11), I2C1_SDA */
-/* Routed pin properties */
-#define EXTERNAL_CONNECTIONS_EXT_SDA_PERIPHERAL                           LPI2C1   /*!< Peripheral name */
-#define EXTERNAL_CONNECTIONS_EXT_SDA_SIGNAL                                  SDA   /*!< Signal name */
-
 /* GPIO_AD_B1_00 (coord J11), I2C1_SCL */
 /* Routed pin properties */
 #define EXTERNAL_CONNECTIONS_EXT_SCL_PERIPHERAL                           LPI2C1   /*!< Peripheral name */
@@ -369,6 +364,11 @@ void Boot_Config(void);
 #define EXTERNAL_CONNECTIONS_V_BAT_PERIPHERAL                               ADC1   /*!< Peripheral name */
 #define EXTERNAL_CONNECTIONS_V_BAT_SIGNAL                                     IN   /*!< Signal name */
 #define EXTERNAL_CONNECTIONS_V_BAT_CHANNEL                                   14U   /*!< Signal channel */
+
+/* GPIO_AD_B1_01 (coord K11), I2C1_SDA */
+/* Routed pin properties */
+#define EXTERNAL_CONNECTIONS_EXT_SDA_PERIPHERAL                           LPI2C1   /*!< Peripheral name */
+#define EXTERNAL_CONNECTIONS_EXT_SDA_SIGNAL                                  SDA   /*!< Signal name */
 
 /*!
  * @brief Configures pin routing and optionally pin electrical features.

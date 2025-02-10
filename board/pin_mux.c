@@ -605,11 +605,11 @@ void Boot_Config(void) {
 External_Connections:
 - options: {callFromInitBoot: 'true', coreID: core0, enableClock: 'true'}
 - pin_list:
-  - {pin_num: K11, peripheral: LPI2C1, signal: SDA, pin_signal: GPIO_AD_B1_01, identifier: EXT_SDA}
-  - {pin_num: J11, peripheral: LPI2C1, signal: SCL, pin_signal: GPIO_AD_B1_00, identifier: EXT_SCL}
-  - {pin_num: J4, peripheral: LPI2C3, signal: SCL, pin_signal: GPIO_SD_B0_00, identifier: ESP_SDA}
-  - {pin_num: J3, peripheral: LPI2C3, signal: SDA, pin_signal: GPIO_SD_B0_01, identifier: ESP_SCL}
-  - {pin_num: J14, peripheral: LPSPI3, signal: SCK, pin_signal: GPIO_AD_B1_15, identifier: ADC_SCK}
+  - {pin_num: J11, peripheral: LPI2C1, signal: SCL, pin_signal: GPIO_AD_B1_00, identifier: EXT_SCL, software_input_on: Enable, hysteresis_enable: Disable, pull_keeper_enable: Enable,
+    open_drain: Enable}
+  - {pin_num: J4, peripheral: LPI2C3, signal: SCL, pin_signal: GPIO_SD_B0_00, identifier: ESP_SDA, software_input_on: Enable, open_drain: Enable}
+  - {pin_num: J3, peripheral: LPI2C3, signal: SDA, pin_signal: GPIO_SD_B0_01, identifier: ESP_SCL, software_input_on: Enable, open_drain: Enable}
+  - {pin_num: J14, peripheral: LPSPI3, signal: SCK, pin_signal: GPIO_AD_B1_15, identifier: ADC_SCK, software_input_on: Enable}
   - {pin_num: H11, peripheral: LPSPI3, signal: SDI, pin_signal: GPIO_AD_B1_13, identifier: ADC_MISO}
   - {pin_num: G12, peripheral: LPSPI3, signal: SDO, pin_signal: GPIO_AD_B1_14, identifier: ADC_MOSI}
   - {pin_num: H12, peripheral: LPSPI3, signal: PCS0, pin_signal: GPIO_AD_B1_12, identifier: ADC_CS}
@@ -629,6 +629,7 @@ External_Connections:
   - {pin_num: H2, peripheral: GPIO8, signal: 'gpio_io, 16', pin_signal: GPIO_SD_B0_04, identifier: V_MYOMOD_EN, direction: OUTPUT}
   - {pin_num: M13, peripheral: ADC1, signal: 'IN, 14', pin_signal: GPIO_AD_B1_09, identifier: V_BAT}
   - {pin_num: H14, peripheral: GPIO1, signal: 'gpio_io, 14', pin_signal: GPIO_AD_B0_14}
+  - {pin_num: K11, peripheral: LPI2C1, signal: SDA, pin_signal: GPIO_AD_B1_01, identifier: EXT_SDA, software_input_on: Enable, open_drain: Enable}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -693,14 +694,14 @@ void External_Connections(void) {
   GPIO_PortEnableInterrupts(GPIO9, 1U << 6U);
 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_14_GPIO1_IO14, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 1U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_09_GPIO1_IO25, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_12_LPSPI3_PCS0, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_13_LPSPI3_SDI, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_14_LPSPI3_SDO, 0U); 
 #if FSL_IOMUXC_DRIVER_VERSION >= MAKE_VERSION(2, 0, 4)
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_15_LPSPI3_SCK, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_15_LPSPI3_SCK, 1U); 
 #endif
   IOMUXC_SetPinMux(IOMUXC_GPIO_B1_04_LPSPI4_PCS0, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_B1_05_LPSPI4_SDI, 0U); 
@@ -712,8 +713,8 @@ void External_Connections(void) {
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_06_GPIO4_IO06, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_07_FLEXIO1_FLEXIO07, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_08_FLEXIO1_FLEXIO08, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_00_LPI2C3_SCL, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_01_LPI2C3_SDA, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_00_LPI2C3_SCL, 1U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_01_LPI2C3_SDA, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_02_FLEXPWM1_PWMA01, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_03_FLEXPWM1_PWMB01, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_04_GPIO3_IO16, 0U); 
@@ -734,6 +735,10 @@ void External_Connections(void) {
     (~(EXTERNAL_CONNECTIONS_IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL_MASK))) 
       | IOMUXC_GPR_GPR29_GPIO_MUX4_GPIO_SEL(0x40U) 
     );
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 0x18B0U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 0x18B0U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_SD_B0_00_LPI2C3_SCL, 0x18B0U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_SD_B0_01_LPI2C3_SDA, 0x18B0U); 
 }
 /***********************************************************************************************************************
  * EOF
