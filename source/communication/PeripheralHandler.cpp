@@ -8,6 +8,8 @@
 #include "PeripheralHandler.h"
 #include "cmsis_gcc.h"
 
+#include "myomodCommon.h"
+
 #define LPIIC_INTERRUPTS (kLPI2C_MasterFifoErrFlag | kLPI2C_MasterNackDetectFlag | kLPI2C_MasterStopDetectFlag \
 							| kLPI2C_MasterArbitrationLostFlag)
 
@@ -16,7 +18,7 @@
 /* Clock divider for master lpi2c clock source */
 #define LPI2C_CLOCK_SOURCE_DIVIDER (1U)
 /* Get frequency of lpi2c clock */
-#define LPI2C_CLOCK_FREQUENCY ((CLOCK_GetFreq(kCLOCK_Usb1PllClk) / 8) / (LPI2C_CLOCK_SOURCE_DIVIDER + 1U))
+#define LPI2C_CLOCK_FREQUENCY ((CLOCK_GetFreq(kCLOCK_Usb1PllClk) / 8) / (LPI2C_CLOCK_SOURCE_DIVIDER))
 
 #define I2C_FIFO_DEPTH 4
 #define DMA_LOWEST_CHANNEL 4
@@ -93,8 +95,8 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, void (*pr
 	lpi2c_master_config_t i2cConfig = {0};
 
 	/*Clock setting for LPI2C*/
-	CLOCK_SetMux(kCLOCK_Lpi2cMux, LPI2C_CLOCK_SOURCE_SELECT);
-    CLOCK_SetDiv(kCLOCK_Lpi2cDiv, LPI2C_CLOCK_SOURCE_DIVIDER);
+	//CLOCK_SetMux(kCLOCK_Lpi2cMux, LPI2C_CLOCK_SOURCE_SELECT);
+    //CLOCK_SetDiv(kCLOCK_Lpi2cDiv, LPI2C_CLOCK_SOURCE_DIVIDER);
 
 
     /*
@@ -114,7 +116,7 @@ PeripheralHandler::PeripheralHandler(DMA_Type* dma, uint32_t i2cIndex, void (*pr
 	i2cConfig.baudRate_Hz = highSpeed ? 1'000'000U : 400'000U;
 
 	// Init i2c hardware
-	LPI2C_MasterInit(m_i2cBase, &i2cConfig, LPI2C_CLOCK_FREQUENCY);
+	//LPI2C_MasterInit(m_i2cBase, &i2cConfig, LPI2C_CLOCK_FREQUENCY);
 
 	// Activate IRQ
 	interrupt = static_cast<IRQn>((static_cast<uint32_t>(LPI2C1_IRQn) + i2cIndex));
@@ -601,10 +603,16 @@ Status PeripheralHandler::enterRealTimeMode() {
  * 				  Returns Status::Error if the function was called while the handler was not in idle state
  */
 Status PeripheralHandler::exitRealTimeMode() {
+	uint64_t timeout = time_us_64() + 100'000; // 100ms
 	while(m_commState > CommState::Idle)
 	{
 		// Wait until the sync command is done
 		// TODO: Add a timeout
+		if(time_us_64() > timeout)
+		{
+			m_commState = CommState::Stopped;
+			return Status::Timeout;
+		}
 	}
 	if(m_commState > CommState::Idle)
 	{
