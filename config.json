@@ -11,7 +11,8 @@
 			},
 			{
 				"type": "Embed' LED",
-				"ID" : "OnboardLED"
+				"ID" : "OnboardLED",
+				"brightness" : 0.1
 			}
 		],
 		"algorithmicNodes": [

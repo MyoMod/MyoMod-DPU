@@ -600,7 +600,16 @@ std::unique_ptr<EmbeddedDeviceNode> ConfigParser::createEmbeddedDeviceNode(const
     }
     else if (nodeData.type == "Embed' LED")
     {
-        return std::make_unique<EmbeddedLED>(ID);
+        float brightness;
+        if (!parseParameter("brightness", nodeData, brightness))
+        {
+            return nullptr;
+        }
+        if(!(0.0f <= brightness && brightness <= 1.0f))
+        {
+            return nullptr;
+        }
+        return std::make_unique<EmbeddedLED>(ID, brightness);
     }
     else
     {

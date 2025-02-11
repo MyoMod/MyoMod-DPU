@@ -24,8 +24,9 @@ volatile float g_ledValues[3] = {0,0,0};
 
 
 /* ----------------------------- Implementation ----------------------------- */
-EmbeddedLED::EmbeddedLED(std::array<char, 10> id) :
-    EmbeddedDeviceNode{id, idArr("embed' LED")}
+EmbeddedLED::EmbeddedLED(std::array<char, 10> id, float brightness) :
+    EmbeddedDeviceNode{id, idArr("embed' LED")},
+    m_brightness(brightness)
 {
     //Link the input ports
     for(size_t i = 0; i < m_colorPorts.size(); i++)
@@ -62,9 +63,9 @@ void EmbeddedLED::processOutData()
     }
 
     // Write the data to the output Port
-    PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_G, kPWM_EdgeAligned, colors[0] * 100.0f);
-    PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_B, kPWM_EdgeAligned, colors[1] * 100.0f);
-    PWM_UpdatePwmDutycycle(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_EdgeAligned, colors[2] * 100.0f);
+    PWM_UpdatePwmDutycycleHighAccuracy(PWM1, PWM1_SM1, PWM1_SM1_LED_G, kPWM_EdgeAligned, colors[0] * 0xFFFF * m_brightness);
+    PWM_UpdatePwmDutycycleHighAccuracy(PWM1, PWM1_SM1, PWM1_SM1_LED_B, kPWM_EdgeAligned, colors[1] * 0xFFFF * m_brightness);
+    PWM_UpdatePwmDutycycleHighAccuracy(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_EdgeAligned, colors[2] * 0xFFFF * m_brightness);
     PWM_SetPwmLdok(PWM1, 2 | 4, true);
 }
 

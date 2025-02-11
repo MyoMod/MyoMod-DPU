@@ -30,7 +30,7 @@
 class EmbeddedLED : public EmbeddedDeviceNode
 {
 public:
-    EmbeddedLED(std::array<char, 10> id);
+    EmbeddedLED(std::array<char, 10> id, float brightness);
     ~EmbeddedLED() = default;
 
     void processInData() override;
@@ -42,4 +42,5 @@ public:
 
 private:
     std::array<std::shared_ptr<InputPort<float>>, 3> m_colorPorts; // RGB
+    float m_brightness = 0.0f;
 };
