@@ -69,13 +69,13 @@ volatile bool g_isRunning = false;
 // volatile uint32_t g_vBatRaw = 0;
 
 // static volatile int32_t accelRaw[3] = {0,0,0};
-volatile int32_t adcRaw[6] = {0,0,0,0,0,0};
-// volatile uint64_t g_time;
-etl::queue_spsc_atomic<std::array<int32_t, 6>, 20> g_adcQueue;
-volatile uint32_t g_adcCounter = 0;
+// volatile int32_t adcRaw[6] = {0,0,0,0,0,0};
+// // volatile uint64_t g_time;
+// etl::queue_spsc_atomic<std::array<int32_t, 6>, 20> g_adcQueue;
+// volatile uint32_t g_adcCounter = 0;
 
-ICM42670 g_imu = ICM42670(SPI_IMU_PERIPHERAL);
-MAX11254 *g_max11254 = nullptr;
+//ICM42670 g_imu = ICM42670(SPI_IMU_PERIPHERAL);
+//MAX11254 *g_max11254 = nullptr;
 
 uint8_t g_debugBuffer[1024];
 /*******************************************************************************
@@ -90,7 +90,7 @@ void start();
 void stop();
 void handleNodes();
 void startCycle();
-void newAdcData(std::array<int32_t, MAX11254_NUM_CHANNELS> &measurements, bool clipped, bool rangeExceeded, bool error);
+//void newAdcData(std::array<int32_t, MAX11254_NUM_CHANNELS> &measurements, bool clipped, bool rangeExceeded, bool error);
 
 // init
 void initHardware();
@@ -551,11 +551,11 @@ void GPIO4_GPIO_COMB_0_15_IRQHANDLER(void) {
 }
 
 /* EXTERNAL_CONNECTIONS_GPIO1_14_handle callback function */
-void EXTERNAL_CONNECTIONS_GPIO1_14_callback(void *param) {
-  /* Place your code here */
-  g_max11254->IRQ_handler();
-  g_max11254->async_handler();
-}
+// void EXTERNAL_CONNECTIONS_GPIO1_14_callback(void *param) {
+//   /* Place your code here */
+//   g_max11254->IRQ_handler();
+//   g_max11254->async_handler();
+// }
 }
 
 
@@ -727,16 +727,16 @@ void initAndTestRAM()
 	} 
 }
 
-void newAdcData(std::array<int32_t, MAX11254_NUM_CHANNELS> &measurements, bool clipped, bool rangeExceeded, bool error)
-{
-	//SEGGER_RTT_printf(0, "New ADC data: %d\n", measurements[0]);
-	for (size_t i = 0; i < 6; i++)
-	{
-		adcRaw[i] = measurements[i];
-	}
-	g_adcQueue.push(measurements);
-	g_adcCounter = g_adcQueue.size();
-}
+// void newAdcData(std::array<int32_t, MAX11254_NUM_CHANNELS> &measurements, bool clipped, bool rangeExceeded, bool error)
+// {
+// 	//SEGGER_RTT_printf(0, "New ADC data: %d\n", measurements[0]);
+// 	for (size_t i = 0; i < 6; i++)
+// 	{
+// 		adcRaw[i] = measurements[i];
+// 	}
+// 	g_adcQueue.push(measurements);
+// 	g_adcCounter = g_adcQueue.size();
+// }
 
 void initHardware()
 {
@@ -793,15 +793,15 @@ void initHardware()
 	g_imu.startGyro(100,2000);
 	*/
 
-	// Init ADC (MAX11254)
-	g_max11254 = new MAX11254(SPI_ADC_PERIPHERAL, newAdcData);
-	bool success = g_max11254->begin();
-	if (!success)
-	{
-		SEGGER_RTT_printf(0, "MAX11254 init failed\n");
-	}
+	// // Init ADC (MAX11254)
+	// g_max11254 = new MAX11254(SPI_ADC_PERIPHERAL, newAdcData);
+	// bool success = g_max11254->begin();
+	// if (!success)
+	// {
+	// 	SEGGER_RTT_printf(0, "MAX11254 init failed\n");
+	// }
 
-	g_max11254->startCyclicConversion();
+	// g_max11254->startCyclicConversion();
 
 	// Init i2c
 	// LPI2C_MasterEnable(I2C_EXT_PERIPHERAL, false);
@@ -861,6 +861,7 @@ void initEmbeddedDevices()
 {
 	g_embeddedDevicesManager.registerDevice(DeviceIdentifier(idArr("Embed' IMU"), idArr("OnboardIMU")));
 	g_embeddedDevicesManager.registerDevice(DeviceIdentifier(idArr("Embed' LED"), idArr("OnboardLED")));
+	g_embeddedDevicesManager.registerDevice(DeviceIdentifier(idArr("Embed' EMG"), idArr("OnboardEMG")));
 }
 
 /* LPUART1 signal event callback function */
