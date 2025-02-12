@@ -23,6 +23,7 @@
 // Virtual devices
 #include "embeddedIMU.h"
 #include "embeddedLED.h"
+#include "embeddedEMG.h"
 
 // Algorithms
 #include "testAlgorithm.h"
@@ -610,6 +611,20 @@ std::unique_ptr<EmbeddedDeviceNode> ConfigParser::createEmbeddedDeviceNode(const
             return nullptr;
         }
         return std::make_unique<EmbeddedLED>(ID, brightness);
+    }
+
+    else if (nodeData.type == "Embed' EMG")
+    {
+        uint32_t amplification;
+        if (!parseParameter("amplification", nodeData, amplification))
+        {
+            return nullptr;
+        }
+        if(!(0 <= amplification && amplification <= 128))
+        {
+            return nullptr;
+        }
+        return std::make_unique<EmbeddedEMG>(ID, amplification);
     }
     else
     {
