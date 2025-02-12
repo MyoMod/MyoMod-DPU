@@ -398,6 +398,16 @@ void MAX11254::startCyclicConversion()
 }
 
 /**
+ * @brief Stops the cyclic conversion of the ADC.
+ * 
+ */
+void MAX11254::stopCyclicConversion()
+{
+    _inCyclicMode = false;
+    max11254_hal_stopCyclicConversion();
+}
+
+/**
  * @brief Gets the Rate enum that is closest to the given sample rate.
  *          If selectedSampleRate is not NULL, the selected sample rate is written to the given address.
  * 

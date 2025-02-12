@@ -15,6 +15,7 @@
 
 // global variables
 static LPSPI_Type *g_spi;
+static uint32_t g_defaultTCR = 0x00000000;
 
 /* Private function prototypes -----------------------------------------------*/
 static inline uint32_t getRegLength(uint8_t reg);
@@ -24,6 +25,7 @@ static inline uint32_t getRegLength(uint8_t reg);
 void max11254_hal_init(LPSPI_Type *spi)
 {
 	g_spi = spi;
+	g_defaultTCR = spi->TCR;
 }
 
 /*
@@ -249,6 +251,7 @@ void max11254_hal_startCyclicConversion()
 									0xC1000000 | ((MAX11254_DATA0_OFFSET + (4)) << (1+24)), 0xC1000000 | ((MAX11254_DATA0_OFFSET + 5) << (1+24))};
 
 	// Prepare the transfer
+
 	g_spi->TCR = startConversionCmd;
 	g_spi->TDR = startConversionData;
 
@@ -277,6 +280,7 @@ void max11254_hal_stopCyclicConversion()
     LPSPI_ClearStatusFlags(g_spi, (uint32_t)kLPSPI_AllStatusFlag);
 
 	g_spi->CFGR0 = 0;
+	g_spi->TCR = g_defaultTCR;
 
 	// TODO: Disable interrupts
 

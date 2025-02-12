@@ -450,6 +450,7 @@ void stop()
 	}
 
 	// TODO: Stop the virtual devices
+	g_embeddedDevicesManager.exitRealTimeMode();
 
 	//?: TODO: Stop the algorithmic nodes
 

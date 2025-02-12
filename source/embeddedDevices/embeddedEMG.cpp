@@ -158,7 +158,8 @@ void EmbeddedEMG::enterRealTimeMode()
  */
 void EmbeddedEMG::exitRealTimeMode()
 {
-
+    MAX11254& adc = AdcSingleton::instance();
+    adc.stopCyclicConversion();
 }
 
 void newAdcData(std::array<int32_t, MAX11254_NUM_CHANNELS> &measurements, bool clipped, bool rangeExceeded, bool error)
