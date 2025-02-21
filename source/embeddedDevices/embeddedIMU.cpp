@@ -69,7 +69,7 @@ void EmbeddedIMU::processInData()
     DEBUG_PIN_1(error);
     if(error)
     {
-        SEGGER_RTT_printf(0, "Accel error: %d %d %d\n", imu_event.accel[0], imu_event.accel[1], imu_event.accel[2]);
+        //SEGGER_RTT_printf(0, "Accel error: %d %d %d\n", imu_event.accel[0], imu_event.accel[1], imu_event.accel[2]);
         return;
     }
 

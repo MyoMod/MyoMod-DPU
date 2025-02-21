@@ -24,6 +24,12 @@ MAX11254::~MAX11254()
 {
 }
 
+/**
+ * @brief Initializes the ADC and sets the default settings.
+ * 
+ * @return true     Initialization was successful
+ * @return false    Initialization failed
+ */
 bool MAX11254::begin()
 {
 

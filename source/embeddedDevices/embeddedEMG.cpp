@@ -142,7 +142,7 @@ void EmbeddedEMG::enterRealTimeMode()
     MAX11254& adc = AdcSingleton::instance();
 
     volatile int returnVal = adc.begin();
-	if (returnVal != 0)
+	if (returnVal != 1)
 	{
 		SEGGER_RTT_printf(0, "ADC init failed\n");
 	}

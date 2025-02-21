@@ -13,6 +13,11 @@
 				"type": "Embed' LED",
 				"ID" : "OnboardLED",
 				"brightness" : 0.1
+			},
+			{
+				"type": "Embed' EMG",
+				"ID" : "OnboardEMG",
+				"amplification" : 1
 			}
 		],
 		"algorithmicNodes": [

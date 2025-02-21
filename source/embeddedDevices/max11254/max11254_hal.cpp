@@ -282,8 +282,6 @@ void max11254_hal_stopCyclicConversion()
 	g_spi->CFGR0 = 0;
 	g_spi->TCR = g_defaultTCR;
 
-	// TODO: Disable interrupts
-
 	LPSPI_Enable(g_spi, true);
 }
 
