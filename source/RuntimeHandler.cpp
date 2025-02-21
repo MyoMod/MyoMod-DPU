@@ -27,6 +27,8 @@
 #include "fsl_src.h"
 #include "fsl_pwm.h"
 #include "fsl_adc.h"
+#include "fsl_romapi.h"
+#include "fsl_cache.h"
 
 #include "SEGGER_RTT.h"
 #include "etl/queue_spsc_atomic.h"
@@ -77,6 +79,8 @@ volatile bool g_isRunning = false;
 //ICM42670 g_imu = ICM42670(SPI_IMU_PERIPHERAL);
 //MAX11254 *g_max11254 = nullptr;
 
+int myvar[1] __attribute__((section(".mySection"))) = {0};
+
 uint8_t g_debugBuffer[1024];
 /*******************************************************************************
  * Function Prototypes
@@ -98,6 +102,9 @@ void initPeripheralHandler();
 void initEmbeddedDevices();
 void gpio_init();
 void init_debug();
+void testFlashAccess();
+bool writeConfiguration(uint32_t offset, uint32_t* data, uint32_t length);
+
 /*******************************************************************************
  * Functions
  * ****************************************************************************/
@@ -754,101 +761,11 @@ void initHardware()
 	QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_MS_COUNTER2_CHANNEL, kQTMR_CascadeCount);
 	QTMR_StartTimer(TMR1_PERIPHERAL, TMR1_TIMEPRESACLER_CHANNEL, kQTMR_PriSrcRiseEdge);
 
-    gpio_init();
-
-	/*
-	// Set LEDs
-	PWM_OutputEnable(PWM1, PWM1_SM2_LED_R, PWM1_SM1);
-	PWM_OutputEnable(PWM1, PWM1_SM1_LED_G, PWM1_SM1);
-	PWM_OutputEnable(PWM1, PWM1_SM1_LED_B, PWM1_SM1);
-	
-	// disable all faults
-	PWM_SetupFaultDisableMap(PWM1, PWM1_SM1, PWM1_SM1_LED_G, kPWM_faultchannel_0, 0);
-	PWM_SetupFaultDisableMap(PWM1, PWM1_SM1, PWM1_SM1_LED_B, kPWM_faultchannel_0, 0);
-	PWM_SetupFaultDisableMap(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_faultchannel_0, 0);
-
-	// Set PWM values
-	PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_G, kPWM_EdgeAligned, 0);
-	PWM_UpdatePwmDutycycle(PWM1, PWM1_SM1, PWM1_SM1_LED_B, kPWM_EdgeAligned, 0);
-	PWM_UpdatePwmDutycycle(PWM1, PWM1_SM2, PWM1_SM2_LED_R, kPWM_EdgeAligned, 0);
-
-	// Start timers for SM1 and SM2
-	PWM_StartTimer(PWM1, 2 | 4);
-	
-	// Load buffered values 
-	PWM_SetPwmLdok(PWM1, 2 | 4, true);
-
-	// Init IMU (ICM42670P)
-	LPSPI_Enable(SPI_IMU_PERIPHERAL, true);
-
-	volatile int returnVal = g_imu.begin();
-	if (returnVal != 0)
-	{
-		SEGGER_RTT_printf(0, "IMU init failed\n");
-	}
-
-	// Accel ODR = 100 Hz and Full Scale Range = 16G
-	g_imu.startAccel(100,16);
-	// Gyro ODR = 100 Hz and Full Scale Range = 2000 dps
-	g_imu.startGyro(100,2000);
-	*/
-
-	// // Init ADC (MAX11254)
-	// g_max11254 = new MAX11254(SPI_ADC_PERIPHERAL, newAdcData);
-	// bool success = g_max11254->begin();
-	// if (!success)
-	// {
-	// 	SEGGER_RTT_printf(0, "MAX11254 init failed\n");
-	// }
-
-	// g_max11254->startCyclicConversion();
-
-	// Init i2c
-	// LPI2C_MasterEnable(I2C_EXT_PERIPHERAL, false);
-	// LPI2C_MasterReset(I2C_EXT_PERIPHERAL);
-	// I2C_EXT_PERIPHERAL->MCR |= LPI2C_MCR_DBGEN(1);
-	// // I2C_EXT_PERIPHERAL->MCFGR1 = LPI2C_MCFGR1_PRESCALE(1); // 0 for everyting else is wanted
-	// // I2C_EXT_PERIPHERAL->MCFGR2 = LPI2C_MCFGR2_FILTSCL(2); // 0 for everyting else is wanted
-	// // I2C_EXT_PERIPHERAL->MCFGR2 |= LPI2C_MCFGR2_FILTSDA(2);
-	// // I2C_EXT_PERIPHERAL->MCFGR2 |= LPI2C_MCFGR2_BUSIDLE((0x28+0x11+2) * 2);
-	// // I2C_EXT_PERIPHERAL->MCCR0 = LPI2C_MCCR0_SETHOLD(0x11); // 0 for everyting else is wanted
-	// // I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_CLKLO(0x28);
-	// // I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_CLKHI(0x1F);
-	// // I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_DATAVD(8);
-	// I2C_EXT_PERIPHERAL->MCFGR1 = LPI2C_MCFGR1_PRESCALE(1); // 0 for everyting else is wanted
-	// I2C_EXT_PERIPHERAL->MCFGR2 = LPI2C_MCFGR2_FILTSCL(2); // 0 for everyting else is wanted
-	// I2C_EXT_PERIPHERAL->MCFGR2 |= LPI2C_MCFGR2_FILTSDA(2);
-	// I2C_EXT_PERIPHERAL->MCCR0 = LPI2C_MCCR0_SETHOLD(0x07); // 0 for everyting else is wanted
-	// I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_CLKLO(0x0F);
-	// I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_CLKHI(0x0B);
-	// I2C_EXT_PERIPHERAL->MCCR0 |= LPI2C_MCCR0_DATAVD(1);
+    gpio_init();	
 	LPI2C_MasterEnable(I2C_EXT_PERIPHERAL, true);
 
-	// uint8_t data[2] = {0x12, 0x34};
-	// volatile auto status = LPI2C_MasterStart(I2C_EXT_PERIPHERAL, 0x1F, kLPI2C_Write);
-
-	// // wait for tx fifo empty
-	// while(!(I2C_EXT_PERIPHERAL->MSR & LPI2C_MSR_TDF_MASK));
-
-	// //status = LPI2C_MasterSend(I2C_EXT_PERIPHERAL, data, 2);
-	// I2C_EXT_PERIPHERAL->MTDR = LPI2C_MTDR_CMD(0x2);
-	// status = LPI2C_MasterStop(I2C_EXT_PERIPHERAL);
-
-	// uint32_t sendData = 0x40404040;
-	// lpi2c_master_transfer_t masterXfer;
-	// masterXfer.slaveAddress = 0x10;
-	// masterXfer.data = (uint8_t*)&sendData;
-	// masterXfer.dataSize = 1;
-	// masterXfer.direction = kLPI2C_Write;
-	// masterXfer.flags = kLPI2C_TransferDefaultFlag;
-	// masterXfer.subaddressSize = 1;
-	// masterXfer.subaddress = 0x00;
-
-	// auto status = LPI2C_MasterTransferBlocking(I2C_EXT_PERIPHERAL, &masterXfer);
-	// if (status != kStatus_Success)
-	// {
-	// 	SEGGER_RTT_printf(0, "I2C init failed\n");
-	// }
+	char testString[] = "Hello World!Hello World!Hello World!Hello World!Hello World!Hello World!Hello World!";
+	writeConfiguration(0, (uint32_t*)testString, sizeof(testString));
 }
 
 void initPeripheralHandler()
@@ -945,4 +862,154 @@ void init_debug()
     SEGGER_RTT_WriteString(0, BOARD_NAME);
 	SEGGER_RTT_WriteString(0, "\r\n\r\n");
 
+}
+
+__attribute__((section(".ramfunc.$SRAM_ITC")))
+bool writeConfiguration(uint32_t offset, uint32_t* data, uint32_t length)
+{
+	const uint32_t SECTOR_SIZE = 0x1000; // 4KB
+	const uint32_t CONFIG_REGION_START = 15 * 1024 * 1024;
+	const uint32_t CONFIG_REGION_SIZE = 1 * 1024 * 1024;
+
+	assert(offset % SECTOR_SIZE == 0);
+	assert((offset + length) <= CONFIG_REGION_SIZE);
+
+	// Disable all interrupts, because Flash may not be accessed while it is 
+	// cleared or programmed and interrupts may resides in the Flash memory
+	//  
+	__disable_irq();
+
+	flexspi_nor_config_t config;
+	serial_nor_config_option_t option;
+	status_t status;
+	uint32_t page_buffer[256 / sizeof(uint32_t)];
+	uint32_t instance = 0;
+	option.option0.U = 0xC0000003; // QuadSPI NOR, Frequency: 133MHz
+
+	uint32_t address = CONFIG_REGION_START + offset;
+	uint32_t totalLength = length;
+	uint32_t *ptr = data;
+
+	status = ROM_FLEXSPI_NorFlash_GetConfig(instance, &config, &option);
+	if (status != kStatus_Success)
+	{
+		SEGGER_RTT_printf(0, "Error: FLEXSPI_NorFlash_GetConfig failed\n");
+	}
+
+	// Without this delay, the init function may freeze
+	SDK_DelayAtLeastUs(1000, CLOCK_GetFreq(kCLOCK_CoreSysClk));
+	status = ROM_FLEXSPI_NorFlash_Init(instance, &config);
+	if (status != kStatus_Success)
+	{
+		SEGGER_RTT_printf(0, "Error: FLEXSPI_NorFlash_Init failed\n");
+	}
+
+	status = ROM_FLEXSPI_NorFlash_Erase(instance, &config, address, length); // Erase 1 sector
+	if (status != kStatus_Success)
+	{
+		SEGGER_RTT_printf(0, "Error: FLEXSPI_NorFlash_Erase failed\n");
+	}
+
+	// Program data to destination
+	while(length > 0)
+	{
+		uint32_t bytesToWrite = length>sizeof(page_buffer)? sizeof(page_buffer): length;
+
+		// Fill data into the page_buffer;
+		memcpy(page_buffer, ptr, bytesToWrite);
+
+		status = ROM_FLEXSPI_NorFlash_ProgramPage(instance, &config, address, page_buffer); // program 1 page
+		if (status != kStatus_Success)
+		{
+			SEGGER_RTT_printf(0, "Error: FLEXSPI_NorFlash_ProgramPage failed\n");
+		}
+
+		address += sizeof(page_buffer);
+		length -= bytesToWrite;
+		ptr += (bytesToWrite / 4);
+	}
+	
+	// Flush the cache
+	DCACHE_CleanInvalidateByRange(CONFIG_REGION_START + offset, totalLength);
+
+	// Use memory mapped access to verify whether data are programmed into Flash correctly
+	uint32_t mem_address = 0x60000000 + CONFIG_REGION_START + offset;
+	if (0 == memcmp((void *)mem_address, data, totalLength))
+	{
+		SEGGER_RTT_printf(0, "Flash access test passed\n");
+	}
+	else
+	{
+		SEGGER_RTT_printf(0, "Flash access test failed\n");
+	}
+
+	//reenable interrupts
+	__enable_irq();
+}
+
+void testFlashAccess()
+{
+	// Disable all interrupts, because Flash may not be accessed while it is 
+	// cleared or programmed and interrupts may resides in the Flash memory
+	//  
+	__disable_irq();
+
+	flexspi_nor_config_t config;
+	serial_nor_config_option_t option;
+	status_t status;
+	uint32_t sector_size = 0x1000; // 4KB
+	uint32_t address = 15 * 1024 * 1024 + sector_size;	   // 1MB
+	uint32_t page_buffer[256 / sizeof(uint32_t)];
+	uint32_t instance = 0;
+	option.option0.U = 0xC0000008; // QuadSPI NOR, Frequency: 133MHz
+	status = ROM_FLEXSPI_NorFlash_GetConfig(instance, &config, &option);
+	if (status != kStatus_Success)
+	{
+		SEGGER_RTT_printf(0, "Error: FLEXSPI_NorFlash_GetConfig failed\n");
+	}
+
+	// Without this delay, the init function may freeze
+	SDK_DelayAtLeastUs(1000, CLOCK_GetFreq(kCLOCK_CoreSysClk));
+	status = ROM_FLEXSPI_NorFlash_Init(instance, &config);
+	if (status != kStatus_Success)
+	{
+		SEGGER_RTT_printf(0, "Error: FLEXSPI_NorFlash_Init failed\n");
+	}
+	status = ROM_FLEXSPI_NorFlash_Erase(instance, &config, address, sector_size * 5); // Erase 1 sector
+	if (status != kStatus_Success)
+	{
+		SEGGER_RTT_printf(0, "Error: FLEXSPI_NorFlash_Erase failed\n");
+	}
+	// Fill data into the page_buffer;
+	for (uint32_t i = 0; i < sizeof(page_buffer) / sizeof(page_buffer[0]); i++)
+	{
+		page_buffer[i] = (i << 24) | (i << 16) | (i << 8) | i;
+	}
+	// Program data to destination
+	for (size_t i = 0; i < 5; i++)
+	{
+
+		status = ROM_FLEXSPI_NorFlash_ProgramPage(instance, &config, address, page_buffer); // program 1 page
+		if (status != kStatus_Success)
+		{
+			SEGGER_RTT_printf(0, "Error: FLEXSPI_NorFlash_ProgramPage failed\n");
+		}
+		address += sizeof(page_buffer);
+	}
+	// Flush the cache
+	DCACHE_CleanInvalidateByRange(address, sizeof(page_buffer));
+
+	// Use memory mapped access to verify whether data are programmed into Flash correctly
+	uint32_t mem_address = 0x60000000 + address;
+	if (0 == memcmp((void *)mem_address, page_buffer, sizeof(page_buffer)))
+	{
+		SEGGER_RTT_printf(0, "Flash access test passed\n");
+	}
+	else
+	{
+		SEGGER_RTT_printf(0, "Flash access test failed\n");
+	}
+
+	//reenable interrupts
+	__enable_irq();
 }

@@ -251,6 +251,11 @@ SECTIONS
        PROVIDE(__end_data_SRAM_DTC = .) ;
     } > SRAM_DTC AT>BOARD_FLASH
 
+    .mySegment : ALIGN(4)
+    {
+        KEEP(*(.mySection))
+    } > CONFIG_FLASH
+
     /* BSS section for SRAM_ITC */
     .bss_RAM2 (NOLOAD) : ALIGN(4)
     {
