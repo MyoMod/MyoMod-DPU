@@ -25,7 +25,7 @@ void OnProjectLoad (void) {
   Project.SetDevice ("MIMXRT1062xxx6B");
   Project.SetHostIF ("USB", "");
   Project.SetTargetIF ("SWD");
-  Project.SetTIFSpeed ("Automatic");
+  Project.SetTIFSpeed ("4 MHz");
   Project.AddPathSubstitute ("/workspace", "$(ProjectDir)");
   Project.AddPathSubstitute ("/workspace", "$(ProjectDir)");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M7F.svd");
@@ -33,7 +33,7 @@ void OnProjectLoad (void) {
   //
   // User settings
   //
-  Edit.SysVar (VAR_HSS_SPEED, FREQ_2_KHZ);
+  Edit.SysVar (VAR_HSS_SPEED, FREQ_100_HZ);
   File.Open ("$(ProjectDir)/build/debug/DPU_CMake.elf");
 }
 

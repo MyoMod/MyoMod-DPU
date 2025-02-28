@@ -31,6 +31,7 @@
 #include "linearFuncNode.h"
 #include "counterNode.h"
 #include "handAnimationNode.h"
+#include "adaptiveEmgFiltNode.h"
 
 // Data structures
 #ifdef CONFIG_PARSER_DEBUG
@@ -665,6 +666,10 @@ std::unique_ptr<AlgorithmicNode> ConfigParser::createAlgorithmicNode(const NodeD
     else if (nodeData.type == "HandAnimation")
     {
         return std::make_unique<HandAnimationNode>();
+    }
+    else if (nodeData.type == "AdaptiveEMGFiltNode")
+    {
+        return std::make_unique<AdaptiveEmgFiltNode>();
     }
     else if (nodeData.type == "LogNode")
     {

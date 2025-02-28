@@ -120,7 +120,7 @@ public:
     /**
      * @brief Get the Value of the linked OutputPort. If the OutputPort is not linked or has an error, the default value is returned.
      * 
-     * @param value     The value of the OutputPort
+     * @return The value of the OutputPort
      */
     const T& getValue() 
     {

@@ -24,6 +24,7 @@ using AdcSingleton = etl::singleton<MAX11254>;
 
 /* --------------------------------- Globals -------------------------------- */
 volatile int32_t adcRaw[6] = {0,0,0,0,0,0};
+volatile int32_t adcOut[6] = {0,0,0,0,0,0};
 etl::queue_spsc_atomic<std::array<int32_t, 6>, 20> g_adcQueue;
 volatile uint32_t g_adcCounter = 0;
 
@@ -90,7 +91,8 @@ void EmbeddedEMG::processInData()
         // fill output vectors and transform to mV
         for (size_t j = 0; j < MAX11254_NUM_CHANNELS; j++)
         {
-            float outVal = ((float)measurement[j] * 3.0f) / 8388607.0f;
+            //float outVal = ((float)measurement[j] * 3.0f) / 8388607.0f;
+            float outVal = measurement[j];
             outVal /= m_amplification > 0 ? m_amplification : 1;
             outputVectors[j][subIndex] = outVal;
         }
@@ -105,6 +107,7 @@ void EmbeddedEMG::processInData()
     // Write the data to the output Port
     for (size_t i = 0; i < MAX11254_NUM_CHANNELS; i++)
     {
+        adcOut[i] = outputVectors[i][0];
         m_emgPorts[i]->setValue(outputVectors[i]);
         m_emgPorts[i]->setValid(true);
     }
