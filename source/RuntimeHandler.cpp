@@ -67,6 +67,7 @@ std::vector<std::shared_ptr<EmbeddedDeviceNode>> g_embeddedDeviceNodes;
 std::vector<std::unique_ptr<AlgorithmicNode>> g_algorithmicNodes;
 
 volatile bool g_isRunning = false;
+volatile bool g_startNodeHandling = false;
 // volatile float g_vBat = 0;
 // volatile uint32_t g_vBatRaw = 0;
 
@@ -207,41 +208,11 @@ int main()
 			SEGGER_RTT_printf(0, "runtime is not running, this shouldn't happen\n");
 		}
 
-		// uint16_t tmrVal = QTMR_GetCurrentTimerCount(TMR1_PERIPHERAL, TMR1_MS_COUNTER_CHANNEL);
-		// if((currentTime & 0xFFFF) != tmrVal)
-		// {
-		// 	// 1ms passed
-		// 	if(tmrVal < (currentTime & 0xFFFF))
-		// 	{
-		// 		// timer overflow -> increment the high word
-		// 		currentTime += 0x10000;
-		// 	}
-		// 	currentTime = (currentTime & 0xFFFF0000) | tmrVal;
-
-
-		// 	ledVal += direction? 1 : -1;
-		// 	if (ledVal == 0 || ledVal == 100)
-		// 	{
-		// 		direction = !direction;
-		// 	}
-		// 	PWM_UpdatePwmDutycycle(PWM1_PERIPHERAL, PWM1_SM2, PWM1_SM2_LED_R, kPWM_SignedCenterAligned, ledVal);
-
-
-		// 	// if(button_up.update())
-		// 	// {
-		// 	// 	if(!button_up.isSet())
-		// 	// 	{
-		// 	// 		incrementConfiguration();
-		// 	// 	}
-		// 	// }
-		// 	// if(button_down.update())
-		// 	// {
-		// 	// 	if(!button_down.isSet())
-		// 	// 	{
-		// 	// 		decrementConfiguration();
-		// 	// 	}
-		// 	// }
-		// }
+		if(g_startNodeHandling)
+		{
+			handleNodes();
+			g_startNodeHandling = false;
+		}
 
 	}
 	return 0;
@@ -484,7 +455,7 @@ void peripheralHandlerCallback(uint32_t index)
 		{
 			// All peripherals have data available and the system is running
 			// -> Start the input handling
-			handleNodes();
+			g_startNodeHandling = true;
 		}
 		dataAvailable = {false, false};
 	}
@@ -627,7 +598,7 @@ void startCycle()
 	//  will not be called in this case	
 	if (!deviceInstalled)
 	{
-		handleNodes();
+		g_startNodeHandling = true;
 	}
 }
 
