@@ -503,12 +503,12 @@ void handleNodes()
 	}
 	g_embeddedDevicesManager.processInData();
 
-	DEBUG_PIN_0(1);
+	debugSetValue(1);
 	for (auto&& algorithmicNode : g_algorithmicNodes)
 	{
 		algorithmicNode->process();
 	}
-	DEBUG_PIN_0(0);
+	debugSetValue(0);
 
 	g_embeddedDevicesManager.processOutData();
 	for (auto&& deviceNode : g_deviceNodes)

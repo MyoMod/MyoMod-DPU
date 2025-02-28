@@ -118,8 +118,8 @@
                <pin_label pin_num="F14" pin_signal="GPIO_AD_B0_09" label="JTAG_TDI/J21[5]/ENET_RST/J22[5]"/>
                <pin_label pin_num="G13" pin_signal="GPIO_AD_B0_10" label="SWO" identifier="INT1_COMBO"/>
                <pin_label pin_num="G10" pin_signal="GPIO_AD_B0_11" label="JTAG_nTRST/J21[3]/INT2_COMBO/LCD_TOUCH_INT/J22[3]/U32[9]" identifier="INT2_COMBO"/>
-               <pin_label pin_num="K14" pin_signal="GPIO_AD_B0_12" label="UART1_TX" identifier="UART1_TXD;SCL4;ASYNC_CTRL_DPU_TX"/>
-               <pin_label pin_num="L14" pin_signal="GPIO_AD_B0_13" label="UART1_RX" identifier="UART1_RXD;SDA4;ASYNC_CTRL_DPU_RX"/>
+               <pin_label pin_num="K14" pin_signal="GPIO_AD_B0_12" label="UART1_TX" identifier="UART1_TXD;SCL4;ASYNC_CTRL_DPU_TX;ESP_TX"/>
+               <pin_label pin_num="L14" pin_signal="GPIO_AD_B0_13" label="UART1_RX" identifier="UART1_RXD;SDA4;ASYNC_CTRL_DPU_RX;ESP_RX"/>
                <pin_label pin_num="H14" pin_signal="GPIO_AD_B0_14" label="ADC_RDY" identifier="CAN2_TX;ADC_RDY"/>
                <pin_label pin_num="L10" pin_signal="GPIO_AD_B0_15" label="CAN2_RX/U12[4]" identifier="CAN2_RX"/>
                <pin_label pin_num="J11" pin_signal="GPIO_AD_B1_00" label="I2C1_SCL" identifier="I2C_SCL_FXOS8700CQ;CSI_I2C_SCL;EXT_SCL"/>
@@ -627,7 +627,7 @@
                <power_domain name="DCDC_LP" value="1.1"/>
                <power_domain name="DCDC_PSWITCH" value="3.3"/>
                <power_domain name="DCDC_SENSE" value="1.1"/>
-               <power_domain name="NVCC_EMC" value="3.3"/>
+               <power_domain name="NVCC_EMC" value="1.8"/>
                <power_domain name="NVCC_GPIO" value="3.3"/>
                <power_domain name="NVCC_PLL" value="3.3"/>
                <power_domain name="NVCC_SD0" value="3.3"/>
@@ -710,12 +710,12 @@
                   <pin peripheral="JTAG" signal="TCK" pin_num="F12" pin_signal="GPIO_AD_B0_07"/>
                   <pin peripheral="LPUART1" signal="RX" pin_num="L14" pin_signal="GPIO_AD_B0_13">
                      <pin_features>
-                        <pin_feature name="identifier" value="ASYNC_CTRL_DPU_RX"/>
+                        <pin_feature name="identifier" value="ESP_RX"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="LPUART1" signal="TX" pin_num="K14" pin_signal="GPIO_AD_B0_12">
                      <pin_features>
-                        <pin_feature name="identifier" value="ASYNC_CTRL_DPU_TX"/>
+                        <pin_feature name="identifier" value="ESP_TX"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="GPIO1" signal="gpio_io, 00" pin_num="M14" pin_signal="GPIO_AD_B0_00"/>
@@ -862,6 +862,7 @@
                   <pin peripheral="FLEXSPI2" signal="FLEXSPI_A_DQS" pin_num="G2" pin_signal="GPIO_EMC_23">
                      <pin_features>
                         <pin_feature name="identifier" value=""/>
+                        <pin_feature name="software_input_on" value="Enable"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="FLEXSPI2" signal="FLEXSPI_B_SCLK" pin_num="H1" pin_signal="GPIO_EMC_12">
@@ -1629,16 +1630,6 @@
                   <data type="Version" maxValue="2.5.9">2.4.0</data>
                </feature>
             </dependency>
-            <dependency resourceType="SWComponent" resourceId="platform.drivers.lpuart_cmsis" description="LPUART CMSIS Driver is not found in the toolchain/IDE project. The project will not compile!" problem_level="2" source="Peripherals">
-               <feature name="enabled" evaluation="equal">
-                  <data type="Boolean">true</data>
-               </feature>
-            </dependency>
-            <dependency resourceType="SWComponent" resourceId="platform.drivers.lpuart_cmsis" description="An unsupported version of the LPUART CMSIS Driver in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}. The project might not compile correctly." problem_level="1" source="Peripherals">
-               <feature name="version" evaluation="greaterOrEqual">
-                  <data type="Version" maxValue="2.5.9">2.4.0</data>
-               </feature>
-            </dependency>
             <dependency resourceType="SWComponent" resourceId="component.igpio_adapter" description="Component igpio_adapter is not found in the toolchain/IDE project. The project will not compile!" problem_level="2" source="Peripherals">
                <feature name="enabled" evaluation="equal">
                   <data type="Boolean">true</data>
@@ -1707,6 +1698,16 @@
             <dependency resourceType="SWComponent" resourceId="platform.drivers.lpi2c" description="An unsupported version of the LPI2C Driver in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}. The project might not compile correctly." problem_level="1" source="Peripherals">
                <feature name="version" evaluation="greaterOrEqual">
                   <data type="Version" maxValue="2.5.9">2.2.0</data>
+               </feature>
+            </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.lpuart" description="LPUART Driver is not found in the toolchain/IDE project. The project will not compile!" problem_level="2" source="Peripherals">
+               <feature name="enabled" evaluation="equal">
+                  <data type="Boolean">true</data>
+               </feature>
+            </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.lpuart" description="An unsupported version of the LPUART Driver in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}. The project might not compile correctly." problem_level="1" source="Peripherals">
+               <feature name="version" evaluation="greaterOrEqual">
+                  <data type="Version" maxValue="2.7.9">2.5.3</data>
                </feature>
             </dependency>
             <dependency resourceType="Tool" resourceId="Pins" description="The Pins tool is required by the Peripherals tool, but it is disabled." problem_level="2" source="Peripherals">
@@ -1786,11 +1787,6 @@
                   <dependency resourceType="PeripheralUnifiedSignal" resourceId="FLEXIO1.flexio_d.08" description="Signal IO, channel 8 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
                      <feature name="routed" evaluation="equal">
                         <data type="Boolean">true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="ClockOutput" resourceId="UART_CLK_ROOT" description="UART_CLK_ROOT is inactive." problem_level="2" source="Peripherals:BOARD_InitPeripherals">
-                     <feature name="frequency" evaluation="greaterThan">
-                        <data type="Frequency" unit="Hz">0</data>
                      </feature>
                   </dependency>
                   <dependency resourceType="PinSignal" resourceId="GPIO7.gpio_io.29" description="Signal gpio_io, 29 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
@@ -1988,6 +1984,21 @@
                         <data type="Boolean">true</data>
                      </feature>
                   </dependency>
+                  <dependency resourceType="ClockOutput" resourceId="UART_CLK_ROOT" description="UART_CLK_ROOT is inactive." problem_level="2" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="frequency" evaluation="greaterThan">
+                        <data type="Frequency" unit="Hz">0</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="LPUART1.uart_tx" description="Signal TX is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="equal">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="LPUART1.uart_rx" description="Signal RX is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="equal">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
                </dependencies>
                <instances>
                   <instance name="NVIC" uuid="93aead58-804b-4de1-ae2f-6922311c0b50" type="nvic" type_id="nvic_57b5eef3774cc60acaede6f5b8bddc67" mode="general" peripheral="NVIC" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
@@ -1995,7 +2006,6 @@
                         <array name="interrupt_table">
                            <struct name="0"/>
                            <struct name="1"/>
-                           <struct name="2"/>
                         </array>
                         <array name="interrupts">
                            <struct name="0">
@@ -2146,37 +2156,6 @@
                            <setting name="enableInDebug" value="true"/>
                            <setting name="enableFastAccess" value="true"/>
                            <setting name="baudRate_Bps" value="100000"/>
-                        </struct>
-                     </config_set>
-                  </instance>
-                  <instance name="LPUART1" uuid="eac5d23d-ed69-4bea-b715-988eaab5cc9b" type="lpuart_cmsis" type_id="lpuart_cmsis_45ff8bb27f56563059427916f159562d" mode="interrupt" peripheral="LPUART1" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
-                     <config_set name="general" quick_selection="default">
-                        <struct name="main_config">
-                           <setting name="operationMode" value="ARM_USART_MODE_ASYNCHRONOUS"/>
-                           <setting name="clockSource" value="LpuartClock"/>
-                           <setting name="clockSourceFreq" value="ClocksTool_DefaultInit"/>
-                           <setting name="power_state" value="ARM_POWER_FULL"/>
-                           <setting name="baudRate_Bps" value="115200"/>
-                           <setting name="dataBits" value="ARM_USART_DATA_BITS_8"/>
-                           <setting name="parityBit" value="ARM_USART_PARITY_NONE"/>
-                           <setting name="stopBit" value="ARM_USART_STOP_BITS_1"/>
-                           <setting name="enableRX" value="false"/>
-                           <setting name="enableRXBuffer" value="true"/>
-                           <setting name="enableTX" value="false"/>
-                           <setting name="signalEventFunctionId" value="LPUART1_SignalEvent"/>
-                           <setting name="enableGetFreqFnCustomName" value="false"/>
-                           <setting name="getFreqFunctionCustomID" value="LPUART1_GetFreq"/>
-                           <setting name="enableInitPinsFnCustomName" value="false"/>
-                           <setting name="initPinFunctionCustomID" value="LPUART1_InitPins"/>
-                           <setting name="enableDeinitPinsFnCustomName" value="false"/>
-                           <setting name="deinitPinFunctionCustomID" value="LPUART1_DeinitPins"/>
-                        </struct>
-                     </config_set>
-                     <config_set name="fsl_cmsis_uart">
-                        <struct name="interrupt">
-                           <setting name="IRQn" value="LPUART1_IRQn"/>
-                           <setting name="enable_priority" value="false"/>
-                           <setting name="priority" value="0"/>
                         </struct>
                      </config_set>
                   </instance>
@@ -2984,6 +2963,33 @@
                         </struct>
                      </config_set>
                   </instance>
+                  <instance name="UART_ESP" uuid="60a26224-5f46-4943-9a29-0d6c1e24fdd7" type="lpuart" type_id="lpuart_65a7af1f2e04f737cb1c75e9f68585ac" mode="polling" peripheral="LPUART1" enabled="true" comment="" custom_name_enabled="true" editing_lock="false">
+                     <config_set name="lpuartConfig_t" quick_selection="QuickSelection1">
+                        <struct name="lpuartConfig">
+                           <setting name="clockSource" value="LpuartClock"/>
+                           <setting name="lpuartSrcClkFreq" value="ClocksTool_DefaultInit"/>
+                           <setting name="baudRate_Bps" value="115200"/>
+                           <setting name="parityMode" value="kLPUART_ParityDisabled"/>
+                           <setting name="dataBitsCount" value="kLPUART_EightDataBits"/>
+                           <setting name="isMsb" value="false"/>
+                           <setting name="stopBitCount" value="kLPUART_OneStopBit"/>
+                           <setting name="enableMatchAddress1" value="false"/>
+                           <setting name="matchAddress1" value="0"/>
+                           <setting name="enableMatchAddress2" value="false"/>
+                           <setting name="matchAddress2" value="0"/>
+                           <setting name="txFifoWatermark" value="0"/>
+                           <setting name="rxFifoWatermark" value="1"/>
+                           <setting name="enableRxRTS" value="false"/>
+                           <setting name="enableTxCTS" value="false"/>
+                           <setting name="txCtsSource" value="kLPUART_CtsSourcePin"/>
+                           <setting name="txCtsConfig" value="kLPUART_CtsSampleAtStart"/>
+                           <setting name="rxIdleType" value="kLPUART_IdleTypeStartBit"/>
+                           <setting name="rxIdleConfig" value="kLPUART_IdleCharacter1"/>
+                           <setting name="enableTx" value="true"/>
+                           <setting name="enableRx" value="true"/>
+                        </struct>
+                     </config_set>
+                  </instance>
                </instances>
             </functional_group>
          </functional_groups>
@@ -2996,11 +3002,7 @@
                </config_set_global>
             </component>
             <component name="uart_cmsis_common" uuid="0171999b-1755-47f9-8c2e-583b4e8d6868" type_id="uart_cmsis_common_9cb8e302497aa696fdbb5a4fd622c2a8">
-               <config_set_global name="global_USART_CMSIS_common" quick_selection="default">
-                  <struct name="commonSetting">
-                     <setting name="USART_RX_BUFFER_LEN" value="64"/>
-                  </struct>
-               </config_set_global>
+               <config_set_global name="global_USART_CMSIS_common" quick_selection="default"/>
             </component>
             <component name="gpio_adapter_common" uuid="d7ce0431-b6ff-44b2-a395-d59a766dcda0" type_id="gpio_adapter_common_57579b9ac814fe26bf95df0a384c36b6">
                <config_set_global name="global_gpio_adapter_common" quick_selection="default">

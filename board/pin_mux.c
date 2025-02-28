@@ -337,7 +337,7 @@ pin_labels:
 - {pin_num: P8, pin_signal: VDD_HIGH_CAP, label: VDDA_2P5_CAP}
 - {pin_num: K9, pin_signal: NGND_KEL0, label: GND}
 - {pin_num: M10, pin_signal: VDD_SNVS_CAP, label: GND}
-power_domains: {DCDC_IN: '3.3', DCDC_IN_Q: '3.3', DCDC_LP: '1.1', DCDC_PSWITCH: '3.3', DCDC_SENSE: '1.1', NVCC_EMC: '3.3', NVCC_GPIO: '3.3', NVCC_PLL: '3.3', NVCC_SD0: '3.3',
+power_domains: {DCDC_IN: '3.3', DCDC_IN_Q: '3.3', DCDC_LP: '1.1', DCDC_PSWITCH: '3.3', DCDC_SENSE: '1.1', NVCC_EMC: '1.8', NVCC_GPIO: '3.3', NVCC_PLL: '3.3', NVCC_SD0: '3.3',
   NVCC_SD1: '3.3', NVCC_SPI0: '3.3', NVCC_SPI1: '3.3', VDDA_ADC_3P3: '3.3', VDD_HIGH_CAP: '2.5', VDD_HIGH_IN: '3.3', VDD_SNVS_CAP: '1.1', VDD_SNVS_IN: '3.3', VDD_SOC_IN: '1.1'}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
@@ -524,7 +524,7 @@ RAM:
   - {pin_num: B1, peripheral: FLEXSPI2, signal: FLEXSPI_B_DATA2, pin_signal: GPIO_EMC_15, identifier: ''}
   - {pin_num: A5, peripheral: FLEXSPI2, signal: FLEXSPI_B_DATA3, pin_signal: GPIO_EMC_16, identifier: ''}
   - {pin_num: D2, peripheral: FLEXSPI2, signal: FLEXSPI_A_SCLK, pin_signal: GPIO_EMC_25, identifier: ''}
-  - {pin_num: G2, peripheral: FLEXSPI2, signal: FLEXSPI_A_DQS, pin_signal: GPIO_EMC_23, identifier: ''}
+  - {pin_num: G2, peripheral: FLEXSPI2, signal: FLEXSPI_A_DQS, pin_signal: GPIO_EMC_23, identifier: '', software_input_on: Enable}
   - {pin_num: H1, peripheral: FLEXSPI2, signal: FLEXSPI_B_SCLK, pin_signal: GPIO_EMC_12, identifier: ''}
   - {pin_num: D3, peripheral: FLEXSPI2, signal: FLEXSPI_A_SS0_B, pin_signal: GPIO_EMC_24, identifier: ''}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
@@ -544,7 +544,7 @@ void RAM(void) {
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_14_FLEXSPI2_B_DATA01, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_15_FLEXSPI2_B_DATA02, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_16_FLEXSPI2_B_DATA03, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_23_FLEXSPI2_A_DQS, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_23_FLEXSPI2_A_DQS, 1U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_24_FLEXSPI2_A_SS0_B, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_25_FLEXSPI2_A_SCLK, 0U); 
   IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_26_FLEXSPI2_A_DATA00, 0U); 

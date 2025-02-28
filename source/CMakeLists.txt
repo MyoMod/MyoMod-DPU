@@ -6,6 +6,7 @@ configurations/*.c
 devices/*.c
 #structure/*.c
 hardware/*.c
+hardware/*.cpp
 *.cpp
 algorithms/*.cpp
 commonClasses/*.cpp
